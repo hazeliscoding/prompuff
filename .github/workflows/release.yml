@@ -1,0 +1,155 @@
+name: Release
+
+# A pushed v* tag builds both platforms and creates a draft GitHub Release with the installers and the
+# Velopack update files. Run it by hand to build the same artifacts without publishing anything.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to build (nothing is published)
+        required: true
+        default: 0.0.1
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  PACK_ID: Prompuff.Desktop
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - id: version
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then version="${GITHUB_REF_NAME#v}"; else version="$INPUT_VERSION"; fi
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then echo "Not a version: $version"; exit 1; fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet tool restore
+      - run: dotnet test -c Release
+      - name: Publish self-contained win-x64
+        run: dotnet publish src/Prompuff.App -c Release -r win-x64 --self-contained true -p:Version=${{ env.VERSION }} -o publish
+      - name: Download the previous release for delta updates
+        continue-on-error: true
+        run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel win --outputDir releases --token ${{ github.token }}
+      - name: Pack with Velopack
+        run: >
+          dotnet vpk pack --packId ${{ env.PACK_ID }} --packVersion ${{ env.VERSION }} --packDir publish
+          --mainExe Prompuff.exe --packTitle Prompuff --packAuthors "Hazel Granados"
+          --icon src/Prompuff.App/Assets/prompuff.ico --channel win --outputDir releases
+      - name: Collect this version's files
+        shell: bash
+        run: |
+          mkdir dist
+          cp "releases/${PACK_ID}-win-Setup.exe" dist/Prompuff-Setup.exe
+          cp "releases/${PACK_ID}-win-Portable.zip" dist/Prompuff-win-x64-Portable.zip
+          cp releases/releases.win.json releases/RELEASES dist/
+          cp releases/${PACK_ID}-${VERSION}-*.nupkg dist/
+          ls -la dist
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows
+          path: dist/*
+          if-no-files-found: error
+
+  linux:
+    needs: version
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet tool restore
+      - run: dotnet test -c Release
+      - name: Publish self-contained linux-x64
+        run: dotnet publish src/Prompuff.App -c Release -r linux-x64 --self-contained true -p:Version=${{ env.VERSION }} -o publish
+      - name: Download the previous release for delta updates
+        continue-on-error: true
+        run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel linux --outputDir releases --token ${{ github.token }}
+      - name: Pack the AppImage with Velopack
+        run: >
+          dotnet vpk pack --packId ${{ env.PACK_ID }} --packVersion ${{ env.VERSION }} --packDir publish
+          --mainExe Prompuff --packTitle Prompuff --packAuthors "Hazel Granados"
+          --icon src/Prompuff.App/Assets/prompuff.png --categories "Utility;Development" --channel linux --outputDir releases
+      - name: Collect this version's files
+        run: |
+          ls -la releases
+          mkdir dist
+          cp releases/*.AppImage dist/Prompuff-linux-x64.AppImage
+          cp releases/releases.linux.json dist/
+          cp releases/${PACK_ID}-${VERSION}-*.nupkg dist/
+          ls -la dist
+      - name: Smoke test the AppImage under Xvfb
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb x11-apps imagemagick > /dev/null
+          export XDG_DATA_HOME="$RUNNER_TEMP/xdg-data" XDG_CONFIG_HOME="$RUNNER_TEMP/xdg-config"
+          export APPIMAGE_EXTRACT_AND_RUN=1
+          chmod +x dist/Prompuff-linux-x64.AppImage
+          xvfb-run -a -s "-screen 0 1280x800x24" bash -c '
+            ./dist/Prompuff-linux-x64.AppImage > "$RUNNER_TEMP/app.log" 2>&1 &
+            pid=$!
+            sleep 20
+            import -window root "$RUNNER_TEMP/linux-smoke.png"
+            kill -0 $pid || { echo "Prompuff exited early"; cat "$RUNNER_TEMP/app.log"; exit 1; }
+            kill $pid'
+          test -f "$XDG_DATA_HOME/prompuff/prompuff.db" || { echo "No database in the XDG data folder"; cat "$RUNNER_TEMP/app.log"; exit 1; }
+          ls -la "$XDG_DATA_HOME/prompuff" "$XDG_CONFIG_HOME/prompuff" || true
+          cat "$XDG_DATA_HOME"/prompuff/logs/*.log
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: linux-smoke-screenshot
+          path: ${{ runner.temp }}/linux-smoke.png
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: linux
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    needs: [version, windows, linux]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: windows
+          path: dist
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: linux
+          path: dist
+      - name: Create a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          ls -la dist
+          gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --draft --title "Prompuff $VERSION" --generate-notes
