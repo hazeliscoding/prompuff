@@ -99,7 +99,7 @@ jobs:
           ls -la releases
           mkdir dist
           cp releases/*.AppImage dist/Prompuff-linux-x64.AppImage
-          cp releases/releases.linux.json dist/
+          cp releases/releases.linux.json releases/RELEASES-linux dist/
           cp releases/${PACK_ID}-${VERSION}-*.nupkg dist/
           ls -la dist
       - name: Smoke test the AppImage under Xvfb
