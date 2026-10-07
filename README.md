@@ -111,7 +111,7 @@ PROMPUFF_SCREENSHOTS=./screenshots dotnet test tests/Prompuff.App.Tests
 | Windows | `%LOCALAPPDATA%\Prompuff\` | `%LOCALAPPDATA%\Prompuff\settings.json` |
 | Linux | `$XDG_DATA_HOME/prompuff/` (default `~/.local/share/prompuff/`) | `$XDG_CONFIG_HOME/prompuff/settings.json` (default `~/.config/prompuff/`) |
 
-The library is one SQLite file, `prompuff.db`. Prompuff never writes next to its executable or inside the AppImage, so updates and reinstalls leave your prompts alone. Before a new version changes the database format, Prompuff copies the file to `backups/`. Settings › Storage shows the folder and opens it.
+The library is one SQLite file, `prompuff.db`. Prompuff never writes next to its executable or inside the AppImage, so updates and reinstalls leave your prompts alone. Prompuff copies the library to `backups/` once a day and keeps the last 30, plus a copy before a new version changes the database format. Settings › Storage shows the folder and lists the backups, and restoring one copies the current library aside first.
 
 ## Packaging
 
