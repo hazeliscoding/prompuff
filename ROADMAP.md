@@ -35,6 +35,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **UI tests** drive the real main window with Avalonia Headless and Skia against a temporary data folder, on both CI runners. `PROMPUFF_SCREENSHOTS` saves a PNG of each state, and `PROMPUFF_DATA_DIR` keeps any run away from the real library.
 - **Linux smoke test:** the release workflow starts the AppImage under Xvfb with temporary XDG folders, checks that it stays up and creates `prompuff.db` in the data folder, and uploads a screenshot.
 - **Update checks** run every time Prompuff opens while the setting is on, with no daily limit. A found update stays in the sidebar footer until it's installed, because a toast is easy to miss at startup.
+- **Sharing is file-based.** Prompts move between machines and people as one `.zip` of the same Markdown files. An import always makes independent copies with their own history, skips prompts whose title and body match one already in the library, and keeps the favorites and ratings in the files. There are no share links or shared libraries.
 
 ## Decisions: the road to 1.0 (2026-10-07)
 
@@ -111,9 +112,9 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 
 **Done when:** a fresh clone builds from the README, and the core flow works on both Windows and Linux. The hands-on install checks moved to v0.2.
 
-## v0.2: Safe and searchable
+## v0.2: Safe, searchable and shareable
 
-Trust Prompuff with more than a few prompts: nothing is lost by accident, and search scales.
+Trust Prompuff with more than a few prompts: nothing is lost by accident, search scales, and prompts move between machines and people.
 
 - [x] Publish v0.1.0 (2026-10-07).
 - [x] Publish v0.1.1 (2026-10-07): hides the full-screen caption button that covered Quick save on Windows.
@@ -123,9 +124,11 @@ Trust Prompuff with more than a few prompts: nothing is lost by accident, and se
 - [ ] Recently deleted: deleting a prompt keeps it for 30 days with Restore and Empty. This is the first real schema migration (`DeletedAt`), with a test that upgrades a v0.1 database.
 - [ ] SQLite FTS5 search behind `IPromptSearch`: ranked results, prefix matches, and case- and accent-insensitive matching for non-ASCII text, which `LIKE` can't do.
 - [ ] Remembered variable values per prompt, stored locally, with a Clear values button.
+- [ ] Share: an Export button in the library header saves what the library shows (all, a collection, a tag, Favorites, Recent or a search) as one `.zip` of Markdown files. Settings › Import and export saves the whole library the same way.
+- [ ] Import a `.zip` as well as `.md` files. Entries are read in memory with the same 5 MB limit per prompt and never unpacked to disk. Prompts whose title and body match one in the library are skipped, and the result says how many.
 - [ ] Release v0.2.0 and confirm the v0.1.0 installs from the first item update to it with the library intact.
 
-**Done when:** an installed 0.1 updates to 0.2 on Windows and Linux with every prompt and version intact, a deleted prompt comes back, and searching "cafe" finds "Café".
+**Done when:** an installed 0.1 updates to 0.2 on Windows and Linux with every prompt and version intact, a deleted prompt comes back, searching "cafe" finds "Café", and a `.zip` exported on one machine imports on another with duplicates skipped.
 
 ## v0.3: macOS and Linux ARM64
 
