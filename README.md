@@ -15,7 +15,7 @@ Prompuff is a small desktop app for the prompts that actually worked. Save them,
 
 Your prompts stay on your machine. There is no account, no cloud and no telemetry.
 
-> **Status:** [v0.1.0 is out](https://github.com/hazeliscoding/prompuff/releases/latest) for Windows x64 and Linux x64. macOS (Intel and Apple Silicon) and Linux ARM64 come in v0.3, and [ROADMAP.md](ROADMAP.md) has the road to 1.0.
+> **Status:** [v0.1.1 is out](https://github.com/hazeliscoding/prompuff/releases/latest) for Windows x64 and Linux x64. macOS (Intel and Apple Silicon) and Linux ARM64 come in v0.3, and [ROADMAP.md](ROADMAP.md) has the road to 1.0.
 
 ![The library: a sidebar with collections and tags, and prompt cards with tags, usefulness and edit times](docs/screenshots/library.png)
 
