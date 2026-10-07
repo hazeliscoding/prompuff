@@ -100,7 +100,7 @@ PROMPUFF_SCREENSHOTS=./screenshots dotnet test tests/Prompuff.App.Tests
 |---|---|
 | `src/Prompuff.Domain` | Entities and pure rules: prompts, versions, collections, tag normalization. No dependencies. |
 | `src/Prompuff.Application` | Interfaces and services: template rendering, versioning, collections, line diff. No UI or database code. |
-| `src/Prompuff.Infrastructure` | SQLite repositories and migrations, LIKE search, Markdown import and export, data paths, settings, file logging, Velopack updates. |
+| `src/Prompuff.Infrastructure` | SQLite repositories and migrations, FTS5 search, backups, Markdown import and export, data paths, settings, file logging, Velopack updates. |
 | `src/Prompuff.App` | The Avalonia app: views, view models, controls, theme tokens, and platform services for the clipboard, file pickers and launcher. |
 | `tests/*` | xUnit tests for each layer, plus headless UI tests for the app. |
 
