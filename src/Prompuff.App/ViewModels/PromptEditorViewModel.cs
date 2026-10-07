@@ -93,6 +93,7 @@ public sealed partial class PromptEditorViewModel : ObservableObject
 
     private PromptContent _saved = new(null, null, string.Empty, null);
     private Dictionary<string, string> _values = new(StringComparer.Ordinal);
+    private bool _clearingValues;
     private bool _loading;
 
     public PromptEditorViewModel(
@@ -182,6 +183,10 @@ public sealed partial class PromptEditorViewModel : ObservableObject
     [ObservableProperty]
     private bool _isFullyFilled;
 
+    /// <summary>True when any variable has a value, which Clear values would forget.</summary>
+    [ObservableProperty]
+    private bool _hasValues;
+
     [ObservableProperty]
     private VersionItemViewModel? _selectedVersion;
 
@@ -266,7 +271,7 @@ public sealed partial class PromptEditorViewModel : ObservableObject
     {
         var prompt = await _prompts.GetAsync(id) ?? throw new LibraryException("That prompt no longer exists.");
         await LoadCollectionsAsync();
-        Apply(prompt);
+        Apply(prompt, await _valuesCache.GetAsync(id));
         await LoadVersionsAsync();
         await _prompts.MarkOpenedAsync(id);
     }
@@ -307,13 +312,8 @@ public sealed partial class PromptEditorViewModel : ObservableObject
                 _loading = false;
 
                 // Keep values typed before the first save for when the prompt is opened again.
-                var cached = _valuesCache.For(created.Id);
-                foreach (var (name, value) in _values)
-                {
-                    cached[name] = value;
-                }
-
-                _values = cached;
+                _valuesCache.Adopt(created.Id, _values);
+                _ = _valuesCache.SaveAsync(created.Id);
                 AfterSave(created.Title, created.UpdatedAt, 1, created: true, quiet);
                 await LoadVersionsAsync();
                 return true;
@@ -351,6 +351,24 @@ public sealed partial class PromptEditorViewModel : ObservableObject
     {
         await _clipboard.SetTextAsync(Body);
         _toasts.Show("Copied.", HasVariables ? "Template with variables intact." : "The prompt is on your clipboard.");
+    }
+
+    [RelayCommand]
+    private async Task ClearValues()
+    {
+        _clearingValues = true;
+        _values.Clear();
+        foreach (var variable in Variables)
+        {
+            variable.Value = string.Empty;
+        }
+
+        _clearingValues = false;
+        RefreshRender();
+        if (Id is { } id)
+        {
+            await _valuesCache.ClearAsync(id);
+        }
     }
 
     [RelayCommand]
@@ -533,7 +551,7 @@ public sealed partial class PromptEditorViewModel : ObservableObject
             }
 
             var prompt = await _prompts.GetAsync(id) ?? throw new LibraryException("That prompt no longer exists.");
-            Apply(prompt);
+            Apply(prompt, await _valuesCache.GetAsync(id));
             await LoadVersionsAsync();
             _notifier.Notify();
             _toasts.Show($"Restored {version.Label}.", $"Saved as v{result.CurrentVersion}, so nothing is lost.");
@@ -636,9 +654,12 @@ public sealed partial class PromptEditorViewModel : ObservableObject
         }
     }
 
-    private void Apply(Prompt prompt)
+    private void Apply(Prompt prompt, Dictionary<string, string> values)
     {
         _loading = true;
+
+        // Before Body: setting it rebuilds the variable inputs from these values.
+        _values = values;
         Id = prompt.Id;
         IsNew = false;
         Title = prompt.Title;
@@ -656,7 +677,6 @@ public sealed partial class PromptEditorViewModel : ObservableObject
         }
 
         UpdatedAt = prompt.UpdatedAt;
-        _values = _valuesCache.For(prompt.Id);
         _saved = CurrentContent;
         _loading = false;
         RefreshVariables();
@@ -696,7 +716,7 @@ public sealed partial class PromptEditorViewModel : ObservableObject
                     variable.Name,
                     variable.Occurrences,
                     _values.GetValueOrDefault(variable.Name, string.Empty),
-                    RefreshRender));
+                    VariableEdited));
             }
 
             OnPropertyChanged(nameof(HasVariables));
@@ -704,6 +724,15 @@ public sealed partial class PromptEditorViewModel : ObservableObject
         }
 
         RefreshRender();
+    }
+
+    private void VariableEdited()
+    {
+        RefreshRender();
+        if (!_clearingValues && Id is { } id)
+        {
+            _ = _valuesCache.SaveAsync(id);
+        }
     }
 
     private void RefreshRender()
@@ -717,6 +746,7 @@ public sealed partial class PromptEditorViewModel : ObservableObject
         var filled = Variables.Count(variable => !string.IsNullOrEmpty(variable.Value));
         IsFullyFilled = filled == Variables.Count;
         FillLabel = Variables.Count == 0 ? "no variables" : $"{filled} of {Variables.Count} filled";
+        HasValues = filled > 0;
     }
 
     private void RefreshComparison()

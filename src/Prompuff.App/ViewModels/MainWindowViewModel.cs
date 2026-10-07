@@ -34,6 +34,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly SqliteDatabase _database;
     private readonly LibraryBackups _backups;
     private readonly PromptService _prompts;
+    private readonly RenderValuesCache _renderValues;
     private readonly Func<PromptEditorViewModel> _createEditor;
     private readonly IPlatformLauncher _launcher;
     private readonly IAppDataPathProvider _paths;
@@ -46,6 +47,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         SqliteDatabase database,
         LibraryBackups backups,
         PromptService prompts,
+        RenderValuesCache renderValues,
         SidebarViewModel sidebar,
         LibraryViewModel library,
         SettingsViewModel settings,
@@ -64,6 +66,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _database = database;
         _backups = backups;
         _prompts = prompts;
+        _renderValues = renderValues;
         Sidebar = sidebar;
         Library = library;
         Settings = settings;
@@ -237,7 +240,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
     }
 
     /// <summary>Saves pending edits before the window closes. Returns false if saving failed.</summary>
-    public async Task<bool> PrepareToCloseAsync() => Editor is not { IsDirty: true } editor || await editor.SaveAsync(quiet: true);
+    public async Task<bool> PrepareToCloseAsync()
+    {
+        if (Editor is { IsDirty: true } editor && !await editor.SaveAsync(quiet: true))
+        {
+            return false;
+        }
+
+        await _renderValues.FlushAsync();
+        return true;
+    }
 
     [RelayCommand]
     private Task NewPrompt() => NewPromptAsync(CurrentCollectionId());

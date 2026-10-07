@@ -104,6 +104,14 @@ public static class Migrations
                 WHERE PromptId = old.PromptId;
             END;
             """),
+        new(4, "Remembered variable values", """
+            CREATE TABLE RenderValues (
+                PromptId  TEXT NOT NULL REFERENCES Prompts (Id) ON DELETE CASCADE,
+                Name      TEXT NOT NULL,
+                Value     TEXT NOT NULL,
+                PRIMARY KEY (PromptId, Name)
+            );
+            """),
     ];
 
     public static int LatestVersion => All[^1].Version;

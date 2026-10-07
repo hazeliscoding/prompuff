@@ -15,7 +15,7 @@ public class SqliteDatabaseTests
 
         await using var connection = await library.Database.OpenAsync();
         Assert.Equal((long)Migrations.LatestVersion, await Scalar(connection, "PRAGMA user_version;"));
-        foreach (var table in new[] { "Prompts", "Collections", "Tags", "PromptTags", "PromptVersions" })
+        foreach (var table in new[] { "Prompts", "Collections", "Tags", "PromptTags", "PromptVersions", "PromptSearch", "RenderValues" })
         {
             Assert.Equal(1L, await Scalar(connection, $"SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = '{table}';"));
         }

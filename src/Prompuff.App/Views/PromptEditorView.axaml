@@ -192,8 +192,17 @@
       <Grid ColumnDefinitions="0.9*,1.3*" IsVisible="{Binding IsRenderTab}">
         <Border BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,0,1,0" MinWidth="280">
           <DockPanel>
-            <Border DockPanel.Dock="Top" Height="32" Padding="20,0" Classes="hairline-bottom">
-              <TextBlock Classes="label" Text="FILL IN VARIABLES" VerticalAlignment="Center" />
+            <Border DockPanel.Dock="Top" Height="32" Padding="20,0,12,0" Classes="hairline-bottom">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="label" Text="FILL IN VARIABLES" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Classes="ghost sm" VerticalAlignment="Center" Command="{Binding ClearValuesCommand}"
+                        IsVisible="{Binding HasVariables}" IsEnabled="{Binding HasValues}" ToolTip.Tip="Forget the values remembered for this prompt">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <c:Icon Kind="X" Size="12" />
+                    <TextBlock Text="Clear values" />
+                  </StackPanel>
+                </Button>
+              </Grid>
             </Border>
             <ScrollViewer HorizontalScrollBarVisibility="Disabled">
               <StackPanel Margin="20,16" Spacing="14">

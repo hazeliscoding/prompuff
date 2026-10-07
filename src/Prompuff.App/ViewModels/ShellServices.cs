@@ -1,7 +1,9 @@
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using Prompuff.Application.DTOs;
+using Prompuff.Infrastructure.Repositories;
 
 namespace Prompuff.App.ViewModels;
 
@@ -44,20 +46,75 @@ public sealed partial class AppearanceState : ObservableObject
     private bool _showMascot = true;
 }
 
-/// <summary>Variable values typed in the Render tab, kept per prompt for the session. Never written to disk.</summary>
-public sealed class RenderValuesCache
+/// <summary>Variable values typed in the Render tab, remembered per prompt in the local library. Never exported or logged.</summary>
+public sealed class RenderValuesCache(SqliteRenderValues store, ILogger<RenderValuesCache> logger)
 {
     private readonly Dictionary<Guid, Dictionary<string, string>> _values = [];
+    private readonly SemaphoreSlim _writes = new(1, 1);
 
-    public Dictionary<string, string> For(Guid promptId)
+    /// <summary>The prompt's values, read from the library the first time and shared after that.</summary>
+    public async Task<Dictionary<string, string>> GetAsync(Guid promptId)
+    {
+        if (_values.TryGetValue(promptId, out var values))
+        {
+            return values;
+        }
+
+        try
+        {
+            values = await store.LoadAsync(promptId);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Couldn't read remembered values for prompt {PromptId}", promptId);
+            values = new Dictionary<string, string>(StringComparer.Ordinal);
+        }
+
+        return _values.TryAdd(promptId, values) ? values : _values[promptId];
+    }
+
+    /// <summary>Keeps values typed into a new prompt once it's saved for the first time.</summary>
+    public void Adopt(Guid promptId, Dictionary<string, string> values) => _values[promptId] = values;
+
+    /// <summary>Writes the prompt's current values. Writes run one at a time, so the last one wins.</summary>
+    public async Task SaveAsync(Guid promptId)
     {
         if (!_values.TryGetValue(promptId, out var values))
         {
-            values = new Dictionary<string, string>(StringComparer.Ordinal);
-            _values[promptId] = values;
+            return;
         }
 
-        return values;
+        var snapshot = new Dictionary<string, string>(values, StringComparer.Ordinal);
+        await _writes.WaitAsync();
+        try
+        {
+            await store.SaveAsync(promptId, snapshot);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Couldn't remember values for prompt {PromptId}", promptId);
+        }
+        finally
+        {
+            _writes.Release();
+        }
+    }
+
+    public async Task ClearAsync(Guid promptId)
+    {
+        if (_values.TryGetValue(promptId, out var values))
+        {
+            values.Clear();
+        }
+
+        await SaveAsync(promptId);
+    }
+
+    /// <summary>Waits for writes in progress, so closing the window doesn't cut one short.</summary>
+    public async Task FlushAsync()
+    {
+        await _writes.WaitAsync();
+        _writes.Release();
     }
 }
 

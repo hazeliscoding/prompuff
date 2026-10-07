@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ICollectionRepository, SqliteCollectionRepository>();
         services.AddSingleton<ITagRepository, SqliteTagRepository>();
         services.AddSingleton<IPromptSearch, SqlitePromptSearch>();
+        services.AddSingleton<SqliteRenderValues>();
         services.AddSingleton<ISettingsStore, JsonSettingsStore>();
         services.AddSingleton<IPromptTransferService, MarkdownTransferService>();
         services.AddSingleton<IUpdateService, VelopackUpdateService>();
