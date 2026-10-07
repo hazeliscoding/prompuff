@@ -115,7 +115,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 Trust Prompuff with more than a few prompts: nothing is lost by accident, and search scales.
 
 - [x] Publish v0.1.0 (2026-10-07).
-- [ ] Publish v0.1.1: hides the full-screen caption button that covered Quick save on Windows.
+- [x] Publish v0.1.1 (2026-10-07): hides the full-screen caption button that covered Quick save on Windows.
 - [ ] Install v0.1.0 from `Prompuff-Setup.exe` on Windows and from the AppImage in WSLg, and run the core flow by hand, real clipboard included.
 - [ ] Automatic backups: a daily copy of the library in `backups/`, keeping the last 30. Restore one from Settings › Storage, after copying the current library aside.
 - [ ] Recently deleted: deleting a prompt keeps it for 30 days with Restore and Empty. This is the first real schema migration (`DeletedAt`), with a test that upgrades a v0.1 database.
