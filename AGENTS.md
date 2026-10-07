@@ -46,8 +46,15 @@ These are the working rules for agents in this repo. Prompuff is a local-first d
 ## Commands
 
 - `dotnet build` and `dotnet test` from the repo root.
-- `dotnet run --project src/Prompuff.App` runs the app.
-- `dotnet publish src/Prompuff.App -c Release -r win-x64` (or `linux-x64`) publishes a self-contained build; the README covers `vpk pack`.
+- `dotnet run --project src/Prompuff.App` runs the app. Set `PROMPUFF_DATA_DIR` to a scratch folder so development never touches the real library.
+- `PROMPUFF_SCREENSHOTS=<folder> dotnet test tests/Prompuff.App.Tests` saves a PNG of every state the headless UI tests visit. Look at them after UI changes.
+- `dotnet tool restore` installs the pinned Velopack CLI (`dotnet vpk …`). The README has the publish and pack commands; `.github/workflows/release.yml` is the source of truth.
+
+## Avalonia notes
+
+- Avalonia 12: compiled bindings are on, so every template needs `x:DataType`. Don't put `x:DataType` on the same element as the `DataContext` binding that switches to that type; wrap it instead.
+- Clipboard goes through `IClipboardService` (Avalonia's `SetTextAsync` / `TryGetTextAsync`), never a platform API.
+- The Windows title bar uses `PrompuffWindowDecorations` in `Themes/Controls.axaml`, which hides Avalonia's drawn title text. Keep `TitleBarInset` in sync with the caption buttons.
 
 ## Working style
 
