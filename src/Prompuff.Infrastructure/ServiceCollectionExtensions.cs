@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
             paths.GetDatabasePath(),
             paths.GetBackupDirectory(),
             provider.GetRequiredService<ILogger<SqliteDatabase>>()));
+        services.AddSingleton<LibraryBackups>();
 
         services.AddSingleton<IPromptRepository, SqlitePromptRepository>();
         services.AddSingleton<ICollectionRepository, SqliteCollectionRepository>();

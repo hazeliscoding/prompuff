@@ -31,6 +31,7 @@ public sealed partial class StartupErrorViewModel(string message, string? detail
 public sealed partial class MainWindowViewModel : ObservableObject
 {
     private readonly SqliteDatabase _database;
+    private readonly LibraryBackups _backups;
     private readonly Func<PromptEditorViewModel> _createEditor;
     private readonly IPlatformLauncher _launcher;
     private readonly IAppDataPathProvider _paths;
@@ -41,6 +42,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public MainWindowViewModel(
         SqliteDatabase database,
+        LibraryBackups backups,
         SidebarViewModel sidebar,
         LibraryViewModel library,
         SettingsViewModel settings,
@@ -57,6 +59,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ILogger<MainWindowViewModel> logger)
     {
         _database = database;
+        _backups = backups;
         Sidebar = sidebar;
         Library = library;
         Settings = settings;
@@ -121,6 +124,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
 
         _ready = true;
+        _backups.StartDailySchedule();
         await RefreshAllAsync();
         _ = Settings.CheckOnStartupAsync();
     }

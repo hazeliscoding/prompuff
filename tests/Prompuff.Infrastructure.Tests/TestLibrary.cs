@@ -67,5 +67,8 @@ internal sealed class ManualTimeProvider(DateTimeOffset start) : TimeProvider
 
     public override DateTimeOffset GetUtcNow() => Now;
 
+    // Day boundaries in tests shouldn't depend on the machine's time zone.
+    public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
+
     public void Advance(TimeSpan by) => Now += by;
 }

@@ -99,6 +99,16 @@ internal sealed class AppHarness : IAsyncDisposable
         Dispatcher.UIThread.RunJobs();
     }
 
+    /// <summary>Waits for background work, such as the startup backup, to reach a state.</summary>
+    public async Task WaitForAsync(Func<bool> condition, int timeoutMilliseconds = 5000)
+    {
+        for (var waited = 0; !condition(); waited += 50)
+        {
+            Assert.True(waited < timeoutMilliseconds, "Timed out waiting for the condition.");
+            await SettleAsync(50);
+        }
+    }
+
     public void Screenshot(string name)
     {
         Dispatcher.UIThread.RunJobs();

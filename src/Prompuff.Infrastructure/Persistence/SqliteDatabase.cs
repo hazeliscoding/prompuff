@@ -85,17 +85,32 @@ public sealed class SqliteDatabase
         }
     }
 
+    /// <summary>Copies the library to <paramref name="targetPath"/> with SQLite's online backup, so it's consistent while in use.</summary>
+    public async Task BackUpToAsync(string targetPath, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        CopyTo(connection, targetPath);
+    }
+
     private void BackUp(SqliteConnection connection, int schemaVersion)
     {
-        Directory.CreateDirectory(BackupDirectory);
         var stamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
-        var target = Path.Combine(BackupDirectory, $"prompuff-schema{schemaVersion}-{stamp}.db");
-        using (var backup = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = target, Pooling = false }.ToString()))
-        {
-            connection.BackupDatabase(backup);
-        }
-
+        CopyTo(connection, Path.Combine(BackupDirectory, $"prompuff-schema{schemaVersion}-{stamp}.db"));
         _logger.LogInformation("Backed up the library before migrating from schema {Version}", schemaVersion);
+    }
+
+    private static void CopyTo(SqliteConnection connection, string targetPath)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(targetPath))!);
+        using var backup = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = targetPath, Pooling = false }.ToString());
+        backup.Open();
+        connection.BackupDatabase(backup);
+
+        // The copy inherits WAL mode, which leaves -wal and -shm files beside it whenever it's opened. A rollback
+        // journal keeps each backup a single file.
+        using var command = backup.CreateCommand();
+        command.CommandText = "PRAGMA journal_mode = DELETE;";
+        command.ExecuteNonQuery();
     }
 
     internal static async Task ExecuteAsync(
