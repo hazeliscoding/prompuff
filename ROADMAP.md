@@ -117,7 +117,7 @@ Trust Prompuff with more than a few prompts: nothing is lost by accident, and se
 
 - [x] Publish v0.1.0 (2026-10-07).
 - [x] Publish v0.1.1 (2026-10-07): hides the full-screen caption button that covered Quick save on Windows.
-- [ ] Publish v0.1.2: checks for updates every time Prompuff opens and keeps a found update in the sidebar.
+- [x] Publish v0.1.2 (2026-10-07): checks for updates every time Prompuff opens and keeps a found update in the sidebar.
 - [ ] Install v0.1.0 from `Prompuff-Setup.exe` on Windows and from the AppImage in WSLg, and run the core flow by hand, real clipboard included.
 - [ ] Automatic backups: a daily copy of the library in `backups/`, keeping the last 30. Restore one from Settings › Storage, after copying the current library aside.
 - [ ] Recently deleted: deleting a prompt keeps it for 30 days with Restore and Empty. This is the first real schema migration (`DeletedAt`), with a test that upgrades a v0.1 database.
