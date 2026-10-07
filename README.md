@@ -11,7 +11,7 @@ Prompuff is a small desktop app for the prompts that actually worked. Save them,
 
 Your prompts stay on your machine. There is no account, no cloud and no telemetry.
 
-> **Status:** v0.1 in progress for Windows x64 and Linux x64. See [ROADMAP.md](ROADMAP.md).
+> **Status:** v0.1 for Windows x64 and Linux x64. macOS (Intel and Apple Silicon) and Linux ARM64 come in v0.3, and [ROADMAP.md](ROADMAP.md) has the road to 1.0.
 
 ![The library: a sidebar with collections and tags, and prompt cards with tags, usefulness and edit times](docs/screenshots/library.png)
 
@@ -33,7 +33,7 @@ Your prompts stay on your machine. There is no account, no cloud and no telemetr
 | Windows x64 (10 and 11) | `Prompuff-Setup.exe`, installed per user with automatic updates |
 | Linux x64 (X11, or Wayland through XWayland) | `Prompuff-linux-x64.AppImage` |
 
-Both are self-contained, so you don't need to install .NET. macOS and Linux ARM64 come later.
+Both are self-contained, so you don't need to install .NET. macOS (Intel and Apple Silicon) and Linux ARM64 come in v0.3.
 
 On Linux:
 
