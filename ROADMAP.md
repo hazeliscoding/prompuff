@@ -25,64 +25,78 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Logging** goes to daily files in `logs/` through a small built-in file logger, so no Serilog. Logs carry prompt IDs, never titles, bodies or notes.
 - **Privacy:** no account, telemetry, analytics or AI calls. The only network request is Velopack's update check against GitHub Releases, which can be turned off in Settings.
 
+## Decisions (2026-10-07)
+
+- **Invariant globalization:** the app runs without ICU (`InvariantGlobalization`), so the AppImage doesn't depend on the host's ICU version. Dates use English month names, which matches the English UI.
+- **Windows title bar:** Avalonia 12 draws the caption buttons when the window extends into the title bar. `PrompuffWindowDecorations` hides the drawn title text that would cover the brand. `TitleBarDecorations` would do this directly, but it isn't in 12.1.3.
+- **Velopack CLI** is pinned in `dotnet-tools.json`, so local packing and CI use the same `vpk` as the NuGet package.
+- **Releases start as drafts.** The tag workflow uploads everything to a draft, and installed copies only see published releases, so nothing reaches users until the owner publishes it.
+- **Release files:** both platforms share one GitHub Release. Velopack's names don't collide (`*-full.nupkg` and `RELEASES` for Windows, `*-linux-full.nupkg` and `RELEASES-linux` for Linux), and the installers are renamed to `Prompuff-Setup.exe`, `Prompuff-win-x64-Portable.zip` and `Prompuff-linux-x64.AppImage`.
+- **UI tests** drive the real main window with Avalonia Headless and Skia against a temporary data folder, on both CI runners. `PROMPUFF_SCREENSHOTS` saves a PNG of each state, and `PROMPUFF_DATA_DIR` keeps any run away from the real library.
+- **Linux smoke test:** the release workflow starts the AppImage under Xvfb with temporary XDG folders, checks that it stays up and creates `prompuff.db` in the data folder, and uploads a screenshot.
+
 ## M0: Foundation
 
-- [ ] Solution with `Prompuff.App`, `.Domain`, `.Application`, `.Infrastructure` and three test projects.
-- [ ] Avalonia shell with MVVM, dependency injection and logging.
-- [ ] `IAppDataPathProvider` for Windows and Linux/XDG, with tests that don't depend on the host machine.
-- [ ] SQLite initialization and the migration runner.
-- [ ] CI that builds and tests on Windows and Linux for every push and pull request.
+- [x] Solution with `Prompuff.App`, `.Domain`, `.Application`, `.Infrastructure` and a test project for each, plus headless UI tests.
+- [x] Avalonia shell with MVVM, dependency injection and logging.
+- [x] `IAppDataPathProvider` for Windows and Linux/XDG, with tests that don't depend on the host machine.
+- [x] SQLite initialization and the migration runner.
+- [x] CI that builds and tests on Windows and Linux for every push and pull request.
 
 **Done when:** the app opens to an empty library on Windows, the database file appears in the platform data folder, and CI is green on both runners.
 
 ## M1: Library
 
-- [ ] Domain models: prompt, collection, tag, version.
-- [ ] Repositories and prompt CRUD: create, edit, delete with confirmation, duplicate, favorite and rating.
-- [ ] Collections: create, rename, delete (prompts become uncategorized), and an Uncategorized view.
-- [ ] Tags: implicit creation, normalization, remove from a prompt, filter by tag.
-- [ ] Search with All, Favorites, Recent, Collection and Tag filters.
-- [ ] Library UI from the design: sidebar, cards and list modes, sorting, empty states.
-- [ ] Quick save dialog that starts from the clipboard.
+- [x] Domain models: prompt, collection, tag, version.
+- [x] Repositories and prompt CRUD: create, edit, delete with confirmation, duplicate, favorite and rating.
+- [x] Collections: create, rename, delete (prompts become uncategorized), and an Uncategorized view.
+- [x] Tags: implicit creation, normalization, remove from a prompt, filter by tag.
+- [x] Search with All, Favorites, Recent, Collection and Tag filters.
+- [x] Library UI from the design: sidebar, cards and list modes, sorting, empty states.
+- [x] Quick save dialog that starts from the clipboard.
 
 **Done when:** you can create, tag, file, favorite, search and delete prompts, close the app, and find them again after reopening.
 
 ## M2: Render and versions
 
-- [ ] `IPromptTemplateService`: extract and render `{{variables}}`.
-- [ ] Render tab: fill variables, live preview with filled and missing values marked, copy.
-- [ ] `IClipboardService` on Avalonia's clipboard.
-- [ ] Versioning on save, no versions for no-op saves.
-- [ ] History tab: version list, line diff and full text, restore, duplicate a version.
+- [x] `IPromptTemplateService`: extract and render `{{variables}}`.
+- [x] Render tab: fill variables, live preview with filled and missing values marked, copy.
+- [x] `IClipboardService` on Avalonia's clipboard.
+- [x] Versioning on save, no versions for no-op saves.
+- [x] History tab: version list, line diff and full text, restore, duplicate a version.
 
 **Done when:** a prompt with variables renders and copies, and editing, saving and restoring builds a history you can read.
 
 ## M3: Portability and settings
 
-- [ ] Markdown export of one prompt, a collection and the whole library.
-- [ ] Markdown import of one or more files, with friendly errors for files it can't read.
-- [ ] Settings: Appearance (Dark, Light, System; Puff on or off), Storage (data folder, open folder), Import and export, Updates, Keyboard shortcuts, About.
-- [ ] Paths checked on a real Windows install and a real Linux desktop.
+- [x] Markdown export of one prompt, a collection and the whole library.
+- [x] Markdown import of one or more files, with friendly errors for files it can't read.
+- [x] Settings: Appearance (Dark, Light, System; Puff on or off), Storage (data folder, open folder), Import and export, Updates, Keyboard shortcuts, About.
+- [x] Paths checked on Windows: a development run and the Velopack portable build both wrote to the data folder, and the update check ran.
+- [x] Paths checked on Linux under Xvfb in CI: the AppImage created `prompuff.db` in `$XDG_DATA_HOME/prompuff` and its config folder in `$XDG_CONFIG_HOME/prompuff`.
+- [ ] Paths checked on a physical Linux desktop.
 
 **Done when:** a prompt survives an export, a delete and an import unchanged, and the settings persist across restarts.
 
 ## M4: Distribution
 
-- [ ] Velopack startup hook and `IUpdateService`.
-- [ ] Self-contained `win-x64` and `linux-x64` publishing.
-- [ ] `Prompuff-Setup.exe` from Velopack.
-- [ ] `Prompuff-linux-x64.AppImage` from Velopack.
-- [ ] Release workflow: a pushed `v*` tag builds both platforms and publishes a GitHub Release with the Velopack update files.
+- [x] Velopack startup hook and `IUpdateService`.
+- [x] Self-contained `win-x64` and `linux-x64` publishing.
+- [x] `Prompuff-Setup.exe` from Velopack.
+- [x] `Prompuff-linux-x64.AppImage` from Velopack.
+- [x] Release workflow: a pushed `v*` tag builds both platforms and opens a draft GitHub Release with the Velopack update files. A manual run (2026-10-07) produced both artifacts.
 
 **Done when:** a dry run of the release workflow produces both artifacts, and an installed build finds an update from GitHub Releases.
 
 ## M5: Polish and v0.1
 
-- [ ] Keyboard shortcuts and the command palette.
-- [ ] Empty states, confirmations and error messages in Prompuff's voice.
-- [ ] Tests for template rendering, versioning, tags, import/export and paths.
-- [ ] README: build, run, test, package, release, storage and privacy.
-- [ ] Smoke test on Windows and Linux: save a prompt, render it, copy it, restart, and find it again.
+- [x] Keyboard shortcuts and the command palette.
+- [x] Empty states, confirmations and error messages in Prompuff's voice.
+- [x] Tests for template rendering, versioning, tags, import/export and paths.
+- [x] README: build, run, test, package, release, storage and privacy.
+- [x] Automated smoke test on both CI runners: the headless UI tests save a prompt, render and copy it, restart, and find it again.
+- [ ] Manual smoke test on a Windows install from `Prompuff-Setup.exe` and on a Linux desktop from the AppImage, including the real clipboard.
+- [ ] Publish v0.1.0, then confirm an installed copy finds a later release through the update check.
 
 **Done when:** a fresh clone builds from the README, and the core flow works on both Windows and Linux.
 
