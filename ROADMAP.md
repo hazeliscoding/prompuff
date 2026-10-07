@@ -130,7 +130,8 @@ Trust Prompuff with more than a few prompts: nothing is lost by accident, search
 - [x] Remembered variable values per prompt, stored locally, with a Clear values button.
 - [x] Share: an Export button in the library header saves what the library shows (all, a collection, a tag, Favorites, Recent or a search) as one `.zip` of Markdown files. Settings › Import and export saves the whole library the same way.
 - [x] Import a `.zip` as well as `.md` files. Entries are read in memory with the same 5 MB limit per prompt and never unpacked to disk. Prompts whose title and body match one in the library are skipped, and the result says how many.
-- [ ] Publish v0.2.0 (tagged 2026-10-07) and confirm the installs from the first item update to it with the library intact.
+- [x] Publish v0.2.0 (2026-10-07).
+- [ ] Confirm the installs from the first item update to 0.2.0 with the library intact, on Windows and in WSLg.
 
 **Done when:** an installed 0.1 updates to 0.2 on Windows and Linux with every prompt and version intact, a deleted prompt comes back, searching "cafe" finds "Café", and a `.zip` exported on one machine imports on another with duplicates skipped.
 
