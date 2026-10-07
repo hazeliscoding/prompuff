@@ -16,7 +16,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Schema additions beyond the handoff:** `Prompts.LastOpenedAt` so Recent can include opens, and `PromptVersions.Note` for the version note. Migrations run in order against `PRAGMA user_version`, and the database is copied to `backups/` before a migration touches an existing file.
 - **Tags** are trimmed, lowercased, lose a leading `#`, and turn inner whitespace into `-`. `Angular`, `angular` and ` #angular` are one tag. Tags with no prompts are deleted.
 - **Variables** are `{{ name }}` with letters, digits and underscores, starting with a letter or underscore. Names are case-sensitive. A missing or empty value leaves the original token in the output.
-- **Search** is SQL `LIKE` over title, description, body, notes and tag names, behind `IPromptSearch` so FTS5 can replace it.
+- **Search** is SQL `LIKE` over title, description, body, notes and tag names, behind `IPromptSearch` so FTS5 can replace it. (Replaced by FTS5 in v0.2; see below.)
 - **Markdown format** is YAML-style frontmatter followed by `# Prompt` and `# Notes` sections. The frontmatter reader and writer are hand-written, so there is no YAML dependency.
 - **Quick save intent** maps onto existing fields: "Worked well" sets the rating to 4, "Template" adds the `template` tag, and "Idea" adds the `idea` tag.
 - **Duplicate, not fork,** for v0.1. The copy starts its own history at v1. `ParentPromptId` and lineage come in v0.4.
@@ -38,6 +38,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Sharing is file-based.** Prompts move between machines and people as one `.zip` of the same Markdown files. An import always makes independent copies with their own history, skips prompts whose title and body match one already in the library, and keeps the favorites and ratings in the files. There are no share links or shared libraries.
 - **Backups** are made the first time Prompuff opens each local day, and checked again every hour while it runs. Only daily backups are pruned to 30; copies made before an update or a restore stay until you delete them. Each backup uses a rollback journal, so it's one `.db` file with no `-wal` or `-shm` beside it. A restore checks the file first, then copies it over the open library with SQLite's backup API and migrates it if it's older.
 - **Recently deleted** is a `DeletedAt` time on the prompt. Deleting and restoring are metadata changes: no version, and `UpdatedAt` stays put. The sidebar shows Recently deleted only while it holds prompts. A deleted prompt can't be opened until it's restored, and prompts deleted more than 30 days ago are removed for good when Prompuff opens.
+- **Search uses FTS5** with the `unicode61 remove_diacritics 2` tokenizer, so matching ignores case and accents. Each word is a quoted prefix phrase, and `bm25` ranks results with weights favoring the title, then tags, then description. Infix matches ("gular" finding "Angular") are gone, which is the trade for ranking and accents. The index is keyed by `PromptId`, not rowid, and triggers keep it current. Words with no letters or digits still match literally with `LIKE`.
 
 ## Decisions: the road to 1.0 (2026-10-07)
 
@@ -124,7 +125,7 @@ Trust Prompuff with more than a few prompts: nothing is lost by accident, search
 - [ ] Install v0.1.0 from `Prompuff-Setup.exe` on Windows and from the AppImage in WSLg, and run the core flow by hand, real clipboard included.
 - [x] Automatic backups: a daily copy of the library in `backups/`, keeping the last 30. Restore one from Settings › Storage, after copying the current library aside.
 - [x] Recently deleted: deleting a prompt keeps it for 30 days with Restore and Empty. This is the first real schema migration (`DeletedAt`), with a test that upgrades a v0.1 database.
-- [ ] SQLite FTS5 search behind `IPromptSearch`: ranked results, prefix matches, and case- and accent-insensitive matching for non-ASCII text, which `LIKE` can't do.
+- [x] SQLite FTS5 search behind `IPromptSearch`: ranked results, prefix matches, and case- and accent-insensitive matching for non-ASCII text, which `LIKE` can't do.
 - [ ] Remembered variable values per prompt, stored locally, with a Clear values button.
 - [ ] Share: an Export button in the library header saves what the library shows (all, a collection, a tag, Favorites, Recent or a search) as one `.zip` of Markdown files. Settings › Import and export saves the whole library the same way.
 - [ ] Import a `.zip` as well as `.md` files. Entries are read in memory with the same 5 MB limit per prompt and never unpacked to disk. Prompts whose title and body match one in the library are skipped, and the result says how many.
