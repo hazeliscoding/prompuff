@@ -228,6 +228,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private Task GoToLibrary() => ShowLibraryAsync(null);
 
+    [RelayCommand]
+    private async Task OpenUpdates()
+    {
+        await ShowSettingsAsync();
+        Settings.Select(SettingsSection.Updates);
+    }
+
     partial void OnSearchTextChanged(string value)
     {
         Library.SearchText = value;

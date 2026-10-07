@@ -118,6 +118,16 @@
           </Button>
 
           <StackPanel DockPanel.Dock="Bottom" Spacing="1">
+            <Button Classes="nav"
+                    Foreground="{DynamicResource AccentTextBrush}"
+                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenUpdatesCommand}"
+                    IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Settings.CanInstallUpdate}"
+                    ToolTip.Tip="Install it from Settings › Updates">
+              <StackPanel Orientation="Horizontal" Spacing="9">
+                <c:Icon Kind="Download" />
+                <TextBlock Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Settings.AvailableUpdateLabel}" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+            </Button>
             <Button Classes="nav" Classes.active="{Binding IsSettingsActive}" Command="{Binding OpenSettingsCommand}">
               <StackPanel Orientation="Horizontal" Spacing="9">
                 <c:Icon Kind="Settings" />

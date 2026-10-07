@@ -140,6 +140,10 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _canInstallUpdate;
 
+    /// <summary>Shown in the sidebar footer while an update is waiting to be installed.</summary>
+    [ObservableProperty]
+    private string _availableUpdateLabel = string.Empty;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDownloading))]
     private int _downloadProgress;
@@ -407,6 +411,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         _availableUpdate = update;
         CanInstallUpdate = true;
+        AvailableUpdateLabel = $"Prompuff {update.Version} is available";
         UpdateStatus = $"Prompuff {update.Version} is available.";
     }
 
