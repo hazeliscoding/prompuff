@@ -24,11 +24,12 @@ Your prompts stay on your machine. There is no account, no cloud and no telemetr
 ## What it does
 
 - **Keeps** prompts with a title, description, body, notes ("why this worked"), a collection, tags, a favorite flag and a 1–5 usefulness rating.
-- **Renders** `{{variable_name}}` placeholders. Fill in the values, watch the preview update, and copy the result. Unfilled variables stay as `{{tokens}}`.
+- **Renders** `{{variable_name}}` placeholders. Fill in the values, watch the preview update, and copy the result. Unfilled variables stay as `{{tokens}}`, and each prompt remembers its values until you clear them.
 - **Versions** every saved change to the title, description, body or notes. The History tab shows a line diff, and Restore brings an old version back as a new one.
-- **Finds** prompts fast: search across titles, descriptions, bodies, notes and tags, or type `#tag`. Filter by Favorites, Recent, a collection or a tag.
+- **Finds** prompts fast: ranked search across titles, descriptions, bodies, notes and tags that ignores case and accents ("cafe" finds "Café"), or type `#tag`. Filter by Favorites, Recent, a collection or a tag.
 - **Captures** quickly: Quick save (Ctrl+Shift+S) starts from whatever is on your clipboard.
-- **Travels** as plain Markdown with a small metadata block, one file per prompt. Import and export never need Prompuff on the other end.
+- **Travels** as plain Markdown with a small metadata block. Export what you're looking at as one `.zip` for another machine or a teammate; importing it skips prompts you already have.
+- **Forgives**: deleted prompts wait 30 days in Recently deleted, and the library is backed up once a day.
 
 ## Supported platforms
 
