@@ -37,6 +37,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Update checks** run every time Prompuff opens while the setting is on, with no daily limit. A found update stays in the sidebar footer until it's installed, because a toast is easy to miss at startup.
 - **Sharing is file-based.** Prompts move between machines and people as one `.zip` of the same Markdown files. An import always makes independent copies with their own history, skips prompts whose title and body match one already in the library, and keeps the favorites and ratings in the files. There are no share links or shared libraries.
 - **Backups** are made the first time Prompuff opens each local day, and checked again every hour while it runs. Only daily backups are pruned to 30; copies made before an update or a restore stay until you delete them. Each backup uses a rollback journal, so it's one `.db` file with no `-wal` or `-shm` beside it. A restore checks the file first, then copies it over the open library with SQLite's backup API and migrates it if it's older.
+- **Recently deleted** is a `DeletedAt` time on the prompt. Deleting and restoring are metadata changes: no version, and `UpdatedAt` stays put. The sidebar shows Recently deleted only while it holds prompts. A deleted prompt can't be opened until it's restored, and prompts deleted more than 30 days ago are removed for good when Prompuff opens.
 
 ## Decisions: the road to 1.0 (2026-10-07)
 
@@ -122,7 +123,7 @@ Trust Prompuff with more than a few prompts: nothing is lost by accident, search
 - [x] Publish v0.1.2 (2026-10-07): checks for updates every time Prompuff opens and keeps a found update in the sidebar.
 - [ ] Install v0.1.0 from `Prompuff-Setup.exe` on Windows and from the AppImage in WSLg, and run the core flow by hand, real clipboard included.
 - [x] Automatic backups: a daily copy of the library in `backups/`, keeping the last 30. Restore one from Settings › Storage, after copying the current library aside.
-- [ ] Recently deleted: deleting a prompt keeps it for 30 days with Restore and Empty. This is the first real schema migration (`DeletedAt`), with a test that upgrades a v0.1 database.
+- [x] Recently deleted: deleting a prompt keeps it for 30 days with Restore and Empty. This is the first real schema migration (`DeletedAt`), with a test that upgrades a v0.1 database.
 - [ ] SQLite FTS5 search behind `IPromptSearch`: ranked results, prefix matches, and case- and accent-insensitive matching for non-ASCII text, which `LIKE` can't do.
 - [ ] Remembered variable values per prompt, stored locally, with a Clear values button.
 - [ ] Share: an Export button in the library header saves what the library shows (all, a collection, a tag, Favorites, Recent or a search) as one `.zip` of Markdown files. Settings › Import and export saves the whole library the same way.
