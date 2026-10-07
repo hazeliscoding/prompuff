@@ -18,6 +18,12 @@
             <TextBlock Text="Clear filter" />
           </StackPanel>
         </Button>
+        <Button Grid.Column="2" Classes="danger sm" VerticalAlignment="Center" IsVisible="{Binding CanEmpty}" Command="{Binding EmptyRecentlyDeletedCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <c:Icon Kind="Trash2" Size="12" />
+            <TextBlock Text="Empty" />
+          </StackPanel>
+        </Button>
         <ComboBox Grid.Column="2" Width="160" VerticalAlignment="Center" IsVisible="{Binding CanSort}"
                   ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSort}" ToolTip.Tip="Sort">
           <ComboBox.ItemTemplate>
@@ -55,13 +61,13 @@
         <TextBlock Classes="section-title" Text="{Binding EmptyTitle}" HorizontalAlignment="Center" />
         <TextBlock Classes="faint" Text="{Binding EmptyMessage}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="380" />
         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,4,0,0">
-          <Button Classes="primary" Command="{Binding NewPromptCommand}">
+          <Button Classes="primary" Command="{Binding NewPromptCommand}" IsVisible="{Binding !IsDeletedView}">
             <StackPanel Orientation="Horizontal" Spacing="6">
               <c:Icon Kind="Plus" Size="13" StrokeWidth="2" />
               <TextBlock Text="New prompt" />
             </StackPanel>
           </Button>
-          <Button Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenQuickSaveCommand}">
+          <Button Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenQuickSaveCommand}" IsVisible="{Binding !IsDeletedView}">
             <StackPanel Orientation="Horizontal" Spacing="6">
               <c:Icon Kind="ClipboardPlus" Size="13" />
               <TextBlock Text="Quick save from clipboard" />
@@ -87,7 +93,7 @@
                     <c:ToneDot Tone="{Binding CollectionTone}" VerticalAlignment="Top" Margin="0,6,0,0" ToolTip.Tip="{Binding CollectionName}" />
                     <TextBlock Grid.Column="1" Classes="card-title" Text="{Binding Title}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
                     <Button Grid.Column="2" Classes="ghost icon sm" Classes.active="{Binding IsFavorite}" Margin="0,-3,-4,0" VerticalAlignment="Top"
-                            Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="Favorite">
+                            Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="Favorite" IsVisible="{Binding !IsDeleted}">
                       <c:Icon Kind="Heart" Size="14" IsFilled="{Binding IsFavorite}" />
                     </Button>
                   </Grid>
@@ -110,8 +116,14 @@
                   </ItemsControl>
                   <Border BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,2,0,0">
                     <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
-                      <c:RatingPips Value="{Binding Rating, Mode=OneWay}" ToolTip.Tip="Usefulness" />
-                      <TextBlock Grid.Column="1" Classes="compact faint" Text="{Binding RatingLabel}" VerticalAlignment="Center" />
+                      <c:RatingPips Value="{Binding Rating, Mode=OneWay}" ToolTip.Tip="Usefulness" IsVisible="{Binding !IsDeleted}" />
+                      <TextBlock Grid.Column="1" Classes="compact faint" Text="{Binding RatingLabel}" VerticalAlignment="Center" IsVisible="{Binding !IsDeleted}" />
+                      <Button Grid.ColumnSpan="2" Classes="sm" Margin="0,-2" Command="{Binding RestoreCommand}" IsVisible="{Binding IsDeleted}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                          <c:Icon Kind="Undo2" Size="12" />
+                          <TextBlock Text="Restore" />
+                        </StackPanel>
+                      </Button>
                       <TextBlock Grid.Column="3" Classes="data faint" Text="{Binding EditedLabel}" ToolTip.Tip="{Binding EditedTooltip}" VerticalAlignment="Center" />
                     </Grid>
                   </Border>
@@ -132,7 +144,7 @@
               <TextBlock Grid.Column="1" Classes="label" Text="PROMPT" VerticalAlignment="Center" />
               <TextBlock Grid.Column="2" Classes="label" Text="TAGS" VerticalAlignment="Center" />
               <TextBlock Grid.Column="3" Classes="label" Text="USEFULNESS" VerticalAlignment="Center" />
-              <TextBlock Grid.Column="4" Classes="label" Text="EDITED" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="4" Classes="label" Text="{Binding EditedColumn}" VerticalAlignment="Center" />
             </Grid>
             <ItemsControl ItemsSource="{Binding Items}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0">
               <ItemsControl.ItemTemplate>
@@ -158,8 +170,11 @@
                       </ItemsControl>
                       <c:RatingPips Grid.Column="3" Value="{Binding Rating, Mode=OneWay}" ToolTip.Tip="{Binding RatingLabel}" HorizontalAlignment="Left" />
                       <TextBlock Grid.Column="4" Classes="data faint" Text="{Binding EditedLabel}" ToolTip.Tip="{Binding EditedTooltip}" VerticalAlignment="Center" />
-                      <Button Grid.Column="5" Classes="ghost icon sm" Classes.active="{Binding IsFavorite}" Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="Favorite">
+                      <Button Grid.Column="5" Classes="ghost icon sm" Classes.active="{Binding IsFavorite}" Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="Favorite" IsVisible="{Binding !IsDeleted}">
                         <c:Icon Kind="Heart" Size="14" IsFilled="{Binding IsFavorite}" />
+                      </Button>
+                      <Button Grid.Column="5" Classes="ghost icon sm" Command="{Binding RestoreCommand}" ToolTip.Tip="Restore" IsVisible="{Binding IsDeleted}">
+                        <c:Icon Kind="Undo2" Size="14" />
                       </Button>
                     </Grid>
                   </Button>

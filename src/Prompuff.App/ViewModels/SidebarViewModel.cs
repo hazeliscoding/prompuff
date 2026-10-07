@@ -119,6 +119,7 @@ public sealed partial class SidebarViewModel : ObservableObject
         Favorites = new NavItemViewModel("Favorites", "Heart", new LibraryFilter(PromptFilterKind.Favorites), navigator);
         Recent = new NavItemViewModel("Recent", "Clock", new LibraryFilter(PromptFilterKind.Recent), navigator);
         NavItems = [All, Favorites, Recent];
+        RecentlyDeleted = new NavItemViewModel("Recently deleted", "Trash2", new LibraryFilter(PromptFilterKind.Deleted), navigator);
     }
 
     public Navigator Navigator { get; }
@@ -126,12 +127,18 @@ public sealed partial class SidebarViewModel : ObservableObject
     public NavItemViewModel Favorites { get; }
     public NavItemViewModel Recent { get; }
     public IReadOnlyList<NavItemViewModel> NavItems { get; }
+
+    /// <summary>Shown at the bottom of the sidebar while it holds prompts or is open.</summary>
+    public NavItemViewModel RecentlyDeleted { get; }
     public ObservableCollection<CollectionItemViewModel> Collections { get; } = [];
     public ObservableCollection<TagItemViewModel> Tags { get; } = [];
     public bool HasTags => Tags.Count > 0;
 
     [ObservableProperty]
     private bool _isSettingsActive;
+
+    [ObservableProperty]
+    private bool _showRecentlyDeleted;
 
     [ObservableProperty]
     private string _footer = "Stored on this device";
@@ -142,6 +149,7 @@ public sealed partial class SidebarViewModel : ObservableObject
         All.Count = counts.All;
         Favorites.Count = counts.Favorites;
         Recent.Count = Math.Min(counts.All, PromptQuery.RecentLimit);
+        RecentlyDeleted.Count = counts.Deleted;
         Footer = $"Stored on this device · {Format.Count(counts.All, "prompt")}";
 
         Collections.Clear();
@@ -253,6 +261,9 @@ public sealed partial class SidebarViewModel : ObservableObject
         {
             item.IsActive = _activeFilter is { } filter && filter.Kind == item.Filter.Kind && filter.Kind is not PromptFilterKind.Collection and not PromptFilterKind.Uncategorized and not PromptFilterKind.Tag;
         }
+
+        RecentlyDeleted.IsActive = _activeFilter is { Kind: PromptFilterKind.Deleted };
+        ShowRecentlyDeleted = RecentlyDeleted.Count > 0 || RecentlyDeleted.IsActive;
 
         foreach (var collection in Collections)
         {

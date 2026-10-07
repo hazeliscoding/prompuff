@@ -128,6 +128,13 @@
                 <TextBlock Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Settings.AvailableUpdateLabel}" TextTrimming="CharacterEllipsis" />
               </StackPanel>
             </Button>
+            <Button Classes="nav" Classes.active="{Binding RecentlyDeleted.IsActive}" Command="{Binding RecentlyDeleted.SelectCommand}" IsVisible="{Binding ShowRecentlyDeleted}">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <c:Icon Kind="Trash2" />
+                <TextBlock Grid.Column="1" Margin="9,0,0,0" Text="Recently deleted" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Classes="data faint" Text="{Binding RecentlyDeleted.Count}" VerticalAlignment="Center" />
+              </Grid>
+            </Button>
             <Button Classes="nav" Classes.active="{Binding IsSettingsActive}" Command="{Binding OpenSettingsCommand}">
               <StackPanel Orientation="Horizontal" Spacing="9">
                 <c:Icon Kind="Settings" />
