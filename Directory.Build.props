@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Version>0.1.0</Version>
+    <Authors>Hazel Granados</Authors>
+    <Product>Prompuff</Product>
+    <Copyright>Copyright (c) 2026 Hazel Granados</Copyright>
+    <RepositoryUrl>https://github.com/hazeliscoding/prompuff</RepositoryUrl>
+    <NeutralLanguage>en</NeutralLanguage>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Prompuff.Application/Prompuff.Application.csproj" />
+    <Project Path="src/Prompuff.Domain/Prompuff.Domain.csproj" />
+    <Project Path="src/Prompuff.Infrastructure/Prompuff.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Prompuff.Application.Tests/Prompuff.Application.Tests.csproj" />
+    <Project Path="tests/Prompuff.Domain.Tests/Prompuff.Domain.Tests.csproj" />
+    <Project Path="tests/Prompuff.Infrastructure.Tests/Prompuff.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>
