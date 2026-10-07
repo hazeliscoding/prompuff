@@ -305,6 +305,15 @@ public sealed partial class PromptEditorViewModel : ObservableObject
                 Id = created.Id;
                 IsNew = false;
                 _loading = false;
+
+                // Keep values typed before the first save for when the prompt is opened again.
+                var cached = _valuesCache.For(created.Id);
+                foreach (var (name, value) in _values)
+                {
+                    cached[name] = value;
+                }
+
+                _values = cached;
                 AfterSave(created.Title, created.UpdatedAt, 1, created: true, quiet);
                 await LoadVersionsAsync();
                 return true;
