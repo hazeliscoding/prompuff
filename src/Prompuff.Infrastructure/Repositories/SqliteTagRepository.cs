@@ -12,7 +12,7 @@ public sealed class SqliteTagRepository(SqliteDatabase database) : ITagRepositor
         await using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT t.Name, COUNT(pt.PromptId) AS Uses
-            FROM Tags t JOIN PromptTags pt ON pt.TagId = t.Id
+            FROM Tags t JOIN PromptTags pt ON pt.TagId = t.Id JOIN Prompts p ON p.Id = pt.PromptId AND p.DeletedAt IS NULL
             GROUP BY t.Id, t.Name
             ORDER BY Uses DESC, t.Name;
             """;

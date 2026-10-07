@@ -14,7 +14,7 @@ public sealed class SqliteCollectionRepository(SqliteDatabase database) : IColle
         await using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT c.Id, c.Name, COUNT(p.Id)
-            FROM Collections c LEFT JOIN Prompts p ON p.CollectionId = c.Id
+            FROM Collections c LEFT JOIN Prompts p ON p.CollectionId = c.Id AND p.DeletedAt IS NULL
             GROUP BY c.Id, c.Name
             ORDER BY c.Name COLLATE NOCASE;
             """;

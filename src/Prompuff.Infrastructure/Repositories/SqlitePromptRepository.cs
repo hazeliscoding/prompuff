@@ -10,7 +10,7 @@ namespace Prompuff.Infrastructure.Repositories;
 public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRepository
 {
     private const string PromptColumns =
-        "Id, Title, Description, Body, Notes, IsFavorite, Rating, CollectionId, CreatedAt, UpdatedAt, LastOpenedAt";
+        "Id, Title, Description, Body, Notes, IsFavorite, Rating, CollectionId, CreatedAt, UpdatedAt, LastOpenedAt, DeletedAt";
 
     private const string VersionColumns =
         "Id, PromptId, VersionNumber, Title, Description, Body, Notes, Note, SavedAt";
@@ -46,7 +46,7 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
             command.Transaction = transaction;
             command.CommandText = $"""
                 INSERT INTO Prompts ({PromptColumns})
-                VALUES ($id, $title, $description, $body, $notes, $favorite, $rating, $collection, $created, $updated, $opened);
+                VALUES ($id, $title, $description, $body, $notes, $favorite, $rating, $collection, $created, $updated, $opened, $deleted);
                 """;
             AddPromptParameters(command, prompt);
             await command.ExecuteNonQueryAsync(cancellationToken);
@@ -69,7 +69,7 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
                 UPDATE Prompts
                 SET Title = $title, Description = $description, Body = $body, Notes = $notes,
                     IsFavorite = $favorite, Rating = $rating, CollectionId = $collection,
-                    CreatedAt = $created, UpdatedAt = $updated, LastOpenedAt = $opened
+                    CreatedAt = $created, UpdatedAt = $updated, LastOpenedAt = $opened, DeletedAt = $deleted
                 WHERE Id = $id;
                 """;
             AddPromptParameters(command, prompt);
@@ -103,6 +103,24 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
 
         await DeleteOrphanTagsAsync(connection, transaction, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task<int> PurgeDeletedAsync(DateTimeOffset? deletedBefore, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await database.OpenAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        int purged;
+        await using (var command = connection.CreateCommand())
+        {
+            command.Transaction = transaction;
+            command.CommandText = "DELETE FROM Prompts WHERE DeletedAt IS NOT NULL AND ($before IS NULL OR DeletedAt < $before);";
+            command.With("$before", SqlValues.TimeOrNull(deletedBefore));
+            purged = await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await DeleteOrphanTagsAsync(connection, transaction, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return purged;
     }
 
     public async Task<IReadOnlyList<PromptVersion>> GetVersionsAsync(Guid promptId, CancellationToken cancellationToken = default)
@@ -156,15 +174,16 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
         await using var connection = await database.OpenAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT COUNT(*),
-                   COALESCE(SUM(IsFavorite), 0),
-                   COALESCE(SUM(CASE WHEN CollectionId IS NULL THEN 1 ELSE 0 END), 0),
-                   (SELECT COUNT(*) FROM PromptVersions)
+            SELECT COALESCE(SUM(CASE WHEN DeletedAt IS NULL THEN 1 ELSE 0 END), 0),
+                   COALESCE(SUM(CASE WHEN DeletedAt IS NULL THEN IsFavorite ELSE 0 END), 0),
+                   COALESCE(SUM(CASE WHEN DeletedAt IS NULL AND CollectionId IS NULL THEN 1 ELSE 0 END), 0),
+                   (SELECT COUNT(*) FROM PromptVersions v JOIN Prompts p ON p.Id = v.PromptId WHERE p.DeletedAt IS NULL),
+                   COALESCE(SUM(CASE WHEN DeletedAt IS NOT NULL THEN 1 ELSE 0 END), 0)
             FROM Prompts;
             """;
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         await reader.ReadAsync(cancellationToken);
-        return new LibraryCounts(reader.GetInt32(0), reader.GetInt32(1), reader.GetInt32(2), reader.GetInt32(3));
+        return new LibraryCounts(reader.GetInt32(0), reader.GetInt32(1), reader.GetInt32(2), reader.GetInt32(3), reader.GetInt32(4));
     }
 
     private static Prompt ReadPrompt(SqliteDataReader reader)
@@ -175,6 +194,7 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
             CreatedAt = reader.ReadTime(8),
             UpdatedAt = reader.ReadTime(9),
             LastOpenedAt = reader.ReadTimeOrNull(10),
+            DeletedAt = reader.ReadTimeOrNull(11),
             IsFavorite = reader.GetInt64(5) != 0,
             Rating = reader.ReadIntOrNull(6),
             CollectionId = reader.ReadIdOrNull(7),
@@ -194,7 +214,8 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
             .With("$collection", SqlValues.IdOrNull(prompt.CollectionId))
             .With("$created", SqlValues.Time(prompt.CreatedAt))
             .With("$updated", SqlValues.Time(prompt.UpdatedAt))
-            .With("$opened", SqlValues.TimeOrNull(prompt.LastOpenedAt));
+            .With("$opened", SqlValues.TimeOrNull(prompt.LastOpenedAt))
+            .With("$deleted", SqlValues.TimeOrNull(prompt.DeletedAt));
 
     private static async Task<IReadOnlyList<string>> ReadTagsAsync(SqliteConnection connection, Guid promptId, CancellationToken cancellationToken)
     {

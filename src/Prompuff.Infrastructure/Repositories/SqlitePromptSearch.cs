@@ -21,13 +21,13 @@ public sealed class SqlitePromptSearch(SqliteDatabase database) : IPromptSearch
         await using var command = connection.CreateCommand();
 
         var sql = new StringBuilder($"""
-            SELECT p.Id, p.Title, p.Description, p.IsFavorite, p.Rating, p.CollectionId, p.CreatedAt, p.UpdatedAt, p.LastOpenedAt,
+            SELECT p.Id, p.Title, p.Description, p.IsFavorite, p.Rating, p.CollectionId, p.CreatedAt, p.UpdatedAt, p.LastOpenedAt, p.DeletedAt,
                    (SELECT group_concat(Name, char(31)) FROM (
                         SELECT t.Name FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId
                         WHERE pt.PromptId = p.Id ORDER BY pt.Position, t.Name)) AS TagNames
             FROM Prompts p
-            WHERE 1 = 1
             """);
+        sql.Append(query.Filter == PromptFilterKind.Deleted ? " WHERE p.DeletedAt IS NOT NULL" : " WHERE p.DeletedAt IS NULL");
 
         switch (query.Filter)
         {
@@ -74,12 +74,17 @@ public sealed class SqlitePromptSearch(SqliteDatabase database) : IPromptSearch
         }
 
         const string activity = "MAX(p.UpdatedAt, COALESCE(p.LastOpenedAt, p.UpdatedAt)) DESC";
-        sql.Append(query.Filter == PromptFilterKind.Recent ? activity : query.Sort switch
+        sql.Append(query.Filter switch
         {
-            PromptSort.Title => "p.Title COLLATE NOCASE, p.UpdatedAt DESC",
-            PromptSort.Usefulness => "COALESCE(p.Rating, 0) DESC, p.UpdatedAt DESC",
-            PromptSort.RecentActivity => activity,
-            _ => "p.UpdatedAt DESC",
+            PromptFilterKind.Recent => activity,
+            PromptFilterKind.Deleted => "p.DeletedAt DESC",
+            _ => query.Sort switch
+            {
+                PromptSort.Title => "p.Title COLLATE NOCASE, p.UpdatedAt DESC",
+                PromptSort.Usefulness => "COALESCE(p.Rating, 0) DESC, p.UpdatedAt DESC",
+                PromptSort.RecentActivity => activity,
+                _ => "p.UpdatedAt DESC",
+            },
         });
 
         if (query.Filter == PromptFilterKind.Recent)
@@ -110,7 +115,8 @@ public sealed class SqlitePromptSearch(SqliteDatabase database) : IPromptSearch
         CreatedAt = reader.ReadTime(6),
         UpdatedAt = reader.ReadTime(7),
         LastOpenedAt = reader.ReadTimeOrNull(8),
-        Tags = reader.ReadTextOrNull(9)?.Split(TagSeparator, StringSplitOptions.RemoveEmptyEntries) ?? [],
+        DeletedAt = reader.ReadTimeOrNull(9),
+        Tags = reader.ReadTextOrNull(10)?.Split(TagSeparator, StringSplitOptions.RemoveEmptyEntries) ?? [],
     };
 
     private static List<string> SplitTerms(string? text) =>

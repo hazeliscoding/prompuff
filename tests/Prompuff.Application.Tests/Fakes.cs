@@ -46,6 +46,17 @@ internal sealed class InMemoryPromptRepository : IPromptRepository
         return Task.CompletedTask;
     }
 
+    public Task<int> PurgeDeletedAsync(DateTimeOffset? deletedBefore, CancellationToken cancellationToken = default)
+    {
+        var purged = _prompts.Values.Where(p => p.DeletedAt is { } deleted && (deletedBefore is null || deleted < deletedBefore)).Select(p => p.Id).ToList();
+        foreach (var id in purged)
+        {
+            DeleteAsync(id, cancellationToken);
+        }
+
+        return Task.FromResult(purged.Count);
+    }
+
     public Task<IReadOnlyList<PromptVersion>> GetVersionsAsync(Guid promptId, CancellationToken cancellationToken = default) =>
         Task.FromResult<IReadOnlyList<PromptVersion>>(
             _versions.Where(version => version.PromptId == promptId).OrderByDescending(version => version.VersionNumber).ToList());
@@ -60,7 +71,12 @@ internal sealed class InMemoryPromptRepository : IPromptRepository
     }
 
     public Task<LibraryCounts> GetCountsAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult(new LibraryCounts(_prompts.Count, _prompts.Values.Count(p => p.IsFavorite), _prompts.Values.Count(p => p.CollectionId is null), _versions.Count));
+        Task.FromResult(new LibraryCounts(
+            _prompts.Values.Count(p => p.DeletedAt is null),
+            _prompts.Values.Count(p => p.DeletedAt is null && p.IsFavorite),
+            _prompts.Values.Count(p => p.DeletedAt is null && p.CollectionId is null),
+            _versions.Count(v => _prompts[v.PromptId].DeletedAt is null),
+            _prompts.Values.Count(p => p.DeletedAt is not null)));
 
     private static Prompt Copy(Prompt source)
     {
@@ -70,6 +86,7 @@ internal sealed class InMemoryPromptRepository : IPromptRepository
             CreatedAt = source.CreatedAt,
             UpdatedAt = source.UpdatedAt,
             LastOpenedAt = source.LastOpenedAt,
+            DeletedAt = source.DeletedAt,
             IsFavorite = source.IsFavorite,
             Rating = source.Rating,
             CollectionId = source.CollectionId,

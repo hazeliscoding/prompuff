@@ -12,6 +12,7 @@ public sealed record PromptSummary
     public required DateTimeOffset CreatedAt { get; init; }
     public required DateTimeOffset UpdatedAt { get; init; }
     public DateTimeOffset? LastOpenedAt { get; init; }
+    public DateTimeOffset? DeletedAt { get; init; }
 
     public DateTimeOffset LastActivity => LastOpenedAt is { } opened && opened > UpdatedAt ? opened : UpdatedAt;
 }

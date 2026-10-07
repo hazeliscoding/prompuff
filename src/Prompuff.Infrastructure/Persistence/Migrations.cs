@@ -60,6 +60,10 @@ public static class Migrations
                 UNIQUE (PromptId, VersionNumber)
             );
             """),
+        new(2, "Recently deleted", """
+            ALTER TABLE Prompts ADD COLUMN DeletedAt TEXT NULL;
+            CREATE INDEX IX_Prompts_DeletedAt ON Prompts (DeletedAt);
+            """),
     ];
 
     public static int LatestVersion => All[^1].Version;

@@ -5,6 +5,7 @@ using Prompuff.App.Platform;
 using Prompuff.Application;
 using Prompuff.Application.DTOs;
 using Prompuff.Application.Interfaces;
+using Prompuff.Application.Services;
 using Prompuff.Infrastructure.Persistence;
 
 namespace Prompuff.App.ViewModels;
@@ -32,6 +33,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 {
     private readonly SqliteDatabase _database;
     private readonly LibraryBackups _backups;
+    private readonly PromptService _prompts;
     private readonly Func<PromptEditorViewModel> _createEditor;
     private readonly IPlatformLauncher _launcher;
     private readonly IAppDataPathProvider _paths;
@@ -43,6 +45,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public MainWindowViewModel(
         SqliteDatabase database,
         LibraryBackups backups,
+        PromptService prompts,
         SidebarViewModel sidebar,
         LibraryViewModel library,
         SettingsViewModel settings,
@@ -60,6 +63,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         _database = database;
         _backups = backups;
+        _prompts = prompts;
         Sidebar = sidebar;
         Library = library;
         Settings = settings;
@@ -125,8 +129,23 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         _ready = true;
         _backups.StartDailySchedule();
+        await PurgeExpiredAsync();
         await RefreshAllAsync();
         _ = Settings.CheckOnStartupAsync();
+    }
+
+    /// <summary>Removes prompts that have waited in Recently deleted longer than 30 days.</summary>
+    private async Task PurgeExpiredAsync()
+    {
+        try
+        {
+            await _prompts.PurgeExpiredAsync();
+        }
+        catch (Exception exception)
+        {
+            // Trying again next time is fine; the prompts stay in Recently deleted until then.
+            _logger.LogWarning(exception, "Couldn't remove expired prompts from Recently deleted");
+        }
     }
 
     /// <summary>Starts a keyboard shortcut if it applies right now. Returns false to let the key through.</summary>

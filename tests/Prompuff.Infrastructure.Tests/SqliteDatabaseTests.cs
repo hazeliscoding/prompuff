@@ -65,6 +65,48 @@ public class SqliteDatabaseTests
     }
 
     [Fact]
+    public async Task A_v0_1_library_upgrades_with_its_prompts_and_a_backup()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "prompuff-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        var path = Path.Combine(folder, "prompuff.db");
+        var id = Guid.NewGuid();
+
+        // A library exactly as v0.1 left it: schema 1, one prompt with a version.
+        await using (var v01 = new SqliteConnection($"Data Source={path};Pooling=False"))
+        {
+            await v01.OpenAsync();
+            await using var command = v01.CreateCommand();
+            command.CommandText = Migrations.All.Single(migration => migration.Version == 1).Sql + $"""
+                PRAGMA user_version = 1;
+                INSERT INTO Prompts (Id, Title, Body, IsFavorite, CreatedAt, UpdatedAt)
+                VALUES ('{id}', 'From v0.1', 'body', 1, '2026-10-07T09:00:00.0000000Z', '2026-10-07T09:00:00.0000000Z');
+                INSERT INTO PromptVersions (Id, PromptId, VersionNumber, Title, Body, SavedAt)
+                VALUES ('{Guid.NewGuid()}', '{id}', 1, 'From v0.1', 'body', '2026-10-07T09:00:00.0000000Z');
+                """;
+            await command.ExecuteNonQueryAsync();
+        }
+
+        var database = new SqliteDatabase(path, Path.Combine(folder, "backups"), NullLogger<SqliteDatabase>.Instance);
+        await database.InitializeAsync();
+
+        await using (var connection = await database.OpenAsync())
+        {
+            Assert.Equal((long)Migrations.LatestVersion, await Scalar(connection, "PRAGMA user_version;"));
+        }
+
+        var prompt = await new Repositories.SqlitePromptRepository(database).GetAsync(id);
+        Assert.NotNull(prompt);
+        Assert.Equal("From v0.1", prompt.Title);
+        Assert.True(prompt.IsFavorite);
+        Assert.Null(prompt.DeletedAt);
+        Assert.Single(Directory.GetFiles(Path.Combine(folder, "backups"), "prompuff-schema1-*.db"));
+
+        SqliteConnection.ClearAllPools();
+        Directory.Delete(folder, recursive: true);
+    }
+
+    [Fact]
     public async Task Foreign_keys_are_enforced()
     {
         await using var library = await TestLibrary.CreateAsync();

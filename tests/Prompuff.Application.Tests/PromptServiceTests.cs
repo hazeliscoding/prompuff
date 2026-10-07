@@ -201,13 +201,20 @@ public class PromptServiceTests
     }
 
     [Fact]
-    public async Task Deleting_removes_the_prompt_and_its_versions()
+    public async Task Deleting_keeps_the_prompt_and_its_versions_until_emptied()
     {
         var prompt = await _service.CreateAsync(Content("body"));
         await _service.SaveContentAsync(prompt.Id, Content("body 2"));
+        var updated = (await _service.GetAsync(prompt.Id))!.UpdatedAt;
 
         await _service.DeleteAsync(prompt.Id);
 
+        var deleted = await _service.GetAsync(prompt.Id);
+        Assert.NotNull(deleted?.DeletedAt);
+        Assert.Equal(updated, deleted.UpdatedAt);
+        Assert.Equal(2, _repository.AllVersions.Count);
+
+        Assert.Equal(1, await _service.EmptyRecentlyDeletedAsync());
         Assert.Null(await _service.GetAsync(prompt.Id));
         Assert.Empty(_repository.AllVersions);
     }

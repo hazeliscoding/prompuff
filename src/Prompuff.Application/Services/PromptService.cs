@@ -20,6 +20,9 @@ public sealed record SaveResult(bool VersionCreated, int CurrentVersion);
 /// <summary>Creates, edits, versions, duplicates and deletes prompts.</summary>
 public sealed class PromptService(IPromptRepository prompts, TimeProvider time, ILogger<PromptService> logger)
 {
+    /// <summary>How long a deleted prompt waits in Recently deleted.</summary>
+    public static readonly TimeSpan DeletedRetention = TimeSpan.FromDays(30);
+
     public Task<Prompt?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
         prompts.GetAsync(id, cancellationToken);
 
@@ -156,10 +159,38 @@ public sealed class PromptService(IPromptRepository prompts, TimeProvider time, 
         return await CreateAsync(content, metadata, $"Duplicated from v{versionNumber} of “{source.Title}”", cancellationToken: cancellationToken);
     }
 
+    /// <summary>Moves the prompt to Recently deleted, where it waits <see cref="DeletedRetention"/> before it's removed for good.</summary>
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        await prompts.DeleteAsync(id, cancellationToken);
-        logger.LogInformation("Deleted prompt {PromptId}", id);
+        var now = time.GetUtcNow();
+        await ModifyAsync(id, prompt => prompt.DeletedAt = now, cancellationToken);
+        logger.LogInformation("Moved prompt {PromptId} to Recently deleted", id);
+    }
+
+    public async Task RestoreDeletedAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        await ModifyAsync(id, prompt => prompt.DeletedAt = null, cancellationToken);
+        logger.LogInformation("Restored prompt {PromptId} from Recently deleted", id);
+    }
+
+    /// <summary>Removes everything in Recently deleted for good. Returns how many prompts went.</summary>
+    public async Task<int> EmptyRecentlyDeletedAsync(CancellationToken cancellationToken = default)
+    {
+        var purged = await prompts.PurgeDeletedAsync(null, cancellationToken);
+        logger.LogInformation("Emptied Recently deleted: {Count} prompts", purged);
+        return purged;
+    }
+
+    /// <summary>Removes prompts that have been in Recently deleted longer than <see cref="DeletedRetention"/>.</summary>
+    public async Task<int> PurgeExpiredAsync(CancellationToken cancellationToken = default)
+    {
+        var purged = await prompts.PurgeDeletedAsync(time.GetUtcNow() - DeletedRetention, cancellationToken);
+        if (purged > 0)
+        {
+            logger.LogInformation("Removed {Count} prompts deleted more than {Days} days ago", purged, DeletedRetention.Days);
+        }
+
+        return purged;
     }
 
     public Task MarkOpenedAsync(Guid id, CancellationToken cancellationToken = default) =>

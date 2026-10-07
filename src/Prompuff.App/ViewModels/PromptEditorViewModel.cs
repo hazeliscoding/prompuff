@@ -489,7 +489,7 @@ public sealed partial class PromptEditorViewModel : ObservableObject
         var versions = Format.Count(Versions.Count, "version");
         if (!await _dialogs.ConfirmAsync(
                 $"Delete “{Title}”?",
-                $"This removes the prompt and its {versions}. You can't undo it.",
+                $"It moves to Recently deleted with its {versions}, and you can restore it from there for 30 days.",
                 "Delete prompt",
                 isDanger: true))
         {
@@ -501,7 +501,7 @@ public sealed partial class PromptEditorViewModel : ObservableObject
             await _prompts.DeleteAsync(Id!.Value);
             _saved = CurrentContent;
             _notifier.Notify();
-            _toasts.Show("Deleted.", Title, isHappy: false);
+            _toasts.Show("Moved to Recently deleted.", Title, isHappy: false);
             await _navigator.ShowLibraryAsync();
         }
         catch (Exception exception)

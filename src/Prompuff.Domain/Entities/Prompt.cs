@@ -31,6 +31,9 @@ public sealed class Prompt
     public DateTimeOffset UpdatedAt { get; set; }
     public DateTimeOffset? LastOpenedAt { get; set; }
 
+    /// <summary>When the prompt moved to Recently deleted, or null while it's in the library.</summary>
+    public DateTimeOffset? DeletedAt { get; set; }
+
     public PromptContent Content => new(Title, Description, Body, Notes);
 
     public void SetContent(PromptContent content)

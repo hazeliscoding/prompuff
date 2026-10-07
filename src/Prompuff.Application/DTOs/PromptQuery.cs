@@ -8,6 +8,7 @@ public enum PromptFilterKind
     Collection,
     Uncategorized,
     Tag,
+    Deleted,
 }
 
 public enum PromptSort
