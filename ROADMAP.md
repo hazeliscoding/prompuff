@@ -39,6 +39,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Backups** are made the first time Prompuff opens each local day, and checked again every hour while it runs. Only daily backups are pruned to 30; copies made before an update or a restore stay until you delete them. Each backup uses a rollback journal, so it's one `.db` file with no `-wal` or `-shm` beside it. A restore checks the file first, then copies it over the open library with SQLite's backup API and migrates it if it's older.
 - **Recently deleted** is a `DeletedAt` time on the prompt. Deleting and restoring are metadata changes: no version, and `UpdatedAt` stays put. The sidebar shows Recently deleted only while it holds prompts. A deleted prompt can't be opened until it's restored, and prompts deleted more than 30 days ago are removed for good when Prompuff opens.
 - **Search uses FTS5** with the `unicode61 remove_diacritics 2` tokenizer, so matching ignores case and accents. Each word is a quoted prefix phrase, and `bm25` ranks results with weights favoring the title, then tags, then description. Infix matches ("gular" finding "Angular") are gone, which is the trade for ranking and accents. The index is keyed by `PromptId`, not rowid, and triggers keep it current. Words with no letters or digits still match literally with `LIKE`.
+- **Remembered values** live in a `RenderValues` table in the library, so backups include them and they go when a prompt is removed for good. Each change is saved as it's typed. Empty values aren't stored, values are never exported or logged, and Clear values forgets them for one prompt.
 
 ## Decisions: the road to 1.0 (2026-10-07)
 
@@ -126,7 +127,7 @@ Trust Prompuff with more than a few prompts: nothing is lost by accident, search
 - [x] Automatic backups: a daily copy of the library in `backups/`, keeping the last 30. Restore one from Settings › Storage, after copying the current library aside.
 - [x] Recently deleted: deleting a prompt keeps it for 30 days with Restore and Empty. This is the first real schema migration (`DeletedAt`), with a test that upgrades a v0.1 database.
 - [x] SQLite FTS5 search behind `IPromptSearch`: ranked results, prefix matches, and case- and accent-insensitive matching for non-ASCII text, which `LIKE` can't do.
-- [ ] Remembered variable values per prompt, stored locally, with a Clear values button.
+- [x] Remembered variable values per prompt, stored locally, with a Clear values button.
 - [ ] Share: an Export button in the library header saves what the library shows (all, a collection, a tag, Favorites, Recent or a search) as one `.zip` of Markdown files. Settings › Import and export saves the whole library the same way.
 - [ ] Import a `.zip` as well as `.md` files. Entries are read in memory with the same 5 MB limit per prompt and never unpacked to disk. Prompts whose title and body match one in the library are skipped, and the result says how many.
 - [ ] Release v0.2.0 and confirm the v0.1.0 installs from the first item update to it with the library intact.
