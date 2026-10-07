@@ -1,0 +1,37 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Prompuff.App.App"
+             Name="Prompuff"
+             RequestedThemeVariant="Dark">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://Prompuff/Themes/Tokens.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme>
+      <FluentTheme.Palettes>
+        <ColorPaletteResources x:Key="Dark"
+                               Accent="#2DD4BF"
+                               AltHigh="#0A0C10" AltLow="#0A0C10" AltMedium="#0A0C10" AltMediumHigh="#0A0C10" AltMediumLow="#0A0C10"
+                               BaseHigh="#E8ECF1" BaseLow="#2A3240" BaseMedium="#98A2B3" BaseMediumHigh="#C4CAD4" BaseMediumLow="#5F6B7A"
+                               ChromeAltLow="#C4CAD4" ChromeBlackHigh="#000000" ChromeBlackLow="#C4CAD4" ChromeBlackMedium="#000000" ChromeBlackMediumLow="#000000"
+                               ChromeDisabledHigh="#2A3240" ChromeDisabledLow="#5F6B7A" ChromeGray="#98A2B3" ChromeHigh="#3A4453" ChromeLow="#0F1218"
+                               ChromeMedium="#151920" ChromeMediumLow="#1B2029" ChromeWhite="#FFFFFF"
+                               ListLow="#1B2029" ListMedium="#222834" RegionColor="#0A0C10" ErrorText="#FF8A90" />
+        <ColorPaletteResources x:Key="Light"
+                               Accent="#0D9488"
+                               AltHigh="#FFFFFF" AltLow="#FFFFFF" AltMedium="#FFFFFF" AltMediumHigh="#FFFFFF" AltMediumLow="#FFFFFF"
+                               BaseHigh="#171B22" BaseLow="#D7DBE2" BaseMedium="#525C6B" BaseMediumHigh="#3A4250" BaseMediumLow="#7D8796"
+                               ChromeAltLow="#3A4250" ChromeBlackHigh="#000000" ChromeBlackLow="#D7DBE2" ChromeBlackMedium="#525C6B" ChromeBlackMediumLow="#7D8796"
+                               ChromeDisabledHigh="#D7DBE2" ChromeDisabledLow="#7D8796" ChromeGray="#7D8796" ChromeHigh="#BCC3CE" ChromeLow="#FAFAFB"
+                               ChromeMedium="#F6F7F9" ChromeMediumLow="#FFFFFF" ChromeWhite="#FFFFFF"
+                               ListLow="#F6F7F9" ListMedium="#EDEFF3" RegionColor="#F3F4F6" ErrorText="#B0232C" />
+      </FluentTheme.Palettes>
+    </FluentTheme>
+    <StyleInclude Source="avares://Prompuff/Themes/Controls.axaml" />
+  </Application.Styles>
+</Application>

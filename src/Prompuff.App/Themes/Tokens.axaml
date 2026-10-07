@@ -1,0 +1,215 @@
+<!--
+  Design tokens from the Prompuff design (Quorum design system). Dark is the primary theme; Light is a full
+  re-tuning. Use DynamicResource for anything in the theme dictionaries so theme switches apply live.
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <FontFamily x:Key="SansFont">avares://Prompuff/Assets/Fonts#Manrope</FontFamily>
+  <FontFamily x:Key="MonoFont">avares://Prompuff/Assets/Fonts#IBM Plex Mono</FontFamily>
+  <FontFamily x:Key="ContentControlThemeFontFamily">avares://Prompuff/Assets/Fonts#Manrope</FontFamily>
+  <x:Double x:Key="ControlContentThemeFontSize">13</x:Double>
+  <CornerRadius x:Key="ControlCornerRadius">4</CornerRadius>
+  <CornerRadius x:Key="OverlayCornerRadius">8</CornerRadius>
+  <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
+  <Thickness x:Key="TextControlThemePadding">8,5,8,5</Thickness>
+
+  <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Dark">
+      <!-- Neutral foundation -->
+      <SolidColorBrush x:Key="Bg0Brush" Color="#0A0C10" />
+      <SolidColorBrush x:Key="Bg1Brush" Color="#0F1218" />
+      <SolidColorBrush x:Key="Bg2Brush" Color="#151920" />
+      <SolidColorBrush x:Key="Bg3Brush" Color="#1B2029" />
+      <SolidColorBrush x:Key="Bg4Brush" Color="#222834" />
+      <SolidColorBrush x:Key="BgInsetBrush" Color="#07090C" />
+      <SolidColorBrush x:Key="Border1Brush" Color="#1E242E" />
+      <SolidColorBrush x:Key="Border2Brush" Color="#2A3240" />
+      <SolidColorBrush x:Key="Border3Brush" Color="#3A4453" />
+      <SolidColorBrush x:Key="Text1Brush" Color="#E8ECF1" />
+      <SolidColorBrush x:Key="Text2Brush" Color="#98A2B3" />
+      <SolidColorBrush x:Key="Text3Brush" Color="#5F6B7A" />
+      <SolidColorBrush x:Key="Text4Brush" Color="#3E4754" />
+      <SolidColorBrush x:Key="TextInverseBrush" Color="#0A0C10" />
+      <SolidColorBrush x:Key="ScrimBrush" Color="#A6040609" />
+      <BoxShadows x:Key="HighlightInset">inset 0 1 0 0 #0AFFFFFF</BoxShadows>
+      <BoxShadows x:Key="Shadow1">0 1 2 0 #59000000</BoxShadows>
+      <BoxShadows x:Key="Shadow3">0 8 24 0 #80000000</BoxShadows>
+      <BoxShadows x:Key="Shadow4">0 24 64 0 #99000000</BoxShadows>
+
+      <!-- Accent (interactive) -->
+      <SolidColorBrush x:Key="AccentBrush" Color="#2DD4BF" />
+      <SolidColorBrush x:Key="AccentHoverBrush" Color="#5EEAD4" />
+      <SolidColorBrush x:Key="AccentActiveBrush" Color="#14B8A6" />
+      <SolidColorBrush x:Key="AccentTextBrush" Color="#7FF0E0" />
+      <SolidColorBrush x:Key="AccentSubtleBrush" Color="#1A2DD4BF" />
+      <SolidColorBrush x:Key="AccentBorderBrush" Color="#592DD4BF" />
+
+      <!-- Tones: lavender (Puff, variables), sky, pink, peach, mint, blue, amber -->
+      <SolidColorBrush x:Key="LavenderBrush" Color="#B48EFF" />
+      <SolidColorBrush x:Key="LavenderTextBrush" Color="#CDB4FF" />
+      <SolidColorBrush x:Key="LavenderSubtleBrush" Color="#1FB48EFF" />
+      <SolidColorBrush x:Key="LavenderBorderBrush" Color="#66B48EFF" />
+      <SolidColorBrush x:Key="SkyBrush" Color="#38BDF8" />
+      <SolidColorBrush x:Key="SkyTextBrush" Color="#7DD3FC" />
+      <SolidColorBrush x:Key="SkySubtleBrush" Color="#1F38BDF8" />
+      <SolidColorBrush x:Key="SkyBorderBrush" Color="#6638BDF8" />
+      <SolidColorBrush x:Key="PinkBrush" Color="#E879A9" />
+      <SolidColorBrush x:Key="PinkTextBrush" Color="#F2A7C7" />
+      <SolidColorBrush x:Key="PinkSubtleBrush" Color="#2EE879A9" />
+      <SolidColorBrush x:Key="PinkBorderBrush" Color="#66E879A9" />
+      <SolidColorBrush x:Key="PeachBrush" Color="#E08E4A" />
+      <SolidColorBrush x:Key="PeachTextBrush" Color="#F0B07F" />
+      <SolidColorBrush x:Key="PeachSubtleBrush" Color="#1FE08E4A" />
+      <SolidColorBrush x:Key="PeachBorderBrush" Color="#66E08E4A" />
+      <SolidColorBrush x:Key="MintBrush" Color="#3DD68C" />
+      <SolidColorBrush x:Key="MintTextBrush" Color="#7BE8B3" />
+      <SolidColorBrush x:Key="MintSubtleBrush" Color="#1A3DD68C" />
+      <SolidColorBrush x:Key="MintBorderBrush" Color="#593DD68C" />
+      <SolidColorBrush x:Key="BlueBrush" Color="#7AA2F7" />
+      <SolidColorBrush x:Key="BlueTextBrush" Color="#A9C2FA" />
+      <SolidColorBrush x:Key="BlueSubtleBrush" Color="#2E7AA2F7" />
+      <SolidColorBrush x:Key="BlueBorderBrush" Color="#667AA2F7" />
+      <SolidColorBrush x:Key="AmberBrush" Color="#F2B441" />
+      <SolidColorBrush x:Key="AmberTextBrush" Color="#F8CE7A" />
+      <SolidColorBrush x:Key="AmberSubtleBrush" Color="#1FF2B441" />
+      <SolidColorBrush x:Key="AmberBorderBrush" Color="#66F2B441" />
+      <SolidColorBrush x:Key="CriticalBrush" Color="#F0555D" />
+      <SolidColorBrush x:Key="CriticalTextBrush" Color="#FF8A90" />
+      <SolidColorBrush x:Key="CriticalSubtleBrush" Color="#1FF0555D" />
+      <SolidColorBrush x:Key="CriticalBorderBrush" Color="#73F0555D" />
+
+      <!-- Fluent control overrides -->
+      <SolidColorBrush x:Key="TextControlBackground" Color="#07090C" />
+      <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#07090C" />
+      <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#07090C" />
+      <SolidColorBrush x:Key="TextControlBorderBrush" Color="#2A3240" />
+      <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#3A4453" />
+      <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#2DD4BF" />
+      <SolidColorBrush x:Key="TextControlForeground" Color="#E8ECF1" />
+      <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#E8ECF1" />
+      <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#E8ECF1" />
+      <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#5F6B7A" />
+      <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#5F6B7A" />
+      <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#5F6B7A" />
+      <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="#592DD4BF" />
+      <SolidColorBrush x:Key="ComboBoxBackground" Color="#1B2029" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#222834" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#222834" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundFocused" Color="#1B2029" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#2A3240" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#3A4453" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="#3A4453" />
+      <SolidColorBrush x:Key="ComboBoxForeground" Color="#E8ECF1" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#1B2029" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#2A3240" />
+      <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground" Color="#98A2B3" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#222834" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#222834" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="#2A3240" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#1B2029" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#2A3240" />
+      <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#222834" />
+      <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#2A3240" />
+      <SolidColorBrush x:Key="ToolTipBackground" Color="#1B2029" />
+      <SolidColorBrush x:Key="ToolTipForeground" Color="#E8ECF1" />
+      <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#2A3240" />
+    </ResourceDictionary>
+
+    <ResourceDictionary x:Key="Light">
+      <SolidColorBrush x:Key="Bg0Brush" Color="#F3F4F6" />
+      <SolidColorBrush x:Key="Bg1Brush" Color="#FAFAFB" />
+      <SolidColorBrush x:Key="Bg2Brush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="Bg3Brush" Color="#F6F7F9" />
+      <SolidColorBrush x:Key="Bg4Brush" Color="#EDEFF3" />
+      <SolidColorBrush x:Key="BgInsetBrush" Color="#F7F8FA" />
+      <SolidColorBrush x:Key="Border1Brush" Color="#E6E8EC" />
+      <SolidColorBrush x:Key="Border2Brush" Color="#D7DBE2" />
+      <SolidColorBrush x:Key="Border3Brush" Color="#BCC3CE" />
+      <SolidColorBrush x:Key="Text1Brush" Color="#171B22" />
+      <SolidColorBrush x:Key="Text2Brush" Color="#525C6B" />
+      <SolidColorBrush x:Key="Text3Brush" Color="#7D8796" />
+      <SolidColorBrush x:Key="Text4Brush" Color="#B3BAC5" />
+      <SolidColorBrush x:Key="TextInverseBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ScrimBrush" Color="#73171B22" />
+      <BoxShadows x:Key="HighlightInset">inset 0 0 0 0 #00000000</BoxShadows>
+      <BoxShadows x:Key="Shadow1">0 1 2 0 #0F171B22</BoxShadows>
+      <BoxShadows x:Key="Shadow3">0 8 24 0 #1F171B22</BoxShadows>
+      <BoxShadows x:Key="Shadow4">0 24 64 0 #2E171B22</BoxShadows>
+
+      <SolidColorBrush x:Key="AccentBrush" Color="#0D9488" />
+      <SolidColorBrush x:Key="AccentHoverBrush" Color="#0F766E" />
+      <SolidColorBrush x:Key="AccentActiveBrush" Color="#115E59" />
+      <SolidColorBrush x:Key="AccentTextBrush" Color="#0B7A70" />
+      <SolidColorBrush x:Key="AccentSubtleBrush" Color="#1A0D9488" />
+      <SolidColorBrush x:Key="AccentBorderBrush" Color="#590D9488" />
+
+      <SolidColorBrush x:Key="LavenderBrush" Color="#7C5CD6" />
+      <SolidColorBrush x:Key="LavenderTextBrush" Color="#5E3FB8" />
+      <SolidColorBrush x:Key="LavenderSubtleBrush" Color="#1A7C5CD6" />
+      <SolidColorBrush x:Key="LavenderBorderBrush" Color="#597C5CD6" />
+      <SolidColorBrush x:Key="SkyBrush" Color="#0A8FCB" />
+      <SolidColorBrush x:Key="SkyTextBrush" Color="#0A6F9D" />
+      <SolidColorBrush x:Key="SkySubtleBrush" Color="#1A0A8FCB" />
+      <SolidColorBrush x:Key="SkyBorderBrush" Color="#590A8FCB" />
+      <SolidColorBrush x:Key="PinkBrush" Color="#C9407F" />
+      <SolidColorBrush x:Key="PinkTextBrush" Color="#A3305F" />
+      <SolidColorBrush x:Key="PinkSubtleBrush" Color="#1AC9407F" />
+      <SolidColorBrush x:Key="PinkBorderBrush" Color="#59C9407F" />
+      <SolidColorBrush x:Key="PeachBrush" Color="#C4681F" />
+      <SolidColorBrush x:Key="PeachTextBrush" Color="#94500F" />
+      <SolidColorBrush x:Key="PeachSubtleBrush" Color="#1AC4681F" />
+      <SolidColorBrush x:Key="PeachBorderBrush" Color="#59C4681F" />
+      <SolidColorBrush x:Key="MintBrush" Color="#1E9E5E" />
+      <SolidColorBrush x:Key="MintTextBrush" Color="#177A49" />
+      <SolidColorBrush x:Key="MintSubtleBrush" Color="#1A1E9E5E" />
+      <SolidColorBrush x:Key="MintBorderBrush" Color="#591E9E5E" />
+      <SolidColorBrush x:Key="BlueBrush" Color="#3B6FE0" />
+      <SolidColorBrush x:Key="BlueTextBrush" Color="#2A55B5" />
+      <SolidColorBrush x:Key="BlueSubtleBrush" Color="#1A3B6FE0" />
+      <SolidColorBrush x:Key="BlueBorderBrush" Color="#593B6FE0" />
+      <SolidColorBrush x:Key="AmberBrush" Color="#C98A12" />
+      <SolidColorBrush x:Key="AmberTextBrush" Color="#8F6100" />
+      <SolidColorBrush x:Key="AmberSubtleBrush" Color="#1FC98A12" />
+      <SolidColorBrush x:Key="AmberBorderBrush" Color="#66C98A12" />
+      <SolidColorBrush x:Key="CriticalBrush" Color="#D7343E" />
+      <SolidColorBrush x:Key="CriticalTextBrush" Color="#B0232C" />
+      <SolidColorBrush x:Key="CriticalSubtleBrush" Color="#1AD7343E" />
+      <SolidColorBrush x:Key="CriticalBorderBrush" Color="#66D7343E" />
+
+      <SolidColorBrush x:Key="TextControlBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TextControlBorderBrush" Color="#D7DBE2" />
+      <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#BCC3CE" />
+      <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#0D9488" />
+      <SolidColorBrush x:Key="TextControlForeground" Color="#171B22" />
+      <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#171B22" />
+      <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#171B22" />
+      <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#7D8796" />
+      <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#7D8796" />
+      <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#7D8796" />
+      <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="#590D9488" />
+      <SolidColorBrush x:Key="ComboBoxBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#F6F7F9" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#EDEFF3" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundFocused" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#D7DBE2" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#BCC3CE" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="#BCC3CE" />
+      <SolidColorBrush x:Key="ComboBoxForeground" Color="#171B22" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#D7DBE2" />
+      <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground" Color="#525C6B" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#F6F7F9" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#EDEFF3" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="#E6E8EC" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#D7DBE2" />
+      <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#F6F7F9" />
+      <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#EDEFF3" />
+      <SolidColorBrush x:Key="ToolTipBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ToolTipForeground" Color="#171B22" />
+      <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#D7DBE2" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

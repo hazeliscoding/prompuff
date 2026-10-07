@@ -1,0 +1,764 @@
+<!--
+  Control styles for Prompuff, following the Quorum design system: 4px controls, 6–8px cards,
+  1px hairlines, one teal accent, and calm hover states that lighten the surface one step.
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="using:Prompuff.App.Controls">
+
+  <Styles.Resources>
+    <ResourceDictionary>
+
+      <!-- Buttons: secondary by default; classes primary, ghost, danger, sm, icon, nav, card, row, bare -->
+      <ControlTheme x:Key="{x:Type Button}" TargetType="Button">
+        <Setter Property="Background" Value="{DynamicResource Bg3Brush}" />
+        <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Border2Brush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+          <ControlTemplate>
+            <ContentPresenter x:Name="PART_ContentPresenter"
+                              Background="{TemplateBinding Background}"
+                              BorderBrush="{TemplateBinding BorderBrush}"
+                              BorderThickness="{TemplateBinding BorderThickness}"
+                              CornerRadius="{TemplateBinding CornerRadius}"
+                              Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                              Padding="{TemplateBinding Padding}"
+                              RecognizesAccessKey="True"
+                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
+              <ContentPresenter.Transitions>
+                <Transitions>
+                  <BrushTransition Property="Background" Duration="0:0:0.12" />
+                </Transitions>
+              </ContentPresenter.Transitions>
+            </ContentPresenter>
+          </ControlTemplate>
+        </Setter>
+
+        <Style Selector="^:pointerover">
+          <Setter Property="Background" Value="{DynamicResource Bg4Brush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource Border3Brush}" />
+        </Style>
+        <Style Selector="^:pressed">
+          <Setter Property="RenderTransform" Value="translateY(0.5px)" />
+        </Style>
+        <Style Selector="^:disabled">
+          <Setter Property="Opacity" Value="0.45" />
+        </Style>
+        <Style Selector="^:focus-visible">
+          <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+
+        <Style Selector="^.primary">
+          <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+          <Setter Property="Foreground" Value="{DynamicResource TextInverseBrush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+        <Style Selector="^.primary:pointerover">
+          <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource AccentHoverBrush}" />
+        </Style>
+        <Style Selector="^.primary:pressed">
+          <Setter Property="Background" Value="{DynamicResource AccentActiveBrush}" />
+        </Style>
+        <Style Selector="^.primary:focus-visible">
+          <Setter Property="BorderBrush" Value="{DynamicResource Text1Brush}" />
+        </Style>
+
+        <Style Selector="^.ghost">
+          <Setter Property="Background" Value="Transparent" />
+          <Setter Property="BorderBrush" Value="Transparent" />
+          <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+        </Style>
+        <Style Selector="^.ghost:pointerover">
+          <Setter Property="Background" Value="{DynamicResource Bg3Brush}" />
+          <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+        <Style Selector="^.ghost.active">
+          <Setter Property="Foreground" Value="{DynamicResource PinkBrush}" />
+        </Style>
+
+        <Style Selector="^.danger">
+          <Setter Property="Background" Value="{DynamicResource CriticalSubtleBrush}" />
+          <Setter Property="Foreground" Value="{DynamicResource CriticalTextBrush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource CriticalBorderBrush}" />
+        </Style>
+        <Style Selector="^.danger:pointerover">
+          <Setter Property="Background" Value="{DynamicResource CriticalBrush}" />
+          <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <Style Selector="^.sm">
+          <Setter Property="Height" Value="24" />
+          <Setter Property="Padding" Value="8,0" />
+          <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style Selector="^.icon">
+          <Setter Property="Width" Value="28" />
+          <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="^.icon.sm">
+          <Setter Property="Width" Value="24" />
+        </Style>
+
+        <!-- Sidebar and settings navigation rows -->
+        <Style Selector="^.nav">
+          <Setter Property="Background" Value="Transparent" />
+          <Setter Property="BorderThickness" Value="0" />
+          <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+          <Setter Property="FontWeight" Value="Normal" />
+          <Setter Property="Padding" Value="8,0" />
+          <Setter Property="HorizontalAlignment" Value="Stretch" />
+          <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="^.nav:pointerover">
+          <Setter Property="Background" Value="{DynamicResource Bg3Brush}" />
+          <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+        <Style Selector="^.nav.active">
+          <Setter Property="Background" Value="{DynamicResource Bg4Brush}" />
+          <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+
+        <!-- Prompt cards in the library -->
+        <Style Selector="^.card">
+          <Setter Property="Height" Value="NaN" />
+          <Setter Property="Background" Value="{DynamicResource Bg2Brush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource Border1Brush}" />
+          <Setter Property="CornerRadius" Value="8" />
+          <Setter Property="Padding" Value="14,14,14,12" />
+          <Setter Property="FontWeight" Value="Normal" />
+          <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+          <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="^.card:pointerover">
+          <Setter Property="Background" Value="{DynamicResource Bg3Brush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource Border2Brush}" />
+        </Style>
+        <Style Selector="^.card:pressed">
+          <Setter Property="RenderTransform" Value="none" />
+        </Style>
+
+        <!-- Rows in lists (library list mode, versions, palette results) -->
+        <Style Selector="^.row">
+          <Setter Property="Height" Value="NaN" />
+          <Setter Property="Background" Value="{DynamicResource Bg2Brush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource Border1Brush}" />
+          <Setter Property="BorderThickness" Value="0,0,0,1" />
+          <Setter Property="CornerRadius" Value="0" />
+          <Setter Property="Padding" Value="12,0" />
+          <Setter Property="FontWeight" Value="Normal" />
+          <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="^.row:pointerover">
+          <Setter Property="Background" Value="{DynamicResource Bg3Brush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource Border1Brush}" />
+        </Style>
+        <Style Selector="^.row:pressed">
+          <Setter Property="RenderTransform" Value="none" />
+        </Style>
+
+        <!-- Version cards in the history timeline -->
+        <Style Selector="^.version">
+          <Setter Property="Height" Value="NaN" />
+          <Setter Property="Background" Value="{DynamicResource Bg2Brush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource Border1Brush}" />
+          <Setter Property="CornerRadius" Value="6" />
+          <Setter Property="Padding" Value="12,10" />
+          <Setter Property="FontWeight" Value="Normal" />
+          <Setter Property="HorizontalAlignment" Value="Stretch" />
+          <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="^.version:pointerover">
+          <Setter Property="Background" Value="{DynamicResource Bg3Brush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource Border2Brush}" />
+        </Style>
+        <Style Selector="^.version.selected">
+          <Setter Property="Background" Value="{DynamicResource Bg3Brush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource Border3Brush}" />
+        </Style>
+        <Style Selector="^.version:pressed">
+          <Setter Property="RenderTransform" Value="none" />
+        </Style>
+
+        <!-- Invisible wrapper around custom content -->
+        <Style Selector="^.bare">
+          <Setter Property="Height" Value="NaN" />
+          <Setter Property="Background" Value="Transparent" />
+          <Setter Property="BorderThickness" Value="0" />
+          <Setter Property="Padding" Value="0" />
+          <Setter Property="FontWeight" Value="Normal" />
+        </Style>
+        <Style Selector="^.bare:pointerover">
+          <Setter Property="Background" Value="Transparent" />
+        </Style>
+      </ControlTheme>
+
+      <!-- Windows title bar: keep the drawn caption buttons, drop the drawn title text that would cover the brand -->
+      <ControlTheme x:Key="PrompuffWindowDecorations"
+                    TargetType="WindowDrawnDecorations"
+                    BasedOn="{StaticResource {x:Type WindowDrawnDecorations}}">
+        <Style Selector="^ /template/ Panel#PART_TitleTextPanel">
+          <Setter Property="Opacity" Value="0" />
+        </Style>
+      </ControlTheme>
+
+      <!-- Tabs (Edit / Render / History) -->
+      <ControlTheme x:Key="TabButton" TargetType="RadioButton">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+          <ControlTemplate>
+            <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="0,0,0,2"
+                    Padding="10,8"
+                    Margin="0,0,0,-1">
+              <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" />
+            </Border>
+          </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover">
+          <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+        <Style Selector="^:checked">
+          <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+      </ControlTheme>
+
+      <!-- Segmented control options (Cards / List, theme, history mode) -->
+      <ControlTheme x:Key="SegmentButton" TargetType="RadioButton">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Padding" Value="9,0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+          <ControlTemplate>
+            <Border x:Name="PART_Border"
+                    Background="{TemplateBinding Background}"
+                    CornerRadius="3"
+                    Padding="{TemplateBinding Padding}">
+              <ContentPresenter VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}" />
+            </Border>
+          </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover">
+          <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+        <Style Selector="^:checked">
+          <Setter Property="Background" Value="{DynamicResource Bg3Brush}" />
+          <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+        <Style Selector="^:checked /template/ Border#PART_Border">
+          <Setter Property="BoxShadow" Value="{DynamicResource Shadow1}" />
+        </Style>
+        <Style Selector="^:disabled">
+          <Setter Property="Opacity" Value="0.45" />
+        </Style>
+      </ControlTheme>
+
+      <!-- Quick save intent tiles -->
+      <ControlTheme x:Key="IntentTile" TargetType="RadioButton">
+        <Setter Property="Background" Value="{DynamicResource Bg1Brush}" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Border2Brush}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Template">
+          <ControlTemplate>
+            <Border Height="34"
+                    CornerRadius="6"
+                    BorderThickness="1"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}">
+              <ContentPresenter VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}" />
+            </Border>
+          </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover">
+          <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource Border3Brush}" />
+        </Style>
+        <Style Selector="^:checked">
+          <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
+          <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+        </Style>
+      </ControlTheme>
+
+      <!-- Switch -->
+      <ControlTheme x:Key="Switch" TargetType="ToggleButton">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Background" Value="{DynamicResource Bg4Brush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Border3Brush}" />
+        <Setter Property="Template">
+          <ControlTemplate>
+            <Border Width="30" Height="18"
+                    CornerRadius="9"
+                    BorderThickness="1"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}">
+              <Border.Transitions>
+                <Transitions>
+                  <BrushTransition Property="Background" Duration="0:0:0.18" />
+                </Transitions>
+              </Border.Transitions>
+              <Border x:Name="PART_Thumb"
+                      Width="12" Height="12"
+                      CornerRadius="6"
+                      HorizontalAlignment="Left"
+                      Margin="2,0,0,0"
+                      Background="{DynamicResource Text2Brush}">
+                <Border.Transitions>
+                  <Transitions>
+                    <ThicknessTransition Property="Margin" Duration="0:0:0.18" Easing="CubicEaseOut" />
+                  </Transitions>
+                </Border.Transitions>
+              </Border>
+            </Border>
+          </ControlTemplate>
+        </Setter>
+        <Style Selector="^:checked">
+          <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+        <Style Selector="^:checked /template/ Border#PART_Thumb">
+          <Setter Property="Margin" Value="14,0,0,0" />
+          <Setter Property="Background" Value="{DynamicResource TextInverseBrush}" />
+        </Style>
+        <Style Selector="^:focus-visible">
+          <Setter Property="BorderBrush" Value="{DynamicResource AccentHoverBrush}" />
+        </Style>
+      </ControlTheme>
+
+      <!-- Tag chip -->
+      <ControlTheme x:Key="{x:Type c:TagChip}" TargetType="c:TagChip">
+        <Setter Property="Background" Value="{DynamicResource Bg3Brush}" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Template">
+          <ControlTemplate>
+            <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Height="20"
+                    Padding="7,0">
+              <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <TextBlock Text="{TemplateBinding Text}"
+                           FontFamily="{StaticResource MonoFont}"
+                           FontSize="11"
+                           FontWeight="Medium"
+                           VerticalAlignment="Center" />
+                <Button Classes="bare"
+                        IsVisible="{TemplateBinding IsRemovable}"
+                        Command="{TemplateBinding RemoveCommand}"
+                        CommandParameter="{TemplateBinding RemoveCommandParameter}"
+                        ToolTip.Tip="Remove tag"
+                        Foreground="{TemplateBinding Foreground}"
+                        Margin="0,0,-3,0">
+                  <c:Icon Kind="X" Size="11" StrokeWidth="1.8" />
+                </Button>
+              </StackPanel>
+            </Border>
+          </ControlTemplate>
+        </Setter>
+        <Style Selector="^[Tone=none]">
+          <Setter Property="Background" Value="Transparent" />
+          <Setter Property="BorderBrush" Value="{DynamicResource Border2Brush}" />
+          <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+        </Style>
+        <Style Selector="^[Tone=lavender]">
+          <Setter Property="Background" Value="{DynamicResource LavenderSubtleBrush}" />
+          <Setter Property="Foreground" Value="{DynamicResource LavenderTextBrush}" />
+        </Style>
+        <Style Selector="^[Tone=sky]">
+          <Setter Property="Background" Value="{DynamicResource SkySubtleBrush}" />
+          <Setter Property="Foreground" Value="{DynamicResource SkyTextBrush}" />
+        </Style>
+        <Style Selector="^[Tone=pink]">
+          <Setter Property="Background" Value="{DynamicResource PinkSubtleBrush}" />
+          <Setter Property="Foreground" Value="{DynamicResource PinkTextBrush}" />
+        </Style>
+        <Style Selector="^[Tone=peach]">
+          <Setter Property="Background" Value="{DynamicResource PeachSubtleBrush}" />
+          <Setter Property="Foreground" Value="{DynamicResource PeachTextBrush}" />
+        </Style>
+        <Style Selector="^[Tone=mint]">
+          <Setter Property="Background" Value="{DynamicResource MintSubtleBrush}" />
+          <Setter Property="Foreground" Value="{DynamicResource MintTextBrush}" />
+        </Style>
+        <Style Selector="^[Tone=blue]">
+          <Setter Property="Background" Value="{DynamicResource BlueSubtleBrush}" />
+          <Setter Property="Foreground" Value="{DynamicResource BlueTextBrush}" />
+        </Style>
+        <Style Selector="^[Tone=amber]">
+          <Setter Property="Background" Value="{DynamicResource AmberSubtleBrush}" />
+          <Setter Property="Foreground" Value="{DynamicResource AmberTextBrush}" />
+        </Style>
+      </ControlTheme>
+    </ResourceDictionary>
+  </Styles.Resources>
+
+  <Style Selector="Button.card /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="BoxShadow" Value="{DynamicResource HighlightInset}" />
+  </Style>
+
+  <!-- Window and typography -->
+  <Style Selector="Window">
+    <Setter Property="FontFamily" Value="{StaticResource SansFont}" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+    <Setter Property="Background" Value="{DynamicResource Bg0Brush}" />
+  </Style>
+
+  <Style Selector="TextBlock.page-title">
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="LetterSpacing" Value="-0.4" />
+  </Style>
+  <Style Selector="TextBlock.section-title">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="LetterSpacing" Value="-0.15" />
+  </Style>
+  <Style Selector="TextBlock.card-title">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="LetterSpacing" Value="-0.14" />
+  </Style>
+  <Style Selector="TextBlock.strong">
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="TextBlock.compact">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="LineHeight" Value="17.4" />
+  </Style>
+  <Style Selector="TextBlock.label">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="LetterSpacing" Value="0.66" />
+    <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+  </Style>
+  <Style Selector="TextBlock.micro">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="LetterSpacing" Value="0.8" />
+  </Style>
+  <Style Selector="TextBlock.data">
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="Medium" />
+  </Style>
+  <Style Selector="TextBlock.muted">
+    <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+  </Style>
+  <Style Selector="TextBlock.faint">
+    <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+  </Style>
+  <Style Selector="TextBlock.variable">
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="Foreground" Value="{DynamicResource LavenderTextBrush}" />
+  </Style>
+
+  <!-- Surfaces -->
+  <Style Selector="Border.hairline-bottom">
+    <Setter Property="BorderBrush" Value="{DynamicResource Border1Brush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+  </Style>
+  <Style Selector="Border.panel">
+    <Setter Property="Background" Value="{DynamicResource Bg2Brush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Border1Brush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="BoxShadow" Value="{DynamicResource HighlightInset}" />
+  </Style>
+  <Style Selector="Border.well">
+    <Setter Property="Background" Value="{DynamicResource BgInsetBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Border1Brush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+  <Style Selector="Border.modal">
+    <Setter Property="Background" Value="{DynamicResource Bg2Brush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Border2Brush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="BoxShadow" Value="{DynamicResource Shadow4}" />
+  </Style>
+  <Style Selector="Border.segmented">
+    <Setter Property="Background" Value="{DynamicResource BgInsetBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Border2Brush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Padding" Value="2" />
+    <Setter Property="Height" Value="28" />
+  </Style>
+  <Style Selector="Border.segmented.sm">
+    <Setter Property="Height" Value="24" />
+  </Style>
+  <Style Selector="Border.kbd">
+    <Setter Property="Background" Value="{DynamicResource Bg2Brush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Border2Brush}" />
+    <Setter Property="BorderThickness" Value="1,1,1,2" />
+    <Setter Property="CornerRadius" Value="2" />
+    <Setter Property="Padding" Value="5,1" />
+    <Setter Property="MinWidth" Value="18" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.kbd > TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="FontSize" Value="10.5" />
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.badge">
+    <Setter Property="CornerRadius" Value="2" />
+    <Setter Property="Padding" Value="6,2" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Border1Brush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.badge > TextBlock">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="LetterSpacing" Value="0.8" />
+    <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+  </Style>
+
+  <!-- Tone dots for collections -->
+  <Style Selector="c|ToneDot">
+    <Setter Property="Width" Value="8" />
+    <Setter Property="Height" Value="8" />
+    <Setter Property="CornerRadius" Value="2" />
+    <Setter Property="Background" Value="{DynamicResource Text4Brush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="c|ToneDot[Tone=lavender]"><Setter Property="Background" Value="{DynamicResource LavenderBrush}" /></Style>
+  <Style Selector="c|ToneDot[Tone=sky]"><Setter Property="Background" Value="{DynamicResource SkyBrush}" /></Style>
+  <Style Selector="c|ToneDot[Tone=pink]"><Setter Property="Background" Value="{DynamicResource PinkBrush}" /></Style>
+  <Style Selector="c|ToneDot[Tone=peach]"><Setter Property="Background" Value="{DynamicResource PeachBrush}" /></Style>
+  <Style Selector="c|ToneDot[Tone=mint]"><Setter Property="Background" Value="{DynamicResource MintBrush}" /></Style>
+  <Style Selector="c|ToneDot[Tone=blue]"><Setter Property="Background" Value="{DynamicResource BlueBrush}" /></Style>
+  <Style Selector="c|ToneDot[Tone=amber]"><Setter Property="Background" Value="{DynamicResource AmberBrush}" /></Style>
+
+  <!-- Rating pips and Puff -->
+  <Style Selector="c|RatingPips">
+    <Setter Property="FilledBrush" Value="{DynamicResource LavenderBrush}" />
+    <Setter Property="EmptyBrush" Value="{DynamicResource Bg4Brush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="c|Puff">
+    <Setter Property="BodyBrush" Value="{DynamicResource LavenderBrush}" />
+    <Setter Property="FaceBrush" Value="{DynamicResource Bg0Brush}" />
+  </Style>
+  <Style Selector="c|Puff.ghost">
+    <Setter Property="BodyBrush" Value="{DynamicResource Bg3Brush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource Border3Brush}" />
+    <Setter Property="FaceBrush" Value="{DynamicResource Text2Brush}" />
+  </Style>
+  <Style Selector="c|Puff.bob">
+    <Setter Property="RenderTransform" Value="translateY(0px)" />
+    <Style.Animations>
+      <Animation Duration="0:0:4" IterationCount="Infinite" Easing="SineEaseInOut">
+        <KeyFrame Cue="0%"><Setter Property="TranslateTransform.Y" Value="0" /></KeyFrame>
+        <KeyFrame Cue="50%"><Setter Property="TranslateTransform.Y" Value="-3" /></KeyFrame>
+        <KeyFrame Cue="100%"><Setter Property="TranslateTransform.Y" Value="0" /></KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+
+  <!-- History diff -->
+  <Style Selector="Border.diff.added">
+    <Setter Property="Background" Value="{DynamicResource MintSubtleBrush}" />
+  </Style>
+  <Style Selector="Border.diff.removed">
+    <Setter Property="Background" Value="{DynamicResource CriticalSubtleBrush}" />
+  </Style>
+  <Style Selector="TextBlock.diff-number">
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource Text4Brush}" />
+  </Style>
+  <Style Selector="TextBlock.diff-mark">
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+  </Style>
+  <Style Selector="Border.diff.added TextBlock.diff-mark">
+    <Setter Property="Foreground" Value="{DynamicResource MintTextBrush}" />
+  </Style>
+  <Style Selector="Border.diff.removed TextBlock.diff-mark">
+    <Setter Property="Foreground" Value="{DynamicResource CriticalTextBrush}" />
+  </Style>
+  <Style Selector="SelectableTextBlock.diff-text">
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="LineHeight" Value="20" />
+    <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+  </Style>
+  <Style Selector="Border.diff.added SelectableTextBlock.diff-text">
+    <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+  </Style>
+
+  <!-- Inputs -->
+  <Style Selector="TextBox">
+    <Setter Property="MinHeight" Value="28" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="SelectionBrush" Value="{DynamicResource AccentBorderBrush}" />
+    <Setter Property="SelectionForegroundBrush" Value="{DynamicResource Text1Brush}" />
+    <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+    <Setter Property="BoxShadow" Value="0 0 0 3 #1A2DD4BF" />
+  </Style>
+  <!-- Borderless inputs that look like text until hovered: the prompt title and description -->
+  <Style Selector="TextBox.plain">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="6,2" />
+  </Style>
+  <Style Selector="TextBox.plain /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="TextBox.plain:pointerover /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource Bg2Brush}" />
+  </Style>
+  <Style Selector="TextBox.plain:focus /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource Bg2Brush}" />
+    <Setter Property="BoxShadow" Value="none" />
+  </Style>
+  <Style Selector="TextBox.title">
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="LetterSpacing" Value="-0.4" />
+  </Style>
+  <!-- The prompt body editor: a mono well with no chrome -->
+  <Style Selector="TextBox.editor">
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="LineHeight" Value="21.5" />
+    <Setter Property="Padding" Value="20,18" />
+    <Setter Property="AcceptsReturn" Value="True" />
+    <Setter Property="AcceptsTab" Value="True" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="VerticalContentAlignment" Value="Top" />
+    <Setter Property="CornerRadius" Value="0" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="TextBox.editor /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource BgInsetBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="BoxShadow" Value="none" />
+    <Setter Property="CornerRadius" Value="0" />
+  </Style>
+  <Style Selector="TextBox.notes">
+    <Setter Property="AcceptsReturn" Value="True" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="VerticalContentAlignment" Value="Top" />
+    <Setter Property="Padding" Value="12,10" />
+    <Setter Property="LineHeight" Value="20" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+  <Style Selector="TextBox.notes /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource Bg2Brush}" />
+  </Style>
+  <Style Selector="TextBox.mono">
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+  <Style Selector="TextBox.raised /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource Bg2Brush}" />
+  </Style>
+
+  <Style Selector="ComboBox">
+    <Setter Property="Height" Value="28" />
+    <Setter Property="MinHeight" Value="28" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Padding" Value="10,0,6,0" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="ComboBox.sm">
+    <Setter Property="Height" Value="24" />
+    <Setter Property="MinHeight" Value="24" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+  <Style Selector="ComboBoxItem">
+    <Setter Property="MinHeight" Value="30" />
+    <Setter Property="Padding" Value="10,5" />
+    <Setter Property="FontSize" Value="13" />
+  </Style>
+
+  <!-- Palette and version list items -->
+  <Style Selector="ListBox.plain">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector="ListBox.plain ListBoxItem">
+    <Setter Property="Padding" Value="8,0" />
+    <Setter Property="MinHeight" Value="34" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+  </Style>
+  <Style Selector="ListBox.plain ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Bg3Brush}" />
+  </Style>
+  <Style Selector="ListBox.plain ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Bg4Brush}" />
+  </Style>
+  <Style Selector="ListBox.plain ListBoxItem:selected">
+    <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+  </Style>
+
+  <Style Selector="ToolTip">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Padding" Value="8,5" />
+  </Style>
+
+  <Style Selector="MenuFlyoutPresenter">
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Padding" Value="4" />
+  </Style>
+  <Style Selector="MenuItem">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Height" Value="30" />
+    <Setter Property="Padding" Value="10,0" />
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
+  <Style Selector="MenuItem.danger">
+    <Setter Property="Foreground" Value="{DynamicResource CriticalTextBrush}" />
+  </Style>
+</Styles>

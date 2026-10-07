@@ -1,0 +1,273 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Prompuff.App.ViewModels"
+             xmlns:c="using:Prompuff.App.Controls"
+             x:Class="Prompuff.App.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+  <UserControl.Styles>
+    <Style Selector="Border.setting-row">
+      <Setter Property="Padding" Value="0,14" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Border1Brush}" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="200,*">
+    <Border Background="{DynamicResource Bg1Brush}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,0,1,0" Padding="10,16">
+      <StackPanel Spacing="1">
+        <TextBlock Classes="section-title" Text="Settings" Margin="8,0,0,10" />
+        <ItemsControl ItemsSource="{Binding Sections}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Spacing="1" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:SettingsSectionItem">
+              <Button Classes="nav" Classes.active="{Binding IsActive}" Command="{Binding SelectCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="9">
+                  <c:Icon Kind="{Binding Icon}" />
+                  <TextBlock Text="{Binding Label}" />
+                </StackPanel>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Border>
+
+    <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Disabled">
+      <Panel Margin="32,24" MaxWidth="640" HorizontalAlignment="Left">
+
+        <!-- Appearance -->
+        <StackPanel Spacing="4" IsVisible="{Binding IsAppearance}">
+          <TextBlock Classes="page-title" Text="Appearance" Margin="0,0,0,8" />
+          <Border Classes="setting-row">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel>
+                <TextBlock Classes="strong" Text="Theme" />
+                <TextBlock Classes="compact faint" Text="Dark is where Prompuff feels most at home." />
+              </StackPanel>
+              <Border Grid.Column="1" Classes="segmented" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="1">
+                  <RadioButton Theme="{StaticResource SegmentButton}" GroupName="theme" IsChecked="{Binding IsDarkTheme}" Content="Dark" />
+                  <RadioButton Theme="{StaticResource SegmentButton}" GroupName="theme" IsChecked="{Binding IsLightTheme}" Content="Light" />
+                  <RadioButton Theme="{StaticResource SegmentButton}" GroupName="theme" IsChecked="{Binding IsSystemTheme}" Content="System" />
+                </StackPanel>
+              </Border>
+            </Grid>
+          </Border>
+          <Border Classes="setting-row">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel>
+                <TextBlock Classes="strong" Text="Puff, the mascot" />
+                <TextBlock Classes="compact faint" Text="Shows up on saves, empty states and the About page." />
+              </StackPanel>
+              <ToggleButton Grid.Column="1" Theme="{StaticResource Switch}" IsChecked="{Binding ShowMascot}" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+        </StackPanel>
+
+        <!-- Storage -->
+        <StackPanel Spacing="16" IsVisible="{Binding IsStorage}">
+          <TextBlock Classes="page-title" Text="Storage" />
+          <TextBlock Classes="muted" TextWrapping="Wrap" LineHeight="19.5"
+                     Text="Everything lives in one folder on this machine: a SQLite library, your settings and the logs. No account, no cloud." />
+          <Border Classes="panel" Padding="14">
+            <StackPanel Spacing="10">
+              <TextBlock Classes="label" Text="DATA FOLDER" />
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Border Classes="well" CornerRadius="4" Padding="10,7">
+                  <SelectableTextBlock Text="{Binding DataDirectory}" FontFamily="{StaticResource MonoFont}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                </Border>
+                <Button Grid.Column="1" Command="{Binding OpenDataFolderCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <c:Icon Kind="FolderOpen" Size="13" />
+                    <TextBlock Text="Open folder" />
+                  </StackPanel>
+                </Button>
+              </Grid>
+              <TextBlock Classes="compact faint" Text="{Binding StorageSummary}" />
+            </StackPanel>
+          </Border>
+          <Border Classes="setting-row">
+            <StackPanel Spacing="2">
+              <TextBlock Classes="strong" Text="Settings file" />
+              <SelectableTextBlock Text="{Binding SettingsPath}" FontFamily="{StaticResource MonoFont}" FontSize="12" Foreground="{DynamicResource Text3Brush}" TextWrapping="Wrap" />
+            </StackPanel>
+          </Border>
+          <TextBlock Classes="compact faint" TextWrapping="Wrap"
+                     Text="Updates replace the app, never this folder. Before a new version changes how the library is stored, Prompuff copies it to the backups folder." />
+        </StackPanel>
+
+        <!-- Import / export -->
+        <StackPanel Spacing="16" IsVisible="{Binding IsImportExport}">
+          <TextBlock Classes="page-title" Text="Import and export" />
+          <TextBlock Classes="muted" TextWrapping="Wrap" LineHeight="19.5"
+                     Text="Prompts travel as Markdown files with a small metadata block on top, so they stay readable anywhere." />
+          <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+            <Border Classes="panel" Padding="16">
+              <StackPanel Spacing="8">
+                <TextBlock Classes="strong" Text="Import" />
+                <TextBlock Classes="compact faint" TextWrapping="Wrap"
+                           Text="Pick one or more .md files. Variables in double braces are detected on the way in. Files that can't be read are skipped and reported." />
+                <Button HorizontalAlignment="Left" Margin="0,6,0,0" Command="{Binding ImportCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <c:Icon Kind="Download" Size="13" />
+                    <TextBlock Text="Choose files" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </Border>
+            <Border Grid.Column="1" Classes="panel" Padding="16">
+              <StackPanel Spacing="8">
+                <TextBlock Classes="strong" Text="Export" />
+                <TextBlock Classes="compact faint" TextWrapping="Wrap"
+                           Text="Writes one Markdown file per prompt into a folder you choose." />
+                <Button HorizontalAlignment="Left" Margin="0,6,0,0" Command="{Binding ExportAllCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <c:Icon Kind="Upload" Size="13" />
+                    <TextBlock Text="Export everything" />
+                  </StackPanel>
+                </Button>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding HasExportCollections}">
+                  <ComboBox ItemsSource="{Binding ExportCollections}" SelectedItem="{Binding SelectedExportCollection}" HorizontalAlignment="Stretch">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:CollectionOption">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <c:ToneDot Tone="{Binding Tone}" />
+                          <TextBlock Text="{Binding Name}" />
+                        </StackPanel>
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                  <Button Grid.Column="1" Classes="ghost" Content="Export collection" Command="{Binding ExportCollectionCommand}" />
+                </Grid>
+              </StackPanel>
+            </Border>
+          </Grid>
+        </StackPanel>
+
+        <!-- Updates -->
+        <StackPanel Spacing="4" IsVisible="{Binding IsUpdates}">
+          <TextBlock Classes="page-title" Text="Updates" Margin="0,0,0,8" />
+          <Border Classes="setting-row">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel>
+                <TextBlock Classes="strong" Text="Check for updates automatically" />
+                <TextBlock Classes="compact faint" Text="Asks GitHub Releases at startup, at most twice a day." />
+              </StackPanel>
+              <ToggleButton Grid.Column="1" Theme="{StaticResource Switch}" IsChecked="{Binding CheckForUpdatesAutomatically}" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+          <Border Classes="setting-row">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel>
+                <TextBlock Classes="strong" Text="Release channel" />
+                <TextBlock Classes="compact faint" Text="Beta builds arrive in a later version." />
+              </StackPanel>
+              <Border Grid.Column="1" Classes="segmented" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="1">
+                  <RadioButton Theme="{StaticResource SegmentButton}" GroupName="channel" IsChecked="True" Content="Stable" />
+                  <RadioButton Theme="{StaticResource SegmentButton}" GroupName="channel" IsEnabled="False" Content="Beta" ToolTip.Tip="Coming later" />
+                </StackPanel>
+              </Border>
+            </Grid>
+          </Border>
+          <Border Classes="setting-row">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel>
+                <TextBlock Classes="strong" Text="Current version" />
+                <TextBlock Classes="data faint" FontSize="12" Text="{Binding CurrentVersion}" />
+              </StackPanel>
+            </Grid>
+          </Border>
+          <StackPanel Spacing="10" Margin="0,14,0,0">
+            <TextBlock Classes="muted" Text="{Binding UpdateStatus}" TextWrapping="Wrap" />
+            <ProgressBar Value="{Binding DownloadProgress}" Maximum="100" Height="4" MinHeight="4" IsVisible="{Binding IsDownloading}" Foreground="{DynamicResource AccentBrush}" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Command="{Binding CheckForUpdatesCommand}" IsEnabled="{Binding !IsCheckingForUpdates}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <c:Icon Kind="RefreshCw" Size="13" />
+                  <TextBlock Text="Check for updates" />
+                </StackPanel>
+              </Button>
+              <Button Classes="primary" IsVisible="{Binding CanInstallUpdate}" Command="{Binding InstallUpdateCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <c:Icon Kind="Download" Size="13" />
+                  <TextBlock Text="Download and restart" />
+                </StackPanel>
+              </Button>
+              <Button Classes="ghost" Command="{Binding OpenReleaseNotesCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <c:Icon Kind="FileText" Size="13" />
+                  <TextBlock Text="Release notes" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </StackPanel>
+        </StackPanel>
+
+        <!-- Shortcuts -->
+        <StackPanel Spacing="16" IsVisible="{Binding IsShortcuts}">
+          <TextBlock Classes="page-title" Text="Keyboard shortcuts" />
+          <Border CornerRadius="6" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="1" ClipToBounds="True">
+            <ItemsControl ItemsSource="{Binding Shortcuts}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:ShortcutRow">
+                  <Border Height="36" Padding="14,0" Background="{DynamicResource Bg2Brush}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,0,0,1">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                      <Border Grid.Column="1" Classes="kbd">
+                        <TextBlock Text="{Binding Keys}" />
+                      </Border>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Border>
+        </StackPanel>
+
+        <!-- About -->
+        <StackPanel Spacing="20" IsVisible="{Binding IsAbout}">
+          <TextBlock Classes="page-title" Text="About" />
+          <Border Classes="panel" CornerRadius="12" Padding="24">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="24">
+              <c:Puff Classes="bob" Width="110" Height="90" Mood="Happy" IsVisible="{Binding Appearance.ShowMascot}" />
+              <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
+                <TextBlock Text="Prompuff" FontSize="22" FontWeight="Bold" LetterSpacing="-0.44" />
+                <TextBlock Classes="muted" Text="Your good prompts deserve a home." />
+                <TextBlock Classes="data faint" FontSize="12" Text="{Binding AboutVersion}" Margin="0,6,0,0" />
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                  <Button Classes="sm" Command="{Binding CheckForUpdatesCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <c:Icon Kind="RefreshCw" Size="12" />
+                      <TextBlock Text="Check for updates" />
+                    </StackPanel>
+                  </Button>
+                  <Button Classes="ghost sm" Command="{Binding OpenReleaseNotesCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <c:Icon Kind="FileText" Size="12" />
+                      <TextBlock Text="Release notes" />
+                    </StackPanel>
+                  </Button>
+                  <Button Classes="ghost sm" Command="{Binding OpenLicensesCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <c:Icon Kind="Scale" Size="12" />
+                      <TextBlock Text="Licenses" />
+                    </StackPanel>
+                  </Button>
+                </StackPanel>
+              </StackPanel>
+            </Grid>
+          </Border>
+          <TextBlock Classes="compact faint" TextWrapping="Wrap" LineHeight="18"
+                     Text="Made by one person who had too many prompts in too many places. Prompuff never uploads your prompts. The only thing it asks the internet is whether there's a new version, and you can turn that off." />
+          <TextBlock Classes="compact faint" TextWrapping="Wrap"
+                     Text="MIT licensed. Manrope and IBM Plex Mono under the SIL Open Font License; icons from Lucide (ISC)." />
+        </StackPanel>
+      </Panel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

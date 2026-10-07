@@ -1,0 +1,174 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Prompuff.App.ViewModels"
+             xmlns:c="using:Prompuff.App.Controls"
+             x:Class="Prompuff.App.Views.LibraryView"
+             x:DataType="vm:LibraryViewModel">
+  <DockPanel>
+    <!-- Header -->
+    <Border DockPanel.Dock="Top" Height="56" Padding="20,0" Classes="hairline-bottom">
+      <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="12">
+        <StackPanel VerticalAlignment="Center" Spacing="1">
+          <TextBlock Classes="section-title" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+          <TextBlock Classes="compact faint" Text="{Binding Subtitle}" />
+        </StackPanel>
+        <Button Grid.Column="1" Classes="ghost sm" IsVisible="{Binding HasFilter}" Command="{Binding ClearFilterCommand}" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <c:Icon Kind="X" Size="12" />
+            <TextBlock Text="Clear filter" />
+          </StackPanel>
+        </Button>
+        <ComboBox Grid.Column="2" Width="160" VerticalAlignment="Center" IsVisible="{Binding CanSort}"
+                  ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSort}" ToolTip.Tip="Sort">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:SortOption">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <c:Icon Kind="ArrowUpDown" Size="12" Foreground="{DynamicResource Text3Brush}" />
+                <TextBlock Text="{Binding Label}" />
+              </StackPanel>
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <Border Grid.Column="3" Classes="segmented" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="1">
+            <RadioButton Theme="{StaticResource SegmentButton}" GroupName="layout" IsChecked="{Binding IsCardsLayout}" ToolTip.Tip="Cards">
+              <StackPanel Orientation="Horizontal" Spacing="5">
+                <c:Icon Kind="LayoutGrid" Size="12" />
+                <TextBlock Text="Cards" />
+              </StackPanel>
+            </RadioButton>
+            <RadioButton Theme="{StaticResource SegmentButton}" GroupName="layout" IsChecked="{Binding IsListLayout}" ToolTip.Tip="List">
+              <StackPanel Orientation="Horizontal" Spacing="5">
+                <c:Icon Kind="List" Size="12" />
+                <TextBlock Text="List" />
+              </StackPanel>
+            </RadioButton>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </Border>
+
+    <Panel>
+      <!-- Empty states -->
+      <StackPanel IsVisible="{Binding IsEmpty}" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Margin="20">
+        <c:Puff Classes="ghost bob" Width="72" Height="56" HorizontalAlignment="Center" IsVisible="{Binding Appearance.ShowMascot}" />
+        <TextBlock Classes="section-title" Text="{Binding EmptyTitle}" HorizontalAlignment="Center" />
+        <TextBlock Classes="faint" Text="{Binding EmptyMessage}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="380" />
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,4,0,0">
+          <Button Classes="primary" Command="{Binding NewPromptCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <c:Icon Kind="Plus" Size="13" StrokeWidth="2" />
+              <TextBlock Text="New prompt" />
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenQuickSaveCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <c:Icon Kind="ClipboardPlus" Size="13" />
+              <TextBlock Text="Quick save from clipboard" />
+            </StackPanel>
+          </Button>
+          <Button Classes="ghost" IsVisible="{Binding HasFilter}" Command="{Binding ClearFilterCommand}" Content="Clear filter" />
+        </StackPanel>
+      </StackPanel>
+
+      <!-- Cards -->
+      <ScrollViewer IsVisible="{Binding IsCards}" HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl ItemsSource="{Binding Items}" Margin="20,16,20,32">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <c:AdaptiveGrid MinItemWidth="272" Spacing="12" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:PromptCardViewModel">
+              <Button Classes="card" Command="{Binding OpenCommand}">
+                <StackPanel Spacing="10">
+                  <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                    <c:ToneDot Tone="{Binding CollectionTone}" VerticalAlignment="Top" Margin="0,6,0,0" ToolTip.Tip="{Binding CollectionName}" />
+                    <TextBlock Grid.Column="1" Classes="card-title" Text="{Binding Title}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                    <Button Grid.Column="2" Classes="ghost icon sm" Classes.active="{Binding IsFavorite}" Margin="0,-3,-4,0" VerticalAlignment="Top"
+                            Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="Favorite">
+                      <c:Icon Kind="Heart" Size="14" IsFilled="{Binding IsFavorite}" />
+                    </Button>
+                  </Grid>
+                  <Panel MinHeight="34">
+                    <TextBlock Classes="compact muted" Text="{Binding Description}" IsVisible="{Binding HasDescription}"
+                               TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Classes="compact faint" Text="No description yet." IsVisible="{Binding !HasDescription}" />
+                  </Panel>
+                  <ItemsControl ItemsSource="{Binding Tags}" MinHeight="20">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <WrapPanel ItemSpacing="4" LineSpacing="4" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:TagChipItem">
+                        <c:TagChip Text="{Binding Name}" Tone="{Binding Tone}" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <Border BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,2,0,0">
+                    <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
+                      <c:RatingPips Value="{Binding Rating, Mode=OneWay}" ToolTip.Tip="Usefulness" />
+                      <TextBlock Grid.Column="1" Classes="compact faint" Text="{Binding RatingLabel}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="3" Classes="data faint" Text="{Binding EditedLabel}" ToolTip.Tip="{Binding EditedTooltip}" VerticalAlignment="Center" />
+                    </Grid>
+                  </Border>
+                </StackPanel>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+
+      <!-- List -->
+      <ScrollViewer IsVisible="{Binding IsList}" HorizontalScrollBarVisibility="Disabled">
+        <Border Margin="20,16,20,32" CornerRadius="6" ClipToBounds="True"
+                BorderBrush="{DynamicResource Border1Brush}" BorderThickness="1" Background="{DynamicResource Bg1Brush}"
+                VerticalAlignment="Top">
+          <StackPanel>
+            <Grid ColumnDefinitions="28,2*,1.6*,120,100,36" ColumnSpacing="12" Height="30" Margin="12,0">
+              <TextBlock Grid.Column="1" Classes="label" Text="PROMPT" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="2" Classes="label" Text="TAGS" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="3" Classes="label" Text="USEFULNESS" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="4" Classes="label" Text="EDITED" VerticalAlignment="Center" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding Items}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:PromptCardViewModel">
+                  <Button Classes="row" Height="46" Command="{Binding OpenCommand}">
+                    <Grid ColumnDefinitions="28,2*,1.6*,120,100,36" ColumnSpacing="12">
+                      <c:ToneDot Tone="{Binding CollectionTone}" HorizontalAlignment="Center" ToolTip.Tip="{Binding CollectionName}" />
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                        <TextBlock Classes="strong" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Classes="compact faint" Text="{Binding Description}" TextTrimming="CharacterEllipsis" IsVisible="{Binding HasDescription}" />
+                      </StackPanel>
+                      <ItemsControl Grid.Column="2" ItemsSource="{Binding Tags}" VerticalAlignment="Center" ClipToBounds="True">
+                        <ItemsControl.ItemsPanel>
+                          <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="4" />
+                          </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="vm:TagChipItem">
+                            <c:TagChip Text="{Binding Name}" Tone="{Binding Tone}" />
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                      <c:RatingPips Grid.Column="3" Value="{Binding Rating, Mode=OneWay}" ToolTip.Tip="{Binding RatingLabel}" HorizontalAlignment="Left" />
+                      <TextBlock Grid.Column="4" Classes="data faint" Text="{Binding EditedLabel}" ToolTip.Tip="{Binding EditedTooltip}" VerticalAlignment="Center" />
+                      <Button Grid.Column="5" Classes="ghost icon sm" Classes.active="{Binding IsFavorite}" Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="Favorite">
+                        <c:Icon Kind="Heart" Size="14" IsFilled="{Binding IsFavorite}" />
+                      </Button>
+                    </Grid>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </ScrollViewer>
+    </Panel>
+  </DockPanel>
+</UserControl>

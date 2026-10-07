@@ -1,0 +1,375 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Prompuff.App.ViewModels"
+             xmlns:c="using:Prompuff.App.Controls"
+             x:Class="Prompuff.App.Views.PromptEditorView"
+             x:DataType="vm:PromptEditorViewModel">
+  <DockPanel>
+    <!-- Header -->
+    <Border DockPanel.Dock="Top" Padding="20,12,20,0" Classes="hairline-bottom">
+      <StackPanel Spacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Classes="bare" Command="{Binding BackCommand}" Foreground="{DynamicResource Text3Brush}" Cursor="Hand">
+            <TextBlock Classes="compact" Text="Library" />
+          </Button>
+          <TextBlock Classes="compact faint" Text="›" />
+          <TextBlock Classes="compact faint" Text="{Binding CollectionLabel}" />
+          <Border Classes="badge" IsVisible="{Binding IsDirty}" BorderBrush="{DynamicResource AmberBorderBrush}" Margin="4,0,0,0">
+            <TextBlock Text="UNSAVED" Foreground="{DynamicResource AmberTextBrush}" />
+          </Border>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+          <TextBox x:Name="TitleBox"
+                   Classes="plain title"
+                   Margin="-6,0,0,0"
+                   Text="{Binding Title}"
+                   PlaceholderText="Untitled prompt" />
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Button Classes="ghost icon" Classes.active="{Binding IsFavorite}" Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="Favorite (Ctrl D)">
+              <c:Icon Kind="Heart" Size="15" IsFilled="{Binding IsFavorite}" />
+            </Button>
+            <Button Command="{Binding DuplicateCommand}" IsEnabled="{Binding !IsNew}" ToolTip.Tip="Make a copy with its own history">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <c:Icon Kind="CopyPlus" Size="13" />
+                <TextBlock Text="Duplicate" />
+              </StackPanel>
+            </Button>
+            <Button Command="{Binding ShowHistoryCommand}" IsEnabled="{Binding !IsNew}" ToolTip.Tip="Version history (Ctrl H)">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <c:Icon Kind="History" Size="13" />
+                <TextBlock Text="History" />
+              </StackPanel>
+            </Button>
+            <Button Command="{Binding SaveCommand}" ToolTip.Tip="Save (Ctrl S)">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <c:Icon Kind="Save" Size="13" />
+                <TextBlock Text="Save" />
+              </StackPanel>
+            </Button>
+            <Button Classes="primary" Command="{Binding CopyRenderedCommand}" ToolTip.Tip="Copy the rendered prompt">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <c:Icon Kind="Copy" Size="13" />
+                <TextBlock Text="Copy" />
+              </StackPanel>
+            </Button>
+            <Button Classes="ghost icon" ToolTip.Tip="More">
+              <c:Icon Kind="Ellipsis" Size="15" />
+              <Button.Flyout>
+                <MenuFlyout Placement="BottomEdgeAlignedRight">
+                  <MenuItem Header="Copy template with variables" Command="{Binding CopyTemplateCommand}" />
+                  <MenuItem Header="Export as Markdown…" Command="{Binding ExportCommand}" IsEnabled="{Binding !IsNew}" />
+                  <Separator />
+                  <MenuItem Header="Delete prompt…" Classes="danger" Command="{Binding DeleteCommand}" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+          </StackPanel>
+        </Grid>
+
+        <TextBox Classes="plain" Margin="-6,-6,0,0" Foreground="{DynamicResource Text2Brush}" FontSize="12"
+                 Text="{Binding Description}" PlaceholderText="Add a one-line description" />
+
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+          <ComboBox Classes="sm" MinWidth="150" ItemsSource="{Binding CollectionOptions}" SelectedItem="{Binding SelectedCollection}" ToolTip.Tip="Collection">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:CollectionOption">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <c:ToneDot Tone="{Binding Tone}" />
+                  <TextBlock Text="{Binding Name}" />
+                </StackPanel>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <WrapPanel Grid.Column="1" ItemSpacing="4" LineSpacing="4" VerticalAlignment="Center">
+            <ItemsControl ItemsSource="{Binding Tags}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel ItemSpacing="4" LineSpacing="4" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:TagChipItem">
+                  <c:TagChip Text="{Binding Name}" Tone="{Binding Tone}" IsRemovable="True"
+                             RemoveCommand="{Binding $parent[UserControl].((vm:PromptEditorViewModel)DataContext).RemoveTagCommand}"
+                             RemoveCommandParameter="{Binding Name}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBox Width="110" Height="22" MinHeight="22" FontSize="11" Padding="6,0" Classes="mono"
+                     Text="{Binding NewTag}" PlaceholderText="+ add tag" ToolTip.Tip="Type a tag and press Enter">
+              <TextBox.KeyBindings>
+                <KeyBinding Gesture="Enter" Command="{Binding AddTagCommand}" />
+              </TextBox.KeyBindings>
+            </TextBox>
+          </WrapPanel>
+          <TextBlock Grid.Column="2" Classes="data faint" Text="{Binding VersionLabel}" VerticalAlignment="Center" />
+        </Grid>
+
+        <StackPanel Orientation="Horizontal" Spacing="2" Margin="0,2,0,0">
+          <RadioButton Theme="{StaticResource TabButton}" GroupName="tabs" IsChecked="{Binding IsEditTab}" Content="Edit" />
+          <RadioButton Theme="{StaticResource TabButton}" GroupName="tabs" IsChecked="{Binding IsRenderTab}" Content="Render &amp; copy" />
+          <RadioButton Theme="{StaticResource TabButton}" GroupName="tabs" IsChecked="{Binding IsHistoryTab}" IsEnabled="{Binding !IsNew}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="History" />
+              <Border Background="{DynamicResource Bg3Brush}" CornerRadius="2" Padding="5,0">
+                <TextBlock Classes="data faint" Text="{Binding Versions.Count}" />
+              </Border>
+            </StackPanel>
+          </RadioButton>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <Panel>
+      <!-- Edit -->
+      <Grid ColumnDefinitions="*,320" IsVisible="{Binding IsEditTab}">
+        <DockPanel>
+          <Border DockPanel.Dock="Top" Height="32" Padding="20,0" Classes="hairline-bottom">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Classes="label" Text="PROMPT · MARKDOWN" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="1" Classes="data faint" Text="{Binding CharsLabel}" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+          <TextBox x:Name="BodyBox"
+                   Classes="editor"
+                   Text="{Binding Body}"
+                   PlaceholderText="Write the prompt. Wrap the parts that change in double braces, like {{project_name}}." />
+        </DockPanel>
+
+        <Border Grid.Column="1" Background="{DynamicResource Bg1Brush}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="1,0,0,0">
+          <DockPanel>
+            <Border DockPanel.Dock="Top" Padding="16,14" Classes="hairline-bottom">
+              <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Classes="label" Text="VARIABLES" />
+                  <TextBlock Grid.Column="1" Classes="data faint" Text="{Binding VariableCountLabel}" />
+                </Grid>
+                <ItemsControl ItemsSource="{Binding Variables}" IsVisible="{Binding HasVariables}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Spacing="6" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:VariableViewModel">
+                      <Border Background="{DynamicResource Bg2Brush}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="1" CornerRadius="6" Padding="10,7">
+                        <Grid ColumnDefinitions="*,Auto">
+                          <TextBlock Classes="variable" Text="{Binding Braced}" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Grid.Column="1" Classes="compact faint" Text="{Binding UsesLabel}" ToolTip.Tip="Times it appears" />
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Classes="compact faint" TextWrapping="Wrap" IsVisible="{Binding !HasVariables}">
+                  <Run Text="No variables yet. Wrap a placeholder like " />
+                  <Run Text="{}{{project_name}}" FontFamily="{StaticResource MonoFont}" Foreground="{DynamicResource LavenderTextBrush}" />
+                  <Run Text=" and it shows up here." />
+                </TextBlock>
+                <Button Classes="ghost sm" HorizontalAlignment="Left" Margin="-8,0,0,0" Command="{Binding ShowRenderCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <c:Icon Kind="Play" Size="12" />
+                    <TextBlock Text="Render with values" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </Border>
+            <DockPanel Margin="16,14">
+              <TextBlock DockPanel.Dock="Top" Classes="label" Text="WHY THIS WORKED" Margin="0,0,0,8" />
+              <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8" Margin="0,10,0,0">
+                <TextBlock Classes="compact faint" Text="Usefulness" VerticalAlignment="Center" />
+                <c:RatingPips Value="{Binding Rating}" IsInteractive="True" PipSize="14" Spacing="4" ToolTip.Tip="Click to rate; click again to clear" />
+                <TextBlock Classes="compact faint" Text="{Binding RatingLabel}" VerticalAlignment="Center" />
+              </StackPanel>
+              <TextBox Classes="notes" MinHeight="140" Text="{Binding Notes}" PlaceholderText="Why did this work? Notes to your future self." />
+            </DockPanel>
+          </DockPanel>
+        </Border>
+      </Grid>
+
+      <!-- Render -->
+      <Grid ColumnDefinitions="0.9*,1.3*" IsVisible="{Binding IsRenderTab}">
+        <Border BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,0,1,0" MinWidth="280">
+          <DockPanel>
+            <Border DockPanel.Dock="Top" Height="32" Padding="20,0" Classes="hairline-bottom">
+              <TextBlock Classes="label" Text="FILL IN VARIABLES" VerticalAlignment="Center" />
+            </Border>
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+              <StackPanel Margin="20,16" Spacing="14">
+                <TextBlock Classes="compact faint" Text="This prompt has no variables. It renders as is." IsVisible="{Binding !HasVariables}" />
+                <ItemsControl x:Name="VariableInputs" ItemsSource="{Binding Variables}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Spacing="14" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:VariableViewModel">
+                      <StackPanel Spacing="5">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <TextBlock Classes="variable" Text="{Binding Braced}" />
+                          <TextBlock Classes="compact faint" Text="{Binding UsesLabel}" />
+                        </StackPanel>
+                        <TextBox Classes="raised" Height="30" Text="{Binding Value}" PlaceholderText="{Binding Placeholder}" />
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Border Background="{DynamicResource Bg1Brush}" BorderBrush="{DynamicResource Border2Brush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,4,0,0">
+                  <StackPanel Spacing="8">
+                    <TextBlock Classes="label" Text="TEMPLATE" />
+                    <ScrollViewer MaxHeight="220">
+                      <SelectableTextBlock Text="{Binding Body}" FontFamily="{StaticResource MonoFont}" FontSize="12" LineHeight="18" TextWrapping="Wrap" Foreground="{DynamicResource Text2Brush}" />
+                    </ScrollViewer>
+                  </StackPanel>
+                </Border>
+              </StackPanel>
+            </ScrollViewer>
+          </DockPanel>
+        </Border>
+        <DockPanel Grid.Column="1">
+          <Border DockPanel.Dock="Top" Height="32" Padding="20,0" Classes="hairline-bottom">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="10">
+              <TextBlock Classes="label" Text="RENDERED PROMPT" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="1" Classes="data" Text="{Binding FillLabel}" VerticalAlignment="Center"
+                         Foreground="{DynamicResource AmberTextBrush}" IsVisible="{Binding !IsFullyFilled}" />
+              <TextBlock Grid.Column="1" Classes="data" Text="{Binding FillLabel}" VerticalAlignment="Center"
+                         Foreground="{DynamicResource MintTextBrush}" IsVisible="{Binding IsFullyFilled}" />
+              <Button Grid.Column="3" Classes="primary sm" Command="{Binding CopyRenderedCommand}" ToolTip.Tip="Ctrl Enter">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <c:Icon Kind="Copy" Size="12" />
+                  <TextBlock Text="Copy rendered prompt" />
+                </StackPanel>
+              </Button>
+            </Grid>
+          </Border>
+          <ScrollViewer Background="{DynamicResource BgInsetBrush}" HorizontalScrollBarVisibility="Disabled">
+            <c:TemplatePreview Margin="20,18"
+                               Segments="{Binding Segments}"
+                               FilledForeground="{DynamicResource AccentTextBrush}"
+                               FilledBackground="{DynamicResource AccentSubtleBrush}"
+                               MissingForeground="{DynamicResource LavenderTextBrush}"
+                               MissingBackground="{DynamicResource LavenderSubtleBrush}"
+                               SelectionBrush="{DynamicResource AccentBorderBrush}"
+                               FontFamily="{StaticResource MonoFont}"
+                               FontSize="13"
+                               LineHeight="21.5"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource Text1Brush}" />
+          </ScrollViewer>
+        </DockPanel>
+      </Grid>
+
+      <!-- History -->
+      <Grid ColumnDefinitions="340,*" IsVisible="{Binding IsHistoryTab}">
+        <Border Background="{DynamicResource Bg1Brush}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,0,1,0">
+          <DockPanel>
+            <Border DockPanel.Dock="Top" Height="32" Padding="20,0" Classes="hairline-bottom">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="label" Text="VERSIONS" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Classes="data faint" Text="{Binding VersionCountLabel}" VerticalAlignment="Center" />
+              </Grid>
+            </Border>
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+              <ItemsControl ItemsSource="{Binding Versions}" Margin="16,14">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:VersionItemViewModel">
+                    <Grid ColumnDefinitions="18,*" ColumnSpacing="10">
+                      <Grid RowDefinitions="Auto,*">
+                        <Ellipse Width="10" Height="10" Margin="0,13,0,0"
+                                 Fill="{DynamicResource Border3Brush}"
+                                 Stroke="{DynamicResource Bg1Brush}" StrokeThickness="2"
+                                 IsVisible="{Binding !IsCurrent}" />
+                        <Ellipse Width="10" Height="10" Margin="0,13,0,0"
+                                 Fill="{DynamicResource AccentBrush}"
+                                 Stroke="{DynamicResource Bg1Brush}" StrokeThickness="2"
+                                 IsVisible="{Binding IsCurrent}" />
+                        <Border Grid.Row="1" Width="1" Background="{DynamicResource Border2Brush}" HorizontalAlignment="Center" />
+                      </Grid>
+                      <Button Grid.Column="1" Classes="version" Classes.selected="{Binding IsSelected}" Command="{Binding SelectCommand}" Margin="0,0,0,8" ToolTip.Tip="{Binding Timestamp}">
+                        <StackPanel Spacing="5">
+                          <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
+                            <TextBlock Classes="data" Text="{Binding Label}" FontSize="12" />
+                            <TextBlock Grid.Column="1" Classes="compact" FontSize="11" Text="current" Foreground="{DynamicResource AccentTextBrush}" IsVisible="{Binding IsCurrent}" />
+                            <TextBlock Grid.Column="3" Classes="data faint" Text="{Binding When}" />
+                          </Grid>
+                          <TextBlock Classes="compact muted" Text="{Binding Note}" TextWrapping="Wrap" />
+                        </StackPanel>
+                      </Button>
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </DockPanel>
+        </Border>
+
+        <DockPanel Grid.Column="1">
+          <Border DockPanel.Dock="Top" Height="36" Padding="20,0" Classes="hairline-bottom">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+              <TextBlock Classes="label" Text="{Binding CompareTitle}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+              <Border Grid.Column="1" Classes="segmented sm" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="1">
+                  <RadioButton Theme="{StaticResource SegmentButton}" GroupName="history-mode" IsChecked="{Binding IsChangesMode, Mode=OneWay}" Command="{Binding ShowChangesCommand}" Content="Changes" />
+                  <RadioButton Theme="{StaticResource SegmentButton}" GroupName="history-mode" IsChecked="{Binding IsFullTextMode, Mode=OneWay}" Command="{Binding ShowFullTextCommand}" Content="Full text" />
+                </StackPanel>
+              </Border>
+              <Button Grid.Column="2" Classes="sm" Command="{Binding DuplicateVersionCommand}" ToolTip.Tip="Make a new prompt from this version">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <c:Icon Kind="CopyPlus" Size="12" />
+                  <TextBlock Text="Duplicate" />
+                </StackPanel>
+              </Button>
+              <Button Grid.Column="3" Classes="primary sm" Command="{Binding RestoreCommand}" IsEnabled="{Binding CanRestore}" ToolTip.Tip="Make this version current. The current one stays in history.">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <c:Icon Kind="RotateCcw" Size="12" />
+                  <TextBlock Text="Restore" />
+                </StackPanel>
+              </Button>
+            </Grid>
+          </Border>
+          <ScrollViewer Background="{DynamicResource BgInsetBrush}">
+            <StackPanel Margin="0,14">
+              <StackPanel Margin="20,0,20,12" Spacing="4" IsVisible="{Binding IsFullTextMode}">
+                <TextBlock Classes="section-title" Text="{Binding FullTextTitle}" TextWrapping="Wrap" />
+                <TextBlock Classes="compact muted" Text="{Binding FullTextDescription}" TextWrapping="Wrap" IsVisible="{Binding FullTextDescription, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <TextBlock Classes="compact faint" TextWrapping="Wrap" IsVisible="{Binding FullTextNotes, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  <Run Text="Why it worked: " FontWeight="SemiBold" />
+                  <Run Text="{Binding FullTextNotes}" />
+                </TextBlock>
+              </StackPanel>
+              <ItemsControl ItemsSource="{Binding ChangeSummaries}" Margin="20,0,20,10" IsVisible="{Binding IsChangesMode}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel ItemSpacing="6" LineSpacing="6" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="x:String">
+                    <Border Background="{DynamicResource LavenderSubtleBrush}" CornerRadius="4" Padding="7,2">
+                      <TextBlock Classes="compact" Text="{Binding}" Foreground="{DynamicResource LavenderTextBrush}" />
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <ItemsControl ItemsSource="{Binding DiffLines}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:DiffLineViewModel">
+                    <Border Classes="diff" Classes.added="{Binding IsAdded}" Classes.removed="{Binding IsRemoved}" Padding="0,1,20,1">
+                      <Grid ColumnDefinitions="44,16,*" ColumnSpacing="8">
+                        <TextBlock Classes="diff-number" Text="{Binding Number}" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="1" Classes="diff-mark" Text="{Binding Mark}" />
+                        <SelectableTextBlock Grid.Column="2" Classes="diff-text" Text="{Binding Text}" TextWrapping="Wrap" />
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </ScrollViewer>
+        </DockPanel>
+      </Grid>
+    </Panel>
+  </DockPanel>
+</UserControl>
