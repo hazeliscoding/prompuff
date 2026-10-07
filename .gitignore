@@ -22,7 +22,7 @@ Thumbs.db
 *.db
 *.db-shm
 *.db-wal
-screenshots/
+/screenshots/
 
 # Agent instructions are committed in this repo (the global gitignore excludes them)
 !AGENTS.md
