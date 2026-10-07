@@ -140,7 +140,7 @@
               <StackPanel Spacing="8">
                 <TextBlock Classes="strong" Text="Import" />
                 <TextBlock Classes="compact faint" TextWrapping="Wrap"
-                           Text="Pick one or more .md files. Variables in double braces are detected on the way in. Files that can't be read are skipped and reported." />
+                           Text="Pick .md files or a .zip export. Prompts you already have are skipped, and files that can't be read are reported." />
                 <Button HorizontalAlignment="Left" Margin="0,6,0,0" Command="{Binding ImportCommand}">
                   <StackPanel Orientation="Horizontal" Spacing="6">
                     <c:Icon Kind="Download" Size="13" />
@@ -153,7 +153,7 @@
               <StackPanel Spacing="8">
                 <TextBlock Classes="strong" Text="Export" />
                 <TextBlock Classes="compact faint" TextWrapping="Wrap"
-                           Text="Writes one Markdown file per prompt into a folder you choose." />
+                           Text="Saves prompts as one .zip of Markdown files, ready for another machine or a teammate." />
                 <Button HorizontalAlignment="Left" Margin="0,6,0,0" Command="{Binding ExportAllCommand}">
                   <StackPanel Orientation="Horizontal" Spacing="6">
                     <c:Icon Kind="Upload" Size="13" />

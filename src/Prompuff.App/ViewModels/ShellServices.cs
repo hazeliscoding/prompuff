@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Prompuff.Application.DTOs;
+using Prompuff.Application.Interfaces;
 using Prompuff.Infrastructure.Repositories;
 
 namespace Prompuff.App.ViewModels;
@@ -266,6 +267,10 @@ internal static class Format
 
     public static string Count(int count, string singular, string? plural = null) =>
         $"{count.ToString(CultureInfo.InvariantCulture)} {(count == 1 ? singular : plural ?? singular + "s")}";
+
+    /// <summary>A file name for a zip of prompts, such as "prompuff-design-2026-10-07.zip".</summary>
+    public static string ArchiveName(IPromptTransferService transfer, string label, DateTimeOffset now) =>
+        $"prompuff-{Path.GetFileNameWithoutExtension(transfer.SuggestFileName(label))}-{now.ToLocalTime().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}.zip";
 
     public static string Relative(DateTimeOffset when, DateTimeOffset now)
     {

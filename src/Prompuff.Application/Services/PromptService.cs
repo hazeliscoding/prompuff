@@ -26,6 +26,10 @@ public sealed class PromptService(IPromptRepository prompts, TimeProvider time, 
     public Task<Prompt?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
         prompts.GetAsync(id, cancellationToken);
 
+    /// <inheritdoc cref="IPromptRepository.HasPromptAsync"/>
+    public Task<bool> HasPromptAsync(string title, string body, CancellationToken cancellationToken = default) =>
+        prompts.HasPromptAsync(title, body, cancellationToken);
+
     public Task<IReadOnlyList<PromptVersion>> GetVersionsAsync(Guid id, CancellationToken cancellationToken = default) =>
         prompts.GetVersionsAsync(id, cancellationToken);
 

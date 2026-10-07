@@ -48,13 +48,25 @@ public sealed class AvaloniaFilePickerService(TopLevelAccessor accessor) : IFile
         MimeTypes = ["text/markdown", "text/plain"],
     };
 
+    private static readonly FilePickerFileType Zip = new("Zip of prompts")
+    {
+        Patterns = ["*.zip"],
+        MimeTypes = ["application/zip"],
+    };
+
+    private static readonly FilePickerFileType Importable = new("Markdown or zip")
+    {
+        Patterns = [.. Markdown.Patterns!, .. Zip.Patterns!],
+        MimeTypes = [.. Markdown.MimeTypes!, .. Zip.MimeTypes!],
+    };
+
     public async Task<IReadOnlyList<string>> PickFilesToImportAsync()
     {
         var files = await accessor.Require().StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "Import prompts",
             AllowMultiple = true,
-            FileTypeFilter = [Markdown, FilePickerFileTypes.All],
+            FileTypeFilter = [Importable, FilePickerFileTypes.All],
         });
         return files.Select(file => file.TryGetLocalPath()).OfType<string>().ToList();
     }
@@ -72,14 +84,17 @@ public sealed class AvaloniaFilePickerService(TopLevelAccessor accessor) : IFile
         return file?.TryGetLocalPath();
     }
 
-    public async Task<string?> PickExportFolderAsync()
+    public async Task<string?> PickArchiveExportFileAsync(string suggestedFileName)
     {
-        var folders = await accessor.Require().StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        var file = await accessor.Require().StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "Export prompts to a folder",
-            AllowMultiple = false,
+            Title = "Export prompts",
+            SuggestedFileName = suggestedFileName,
+            DefaultExtension = "zip",
+            FileTypeChoices = [Zip],
+            ShowOverwritePrompt = true,
         });
-        return folders.FirstOrDefault()?.TryGetLocalPath();
+        return file?.TryGetLocalPath();
     }
 }
 

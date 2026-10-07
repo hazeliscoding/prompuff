@@ -16,6 +16,12 @@ public interface IPromptRepository
     /// <summary>Deletes the prompt for good, with its versions and tag links. Tags left with no prompts are deleted.</summary>
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// True when a prompt in the library (not in Recently deleted) has this title and body. Line-ending style and blank
+    /// lines around the body don't count, so a prompt that went out through Markdown and came back still matches.
+    /// </summary>
+    Task<bool> HasPromptAsync(string title, string body, CancellationToken cancellationToken = default);
+
     /// <summary>Removes prompts in Recently deleted for good: those deleted before <paramref name="deletedBefore"/>, or all of them. Returns how many.</summary>
     Task<int> PurgeDeletedAsync(DateTimeOffset? deletedBefore, CancellationToken cancellationToken = default);
 

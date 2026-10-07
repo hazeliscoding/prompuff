@@ -347,18 +347,27 @@ public sealed partial class SettingsViewModel : ObservableObject
         var result = await _transfer.ImportFilesAsync(files);
         _notifier.Notify();
         await RefreshAsync();
+        var skipped = result.SkippedCount == 0 ? string.Empty : $" Skipped {Format.Count(result.SkippedCount, "prompt")} you already have.";
         if (result.Failures.Count == 0)
         {
-            _toasts.Show("Imported.", $"{Format.Count(result.ImportedCount, "prompt")} added to your library.");
+            if (result.ImportedCount == 0 && result.SkippedCount > 0)
+            {
+                _toasts.Show("Nothing new.", result.SkippedCount == 1 ? "You already have that prompt." : $"You already have all {result.SkippedCount} of those prompts.", isHappy: false);
+            }
+            else
+            {
+                _toasts.Show("Imported.", $"{Format.Count(result.ImportedCount, "prompt")} added to your library." + skipped);
+            }
+
             return;
         }
 
         var failed = string.Join("\n", result.Failures.Select(failure => $"{Path.GetFileName(failure.FilePath)}: {failure.Reason}"));
         await _dialogs.ShowErrorAsync(
-            result.ImportedCount == 0 ? "Couldn't import that prompt." : $"Imported {Format.Count(result.ImportedCount, "prompt")}, skipped {result.Failures.Count}.",
-            result.ImportedCount == 0
+            result.ImportedCount == 0 ? "Couldn't import that." : $"Imported {Format.Count(result.ImportedCount, "prompt")}, couldn't read {result.Failures.Count}.",
+            (result.ImportedCount == 0
                 ? "Prompuff couldn't understand the file format. Your existing library hasn't been changed."
-                : "Some files couldn't be read. The rest are in your library, and nothing else changed.",
+                : "Some files couldn't be read. The rest are in your library, and nothing else changed.") + skipped,
             failed);
     }
 
@@ -366,7 +375,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private async Task ExportAll()
     {
         var prompts = await _search.SearchAsync(PromptQuery.All);
-        await ExportAsync(prompts.Select(prompt => prompt.Id).ToList(), "your library");
+        await ExportAsync(prompts.Select(prompt => prompt.Id).ToList(), "your library", "library");
     }
 
     [RelayCommand]
@@ -378,7 +387,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
 
         var prompts = await _search.SearchAsync(new PromptQuery { Filter = PromptFilterKind.Collection, CollectionId = id });
-        await ExportAsync(prompts.Select(prompt => prompt.Id).ToList(), SelectedExportCollection.Name);
+        await ExportAsync(prompts.Select(prompt => prompt.Id).ToList(), SelectedExportCollection.Name, SelectedExportCollection.Name);
     }
 
     [RelayCommand]
@@ -473,7 +482,9 @@ public sealed partial class SettingsViewModel : ObservableObject
         UpdateStatus = $"Prompuff {update.Version} is available.";
     }
 
-    private async Task ExportAsync(IReadOnlyList<Guid> ids, string what)
+    /// <param name="what">For the toast: "your library", or a collection name.</param>
+    /// <param name="label">For the suggested file name.</param>
+    private async Task ExportAsync(IReadOnlyList<Guid> ids, string what, string label)
     {
         if (ids.Count == 0)
         {
@@ -481,16 +492,16 @@ public sealed partial class SettingsViewModel : ObservableObject
             return;
         }
 
-        var folder = await _files.PickExportFolderAsync();
-        if (folder is null)
+        var path = await _files.PickArchiveExportFileAsync(Format.ArchiveName(_transfer, label, DateTimeOffset.Now));
+        if (path is null)
         {
             return;
         }
 
         try
         {
-            var result = await _transfer.ExportPromptsAsync(ids, folder);
-            _toasts.Show("Exported.", $"{Format.Count(result.ExportedCount, "prompt")} from {what} as Markdown.");
+            var result = await _transfer.ExportArchiveAsync(ids, path);
+            _toasts.Show("Exported.", $"{Format.Count(result.ExportedCount, "prompt")} from {what} in {Path.GetFileName(path)}.");
         }
         catch (LibraryException exception)
         {

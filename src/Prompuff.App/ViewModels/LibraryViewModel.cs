@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Prompuff.App.Controls;
+using Prompuff.Application;
 using Prompuff.Application.DTOs;
 using Prompuff.Application.Interfaces;
 using Prompuff.Application.Services;
@@ -86,6 +87,8 @@ public sealed partial class LibraryViewModel : ObservableObject
     private readonly ISettingsStore _settings;
     private readonly DialogService _dialogs;
     private readonly ToastService _toasts;
+    private readonly IPromptTransferService _transfer;
+    private readonly IFilePickerService _files;
     private readonly TimeProvider _time;
     private readonly ILogger<LibraryViewModel> _logger;
     private CancellationTokenSource? _searchDelay;
@@ -102,6 +105,8 @@ public sealed partial class LibraryViewModel : ObservableObject
         ISettingsStore settings,
         DialogService dialogs,
         ToastService toasts,
+        IPromptTransferService transfer,
+        IFilePickerService files,
         AppearanceState appearance,
         TimeProvider time,
         ILogger<LibraryViewModel> logger)
@@ -115,6 +120,8 @@ public sealed partial class LibraryViewModel : ObservableObject
         _settings = settings;
         _dialogs = dialogs;
         _toasts = toasts;
+        _transfer = transfer;
+        _files = files;
         _time = time;
         _logger = logger;
         Appearance = appearance;
@@ -170,6 +177,7 @@ public sealed partial class LibraryViewModel : ObservableObject
     public bool CanSort => Filter.Kind is not PromptFilterKind.Recent and not PromptFilterKind.Deleted;
     public bool IsDeletedView => Filter.Kind == PromptFilterKind.Deleted;
     public bool CanEmpty => IsDeletedView && Items.Count > 0;
+    public bool CanExport => !IsDeletedView && Items.Count > 0;
     public string EditedColumn => IsDeletedView ? "TIME LEFT" : "EDITED";
     public bool IsCards => !IsEmpty && Layout == LibraryLayout.Cards;
     public bool IsList => !IsEmpty && Layout == LibraryLayout.List;
@@ -256,6 +264,7 @@ public sealed partial class LibraryViewModel : ObservableObject
         OnPropertyChanged(nameof(CanSort));
         OnPropertyChanged(nameof(IsDeletedView));
         OnPropertyChanged(nameof(CanEmpty));
+        OnPropertyChanged(nameof(CanExport));
         OnPropertyChanged(nameof(EditedColumn));
     }
 
@@ -299,6 +308,28 @@ public sealed partial class LibraryViewModel : ObservableObject
         {
             _logger.LogError(exception, "Couldn't toggle favorite for prompt {PromptId}", card.Id);
             card.IsFavorite = !card.IsFavorite;
+        }
+    }
+
+    /// <summary>Saves the prompts on screen, with the current filter and search, as one .zip to share.</summary>
+    [RelayCommand]
+    private async Task Export()
+    {
+        var ids = Items.Select(card => card.Id).ToList();
+        var path = await _files.PickArchiveExportFileAsync(Format.ArchiveName(_transfer, Title, _time.GetUtcNow()));
+        if (path is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var result = await _transfer.ExportArchiveAsync(ids, path);
+            _toasts.Show("Exported.", $"{Format.Count(result.ExportedCount, "prompt")} in {Path.GetFileName(path)}.");
+        }
+        catch (LibraryException exception)
+        {
+            await _dialogs.ShowErrorAsync("Couldn't export.", exception.Message, exception.InnerException?.Message);
         }
     }
 

@@ -54,7 +54,8 @@ internal sealed class AppHarness : IAsyncDisposable
         string? folder = null,
         double width = 1280,
         double height = 800,
-        IUpdateService? updates = null)
+        IUpdateService? updates = null,
+        IFilePickerService? files = null)
     {
         folder ??= Path.Combine(Path.GetTempPath(), "prompuff-ui-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
@@ -68,6 +69,11 @@ internal sealed class AppHarness : IAsyncDisposable
             if (updates is not null)
             {
                 collection.AddSingleton(updates);
+            }
+
+            if (files is not null)
+            {
+                collection.AddSingleton(files);
             }
         });
         var settings = services.GetRequiredService<ISettingsStore>();

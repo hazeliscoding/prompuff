@@ -7,7 +7,7 @@
   <DockPanel>
     <!-- Header -->
     <Border DockPanel.Dock="Top" Height="56" Padding="20,0" Classes="hairline-bottom">
-      <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="12">
+      <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="12">
         <StackPanel VerticalAlignment="Center" Spacing="1">
           <TextBlock Classes="section-title" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
           <TextBlock Classes="compact faint" Text="{Binding Subtitle}" />
@@ -18,13 +18,20 @@
             <TextBlock Text="Clear filter" />
           </StackPanel>
         </Button>
-        <Button Grid.Column="2" Classes="danger sm" VerticalAlignment="Center" IsVisible="{Binding CanEmpty}" Command="{Binding EmptyRecentlyDeletedCommand}">
+        <Button Grid.Column="2" Classes="ghost sm" IsVisible="{Binding CanExport}" Command="{Binding ExportCommand}" VerticalAlignment="Center"
+                ToolTip.Tip="Save these prompts as one .zip to share">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <c:Icon Kind="Upload" Size="12" />
+            <TextBlock Text="Export" />
+          </StackPanel>
+        </Button>
+        <Button Grid.Column="3" Classes="danger sm" VerticalAlignment="Center" IsVisible="{Binding CanEmpty}" Command="{Binding EmptyRecentlyDeletedCommand}">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <c:Icon Kind="Trash2" Size="12" />
             <TextBlock Text="Empty" />
           </StackPanel>
         </Button>
-        <ComboBox Grid.Column="2" Width="160" VerticalAlignment="Center" IsVisible="{Binding CanSort}"
+        <ComboBox Grid.Column="3" Width="160" VerticalAlignment="Center" IsVisible="{Binding CanSort}"
                   ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSort}" ToolTip.Tip="Sort">
           <ComboBox.ItemTemplate>
             <DataTemplate x:DataType="vm:SortOption">
@@ -35,7 +42,7 @@
             </DataTemplate>
           </ComboBox.ItemTemplate>
         </ComboBox>
-        <Border Grid.Column="3" Classes="segmented" VerticalAlignment="Center">
+        <Border Grid.Column="4" Classes="segmented" VerticalAlignment="Center">
           <StackPanel Orientation="Horizontal" Spacing="1">
             <RadioButton Theme="{StaticResource SegmentButton}" GroupName="layout" IsChecked="{Binding IsCardsLayout}" ToolTip.Tip="Cards">
               <StackPanel Orientation="Horizontal" Spacing="5">

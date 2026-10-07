@@ -105,6 +105,23 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
         await transaction.CommitAsync(cancellationToken);
     }
 
+    public async Task<bool> HasPromptAsync(string title, string body, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await database.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+
+        // The stored body gets the same treatment as a body read from Markdown: no carriage returns, no blank lines
+        // around it, no trailing whitespace.
+        command.CommandText = """
+            SELECT EXISTS (
+                SELECT 1 FROM Prompts
+                WHERE DeletedAt IS NULL AND Title = $title
+                  AND rtrim(ltrim(replace(Body, char(13), ''), char(10)), char(10) || char(9) || ' ') = $body);
+            """;
+        command.With("$title", title.Trim()).With("$body", body.Replace("\r", string.Empty).Trim('\n').TrimEnd());
+        return Convert.ToInt64(await command.ExecuteScalarAsync(cancellationToken)) == 1;
+    }
+
     public async Task<int> PurgeDeletedAsync(DateTimeOffset? deletedBefore, CancellationToken cancellationToken = default)
     {
         await using var connection = await database.OpenAsync(cancellationToken);
