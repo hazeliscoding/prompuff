@@ -116,21 +116,21 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 
 **Done when:** a fresh clone builds from the README, and the core flow works on both Windows and Linux. The hands-on install checks moved to v0.2.
 
-## v0.2: Safe, searchable and shareable
+## v0.2: Safe, searchable and shareable (tagged 2026-10-07)
 
 Trust Prompuff with more than a few prompts: nothing is lost by accident, search scales, and prompts move between machines and people.
 
 - [x] Publish v0.1.0 (2026-10-07).
 - [x] Publish v0.1.1 (2026-10-07): hides the full-screen caption button that covered Quick save on Windows.
 - [x] Publish v0.1.2 (2026-10-07): checks for updates every time Prompuff opens and keeps a found update in the sidebar.
-- [ ] Install v0.1.0 from `Prompuff-Setup.exe` on Windows and from the AppImage in WSLg, and run the core flow by hand, real clipboard included.
+- [ ] Install v0.1.0 from `Prompuff-Setup.exe` on Windows and from the AppImage in WSLg, and run the core flow by hand, real clipboard included. Windows is partly done: an install of 0.1.0 updated itself to 0.1.2 (2026-10-07).
 - [x] Automatic backups: a daily copy of the library in `backups/`, keeping the last 30. Restore one from Settings › Storage, after copying the current library aside.
 - [x] Recently deleted: deleting a prompt keeps it for 30 days with Restore and Empty. This is the first real schema migration (`DeletedAt`), with a test that upgrades a v0.1 database.
 - [x] SQLite FTS5 search behind `IPromptSearch`: ranked results, prefix matches, and case- and accent-insensitive matching for non-ASCII text, which `LIKE` can't do.
 - [x] Remembered variable values per prompt, stored locally, with a Clear values button.
 - [x] Share: an Export button in the library header saves what the library shows (all, a collection, a tag, Favorites, Recent or a search) as one `.zip` of Markdown files. Settings › Import and export saves the whole library the same way.
 - [x] Import a `.zip` as well as `.md` files. Entries are read in memory with the same 5 MB limit per prompt and never unpacked to disk. Prompts whose title and body match one in the library are skipped, and the result says how many.
-- [ ] Release v0.2.0 and confirm the v0.1.0 installs from the first item update to it with the library intact.
+- [ ] Publish v0.2.0 (tagged 2026-10-07) and confirm the installs from the first item update to it with the library intact.
 
 **Done when:** an installed 0.1 updates to 0.2 on Windows and Linux with every prompt and version intact, a deleted prompt comes back, searching "cafe" finds "Café", and a `.zip` exported on one machine imports on another with duplicates skipped.
 
