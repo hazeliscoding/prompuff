@@ -53,7 +53,8 @@ internal sealed class AppHarness : IAsyncDisposable
         ThemePreference theme = ThemePreference.Dark,
         string? folder = null,
         double width = 1280,
-        double height = 800)
+        double height = 800,
+        IUpdateService? updates = null)
     {
         folder ??= Path.Combine(Path.GetTempPath(), "prompuff-ui-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
@@ -62,7 +63,13 @@ internal sealed class AppHarness : IAsyncDisposable
             PlatformEnvironment.Current.HomeDirectory,
             name => name == AppDataPathProvider.OverrideVariable ? folder : null));
 
-        var services = App.ConfigureServices(paths);
+        var services = App.ConfigureServices(paths, replace: collection =>
+        {
+            if (updates is not null)
+            {
+                collection.AddSingleton(updates);
+            }
+        });
         var settings = services.GetRequiredService<ISettingsStore>();
         settings.Save(settings.Load() with { Theme = theme, CheckForUpdatesAutomatically = false, Window = null });
 

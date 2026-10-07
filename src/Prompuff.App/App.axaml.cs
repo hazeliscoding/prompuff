@@ -45,8 +45,8 @@ public sealed class App : Avalonia.Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    /// <summary>Builds the service container. Used by the app and by the headless UI tests.</summary>
-    public static ServiceProvider ConfigureServices(AppDataPathProvider paths)
+    /// <summary>Builds the service container. Used by the app and by the headless UI tests, which can replace services.</summary>
+    public static ServiceProvider ConfigureServices(AppDataPathProvider paths, Action<IServiceCollection>? replace = null)
     {
         try
         {
@@ -87,6 +87,7 @@ public sealed class App : Avalonia.Application
         services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<PromptEditorViewModel>();
         services.AddSingleton<Func<PromptEditorViewModel>>(provider => provider.GetRequiredService<PromptEditorViewModel>);
+        replace?.Invoke(services);
         return services.BuildServiceProvider();
     }
 

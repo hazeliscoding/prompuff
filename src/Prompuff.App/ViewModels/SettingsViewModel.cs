@@ -231,12 +231,11 @@ public sealed partial class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(HasExportCollections));
     }
 
-    /// <summary>Checks for updates in the background when the setting is on, at most twice a day.</summary>
+    /// <summary>Checks for updates in the background every time Prompuff opens, when the setting is on.</summary>
     public async Task CheckOnStartupAsync()
     {
         var settings = _settings.Load();
-        if (!settings.CheckForUpdatesAutomatically || !_updates.IsSupported
-            || settings.LastUpdateCheck is { } last && DateTimeOffset.UtcNow - last < TimeSpan.FromHours(12))
+        if (!settings.CheckForUpdatesAutomatically || !_updates.IsSupported)
         {
             return;
         }
@@ -244,7 +243,6 @@ public sealed partial class SettingsViewModel : ObservableObject
         try
         {
             var update = await _updates.CheckForUpdatesAsync(settings.UpdateChannel);
-            _settings.Save(_settings.Load() with { LastUpdateCheck = DateTimeOffset.UtcNow });
             if (update is not null)
             {
                 ShowAvailable(update);
@@ -335,7 +333,6 @@ public sealed partial class SettingsViewModel : ObservableObject
         try
         {
             var update = await _updates.CheckForUpdatesAsync(_settings.Load().UpdateChannel);
-            _settings.Save(_settings.Load() with { LastUpdateCheck = DateTimeOffset.UtcNow });
             if (update is null)
             {
                 CanInstallUpdate = false;

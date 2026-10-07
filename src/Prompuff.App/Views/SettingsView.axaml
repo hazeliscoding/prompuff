@@ -155,7 +155,7 @@
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
               <StackPanel>
                 <TextBlock Classes="strong" Text="Check for updates automatically" />
-                <TextBlock Classes="compact faint" Text="Asks GitHub Releases at startup, at most twice a day." />
+                <TextBlock Classes="compact faint" Text="Asks GitHub Releases each time Prompuff opens." />
               </StackPanel>
               <ToggleButton Grid.Column="1" Theme="{StaticResource Switch}" IsChecked="{Binding CheckForUpdatesAutomatically}" VerticalAlignment="Center" />
             </Grid>

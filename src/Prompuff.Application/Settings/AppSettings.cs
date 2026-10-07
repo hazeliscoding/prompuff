@@ -31,7 +31,6 @@ public sealed record AppSettings
     public UpdateChannel UpdateChannel { get; init; } = UpdateChannel.Stable;
     public LibraryLayout LibraryLayout { get; init; } = LibraryLayout.Cards;
     public PromptSort LibrarySort { get; init; } = PromptSort.LastEdited;
-    public DateTimeOffset? LastUpdateCheck { get; init; }
     public WindowPlacement? Window { get; init; }
 
     public static AppSettings Default { get; } = new();
