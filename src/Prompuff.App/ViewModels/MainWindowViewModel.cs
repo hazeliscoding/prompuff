@@ -91,9 +91,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public string PaletteShortcut => Shortcuts.Display(ShortcutAction.CommandPalette);
     public string QuickSaveShortcut => Shortcuts.Display(ShortcutAction.QuickSave);
 
-    /// <summary>Space to leave for the native caption buttons when the window draws its own title bar.</summary>
     public bool ExtendsIntoTitleBar { get; } = OperatingSystem.IsWindows();
 
+    /// <summary>Space to leave for the caption buttons when the window draws its own title bar: three 45px buttons, 2px apart.</summary>
     public Avalonia.Thickness TitleBarInset => ExtendsIntoTitleBar ? new Avalonia.Thickness(0, 0, 144, 0) : default;
 
     [ObservableProperty]

@@ -204,12 +204,16 @@
         </Style>
       </ControlTheme>
 
-      <!-- Windows title bar: keep the drawn caption buttons, drop the drawn title text that would cover the brand -->
+      <!-- Windows title bar: keep the drawn caption buttons, drop the drawn title text that would cover the brand,
+           and drop the full-screen button so only minimize, maximize and close remain (TitleBarInset reserves room for three) -->
       <ControlTheme x:Key="PrompuffWindowDecorations"
                     TargetType="WindowDrawnDecorations"
                     BasedOn="{StaticResource {x:Type WindowDrawnDecorations}}">
         <Style Selector="^ /template/ Panel#PART_TitleTextPanel">
           <Setter Property="Opacity" Value="0" />
+        </Style>
+        <Style Selector="^ /template/ Button#PART_FullScreenButton">
+          <Setter Property="IsVisible" Value="False" />
         </Style>
       </ControlTheme>
 
