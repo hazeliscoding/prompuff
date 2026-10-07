@@ -96,8 +96,38 @@
               <SelectableTextBlock Text="{Binding SettingsPath}" FontFamily="{StaticResource MonoFont}" FontSize="12" Foreground="{DynamicResource Text3Brush}" TextWrapping="Wrap" />
             </StackPanel>
           </Border>
+          <StackPanel Spacing="8">
+            <TextBlock Classes="strong" Text="Backups" />
+            <TextBlock Classes="compact faint" TextWrapping="Wrap"
+                       Text="Prompuff copies the library to the backups folder once a day and keeps the last 30, plus a copy before an update changes how it's stored. Restoring copies the current library aside first." />
+            <TextBlock Classes="compact faint" IsVisible="{Binding !HasBackups}" Text="No backups yet. The first one is made the next time Prompuff opens." />
+            <Border CornerRadius="6" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="1" ClipToBounds="True" IsVisible="{Binding HasBackups}">
+              <ScrollViewer MaxHeight="290" HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding Backups}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:BackupRow">
+                      <Border Height="48" Padding="14,0,8,0" Background="{DynamicResource Bg2Brush}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                          <StackPanel VerticalAlignment="Center" Spacing="1">
+                            <TextBlock Classes="data" FontSize="12" Text="{Binding When}" />
+                            <TextBlock Classes="compact faint" Text="{Binding Detail}" />
+                          </StackPanel>
+                          <Button Grid.Column="1" Classes="ghost sm" VerticalAlignment="Center" Command="{Binding RestoreCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                              <c:Icon Kind="RotateCcw" Size="12" />
+                              <TextBlock Text="Restore" />
+                            </StackPanel>
+                          </Button>
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </Border>
+          </StackPanel>
           <TextBlock Classes="compact faint" TextWrapping="Wrap"
-                     Text="Updates replace the app, never this folder. Before a new version changes how the library is stored, Prompuff copies it to the backups folder." />
+                     Text="Updates replace the app, never this folder." />
         </StackPanel>
 
         <!-- Import / export -->

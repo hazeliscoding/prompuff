@@ -8,6 +8,7 @@ using Prompuff.Application.DTOs;
 using Prompuff.Application.Interfaces;
 using Prompuff.Application.Services;
 using Prompuff.Application.Settings;
+using Prompuff.Infrastructure.Persistence;
 
 namespace Prompuff.App.ViewModels;
 
@@ -36,6 +37,25 @@ public sealed partial class SettingsSectionItem(SettingsSection section, string 
 
 public sealed record ShortcutRow(string Label, string Keys);
 
+public sealed partial class BackupRow(LibraryBackup backup, Func<BackupRow, Task> restore)
+{
+    public LibraryBackup Backup { get; } = backup;
+    public string When { get; } = Format.Timestamp(backup.CreatedAt);
+
+    /// <summary>The time for a sentence: "Oct 7, 2026 at 16:57".</summary>
+    public string WhenInWords { get; } = $"{Format.Date(backup.CreatedAt)} at {backup.CreatedAt.ToLocalTime():HH:mm}";
+
+    public string Detail { get; } = backup.Kind switch
+    {
+        BackupKind.BeforeUpdate => "Before an update",
+        BackupKind.BeforeRestore => "Before a restore",
+        _ => "Daily",
+    } + " · " + Format.Size(backup.SizeBytes);
+
+    [RelayCommand]
+    private Task Restore() => restore(this);
+}
+
 public sealed partial class SettingsViewModel : ObservableObject
 {
     public const string ReleasesUrl = "https://github.com/hazeliscoding/prompuff/releases";
@@ -50,6 +70,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly IFilePickerService _files;
     private readonly IPlatformLauncher _launcher;
     private readonly IUpdateService _updates;
+    private readonly LibraryBackups _backups;
     private readonly DialogService _dialogs;
     private readonly ToastService _toasts;
     private readonly LibraryNotifier _notifier;
@@ -67,6 +88,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         IFilePickerService files,
         IPlatformLauncher launcher,
         IUpdateService updates,
+        LibraryBackups backups,
         DialogService dialogs,
         ToastService toasts,
         LibraryNotifier notifier,
@@ -82,6 +104,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _files = files;
         _launcher = launcher;
         _updates = updates;
+        _backups = backups;
         _dialogs = dialogs;
         _toasts = toasts;
         _notifier = notifier;
@@ -105,6 +128,8 @@ public sealed partial class SettingsViewModel : ObservableObject
     public IReadOnlyList<SettingsSectionItem> Sections { get; }
     public IReadOnlyList<ShortcutRow> Shortcuts { get; }
     public ObservableCollection<CollectionOption> ExportCollections { get; } = [];
+    public ObservableCollection<BackupRow> Backups { get; } = [];
+    public bool HasBackups => Backups.Count > 0;
     public string DataDirectory => _paths.GetAppDataDirectory();
     public string SettingsPath => _paths.GetSettingsPath();
     public string CurrentVersion => _updates.CurrentVersion;
@@ -224,6 +249,14 @@ public sealed partial class SettingsViewModel : ObservableObject
 
         StorageSummary = $"{Format.Count(counts.All, "prompt")} · {Format.Count(counts.Versions, "version")} · {Format.Size(size)} on disk";
 
+        Backups.Clear();
+        foreach (var backup in _backups.List())
+        {
+            Backups.Add(new BackupRow(backup, RestoreBackupAsync));
+        }
+
+        OnPropertyChanged(nameof(HasBackups));
+
         var selected = SelectedExportCollection?.Id;
         ExportCollections.Clear();
         foreach (var collection in await _collections.ListAsync())
@@ -275,6 +308,31 @@ public sealed partial class SettingsViewModel : ObservableObject
         {
             await _dialogs.ShowErrorAsync("Couldn't open the folder.", $"Your library lives in {DataDirectory}.");
         }
+    }
+
+    private async Task RestoreBackupAsync(BackupRow row)
+    {
+        if (!await _dialogs.ConfirmAsync(
+                "Restore this backup?",
+                $"Your library goes back to how it was on {row.WhenInWords}. Prompuff copies the current library to the backups folder first, so you can change your mind.",
+                "Restore"))
+        {
+            return;
+        }
+
+        try
+        {
+            await _backups.RestoreAsync(row.Backup);
+        }
+        catch (LibraryException exception)
+        {
+            await _dialogs.ShowErrorAsync("Couldn't restore that backup.", exception.Message, exception.InnerException?.Message);
+            return;
+        }
+
+        _notifier.Notify();
+        await RefreshAsync();
+        _toasts.Show("Restored.", $"Your library is back to {row.WhenInWords}.");
     }
 
     [RelayCommand]
