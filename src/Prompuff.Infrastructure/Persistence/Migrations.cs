@@ -64,6 +64,46 @@ public static class Migrations
             ALTER TABLE Prompts ADD COLUMN DeletedAt TEXT NULL;
             CREATE INDEX IX_Prompts_DeletedAt ON Prompts (DeletedAt);
             """),
+
+        // Full-text search. Rows are keyed by PromptId rather than rowid, because VACUUM may renumber the rowids of a
+        // table without an INTEGER PRIMARY KEY. Triggers keep the index in step with prompts and their tags.
+        new(3, "Full-text search", """
+            CREATE VIRTUAL TABLE PromptSearch USING fts5(
+                PromptId UNINDEXED, Title, Description, Body, Notes, Tags,
+                tokenize = 'unicode61 remove_diacritics 2'
+            );
+
+            INSERT INTO PromptSearch (PromptId, Title, Description, Body, Notes, Tags)
+            SELECT p.Id, p.Title, p.Description, p.Body, p.Notes,
+                   (SELECT group_concat(t.Name, ' ') FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId WHERE pt.PromptId = p.Id)
+            FROM Prompts p;
+
+            CREATE TRIGGER Prompts_SearchInsert AFTER INSERT ON Prompts BEGIN
+                INSERT INTO PromptSearch (PromptId, Title, Description, Body, Notes)
+                VALUES (new.Id, new.Title, new.Description, new.Body, new.Notes);
+            END;
+
+            CREATE TRIGGER Prompts_SearchUpdate AFTER UPDATE OF Title, Description, Body, Notes ON Prompts BEGIN
+                UPDATE PromptSearch SET Title = new.Title, Description = new.Description, Body = new.Body, Notes = new.Notes
+                WHERE PromptId = new.Id;
+            END;
+
+            CREATE TRIGGER Prompts_SearchDelete AFTER DELETE ON Prompts BEGIN
+                DELETE FROM PromptSearch WHERE PromptId = old.Id;
+            END;
+
+            CREATE TRIGGER PromptTags_SearchInsert AFTER INSERT ON PromptTags BEGIN
+                UPDATE PromptSearch
+                SET Tags = (SELECT group_concat(t.Name, ' ') FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId WHERE pt.PromptId = new.PromptId)
+                WHERE PromptId = new.PromptId;
+            END;
+
+            CREATE TRIGGER PromptTags_SearchDelete AFTER DELETE ON PromptTags BEGIN
+                UPDATE PromptSearch
+                SET Tags = (SELECT group_concat(t.Name, ' ') FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId WHERE pt.PromptId = old.PromptId)
+                WHERE PromptId = old.PromptId;
+            END;
+            """),
     ];
 
     public static int LatestVersion => All[^1].Version;

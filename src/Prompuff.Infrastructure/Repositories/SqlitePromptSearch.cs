@@ -8,8 +8,10 @@ using Prompuff.Infrastructure.Persistence;
 namespace Prompuff.Infrastructure.Repositories;
 
 /// <summary>
-/// Search with SQL LIKE. Every word in the query must appear in the title, description, body, notes or a tag.
-/// A word starting with <c>#</c> must match a tag exactly. Titles that match the first word rank first.
+/// Full-text search over the <c>PromptSearch</c> FTS5 index. Every word in the query must start a word in the title,
+/// description, body, notes or tags, ignoring case and accents, and results are ranked with title matches first.
+/// A word starting with <c>#</c> must match a tag exactly. A word with no letters or digits, such as <c>-&gt;</c>,
+/// gives the index nothing to look up, so it is matched literally with LIKE.
 /// </summary>
 public sealed class SqlitePromptSearch(SqliteDatabase database) : IPromptSearch
 {
@@ -20,6 +22,9 @@ public sealed class SqlitePromptSearch(SqliteDatabase database) : IPromptSearch
         await using var connection = await database.OpenAsync(cancellationToken);
         await using var command = connection.CreateCommand();
 
+        var terms = SplitTerms(query.Text);
+        var words = terms.Where(term => !IsTagTerm(term) && term.Any(char.IsLetterOrDigit)).ToList();
+
         var sql = new StringBuilder($"""
             SELECT p.Id, p.Title, p.Description, p.IsFavorite, p.Rating, p.CollectionId, p.CreatedAt, p.UpdatedAt, p.LastOpenedAt, p.DeletedAt,
                    (SELECT group_concat(Name, char(31)) FROM (
@@ -27,7 +32,18 @@ public sealed class SqlitePromptSearch(SqliteDatabase database) : IPromptSearch
                         WHERE pt.PromptId = p.Id ORDER BY pt.Position, t.Name)) AS TagNames
             FROM Prompts p
             """);
+        if (words.Count > 0)
+        {
+            sql.Append(" JOIN PromptSearch ON PromptSearch.PromptId = p.Id");
+        }
+
         sql.Append(query.Filter == PromptFilterKind.Deleted ? " WHERE p.DeletedAt IS NOT NULL" : " WHERE p.DeletedAt IS NULL");
+        if (words.Count > 0)
+        {
+            // Each word becomes a quoted prefix phrase, so FTS5 syntax typed into the search box is never interpreted.
+            sql.Append(" AND PromptSearch MATCH $match");
+            command.With("$match", string.Join(' ', words.Select(word => $"\"{word.Replace("\"", "\"\"")}\"*")));
+        }
 
         switch (query.Filter)
         {
@@ -47,30 +63,29 @@ public sealed class SqlitePromptSearch(SqliteDatabase database) : IPromptSearch
                 break;
         }
 
-        var terms = SplitTerms(query.Text);
         for (var i = 0; i < terms.Count; i++)
         {
             var term = terms[i];
-            if (term.StartsWith('#') && TagName.Normalize(term) is { } tagTerm)
+            if (IsTagTerm(term))
             {
                 sql.Append($" AND EXISTS (SELECT 1 FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId WHERE pt.PromptId = p.Id AND t.Name = $tag{i})");
-                command.With($"$tag{i}", tagTerm);
-                continue;
+                command.With($"$tag{i}", TagName.Normalize(term)!);
             }
-
-            sql.Append($"""
-                 AND (p.Title LIKE $term{i} ESCAPE '\' OR p.Description LIKE $term{i} ESCAPE '\'
-                      OR p.Body LIKE $term{i} ESCAPE '\' OR p.Notes LIKE $term{i} ESCAPE '\'
-                      OR EXISTS (SELECT 1 FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId
-                                 WHERE pt.PromptId = p.Id AND t.Name LIKE $term{i} ESCAPE '\'))
-                """);
-            command.With($"$term{i}", "%" + EscapeLike(term) + "%");
+            else if (!words.Contains(term))
+            {
+                sql.Append($"""
+                     AND (p.Title LIKE $term{i} ESCAPE '\' OR p.Description LIKE $term{i} ESCAPE '\'
+                          OR p.Body LIKE $term{i} ESCAPE '\' OR p.Notes LIKE $term{i} ESCAPE '\')
+                    """);
+                command.With($"$term{i}", "%" + EscapeLike(term) + "%");
+            }
         }
 
         sql.Append(" ORDER BY ");
-        if (terms.Count > 0 && !terms[0].StartsWith('#'))
+        if (words.Count > 0)
         {
-            sql.Append("CASE WHEN p.Title LIKE $term0 ESCAPE '\\' THEN 0 ELSE 1 END, ");
+            // Column weights in table order: PromptId (not indexed), Title, Description, Body, Notes, Tags.
+            sql.Append("bm25(PromptSearch, 0.0, 10.0, 4.0, 1.0, 2.0, 6.0), ");
         }
 
         const string activity = "MAX(p.UpdatedAt, COALESCE(p.LastOpenedAt, p.UpdatedAt)) DESC";
@@ -118,6 +133,8 @@ public sealed class SqlitePromptSearch(SqliteDatabase database) : IPromptSearch
         DeletedAt = reader.ReadTimeOrNull(9),
         Tags = reader.ReadTextOrNull(10)?.Split(TagSeparator, StringSplitOptions.RemoveEmptyEntries) ?? [],
     };
+
+    private static bool IsTagTerm(string term) => term.StartsWith('#') && TagName.Normalize(term) is not null;
 
     private static List<string> SplitTerms(string? text) =>
         string.IsNullOrWhiteSpace(text)

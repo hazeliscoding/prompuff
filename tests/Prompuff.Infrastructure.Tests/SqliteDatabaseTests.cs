@@ -100,6 +100,8 @@ public class SqliteDatabaseTests
         Assert.Equal("From v0.1", prompt.Title);
         Assert.True(prompt.IsFavorite);
         Assert.Null(prompt.DeletedAt);
+        var found = await new Repositories.SqlitePromptSearch(database).SearchAsync(new Application.DTOs.PromptQuery { Text = "from" });
+        Assert.Equal([id], found.Select(summary => summary.Id));
         Assert.Single(Directory.GetFiles(Path.Combine(folder, "backups"), "prompuff-schema1-*.db"));
 
         SqliteConnection.ClearAllPools();

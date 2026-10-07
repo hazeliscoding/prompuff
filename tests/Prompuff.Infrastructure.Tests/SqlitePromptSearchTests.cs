@@ -76,6 +76,78 @@ public class SqlitePromptSearchTests
         Assert.Empty(await library.Search.SearchAsync(new PromptQuery { Text = "%%" }));
     }
 
+    [Theory]
+    [InlineData("cafe", "Café au lait")]
+    [InlineData("CAFÉ", "cafe order")]
+    [InlineData("naive", "Naïve résumé")]
+    [InlineData("resume", "Naïve résumé")]
+    public async Task Matching_ignores_case_and_accents(string text, string title)
+    {
+        await using var library = await TestLibrary.CreateAsync();
+        var prompt = await library.PromptService.CreateAsync(new PromptContent(title, null, "body", null));
+        await library.PromptService.CreateAsync(new PromptContent("Something else", null, "body", null));
+
+        Assert.Equal([prompt.Id], (await library.Search.SearchAsync(new PromptQuery { Text = text })).Select(r => r.Id));
+    }
+
+    [Fact]
+    public async Task Words_match_by_prefix()
+    {
+        var (library, ids) = await SeedAsync();
+        await using var _ = library;
+
+        Assert.Equal([ids["angular"]], (await library.Search.SearchAsync(new PromptQuery { Text = "upgr" })).Select(r => r.Id));
+        Assert.Equal([ids["angular"]], (await library.Search.SearchAsync(new PromptQuery { Text = "migr" })).Select(r => r.Id));
+    }
+
+    [Fact]
+    public async Task Results_are_ranked_with_titles_first()
+    {
+        await using var library = await TestLibrary.CreateAsync();
+        var body = await library.PromptService.CreateAsync(new PromptContent("Other", null, "testing testing testing", null));
+        library.Time.Advance(TimeSpan.FromMinutes(1));
+        var title = await library.PromptService.CreateAsync(new PromptContent("Notes on testing", null, "x", null));
+        library.Time.Advance(TimeSpan.FromMinutes(1));
+        await library.PromptService.SaveContentAsync(body.Id, new PromptContent("Other", null, "testing testing testing!", null));
+
+        var results = await library.Search.SearchAsync(new PromptQuery { Text = "testing", Sort = PromptSort.LastEdited });
+
+        Assert.Equal([title.Id, body.Id], results.Select(r => r.Id));
+    }
+
+    [Fact]
+    public async Task The_index_follows_edits_tags_and_deletes()
+    {
+        await using var library = await TestLibrary.CreateAsync();
+        var prompt = await library.PromptService.CreateAsync(new PromptContent("Planner", null, "first draft", null));
+
+        await library.PromptService.SaveContentAsync(prompt.Id, new PromptContent("Planner", null, "second version", null));
+        Assert.Empty(await library.Search.SearchAsync(new PromptQuery { Text = "draft" }));
+        Assert.Single(await library.Search.SearchAsync(new PromptQuery { Text = "second" }));
+
+        await library.PromptService.AddTagAsync(prompt.Id, "kubernetes");
+        Assert.Single(await library.Search.SearchAsync(new PromptQuery { Text = "kube" }));
+        await library.PromptService.RemoveTagAsync(prompt.Id, "kubernetes");
+        Assert.Empty(await library.Search.SearchAsync(new PromptQuery { Text = "kube" }));
+
+        await library.PromptService.DeleteAsync(prompt.Id);
+        await library.PromptService.EmptyRecentlyDeletedAsync();
+        await using var connection = await library.Database.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM PromptSearch;";
+        Assert.Equal(0L, await command.ExecuteScalarAsync());
+    }
+
+    [Fact]
+    public async Task Symbol_only_words_match_literally()
+    {
+        await using var library = await TestLibrary.CreateAsync();
+        var arrow = await library.PromptService.CreateAsync(new PromptContent("Pipeline", null, "parse -> render", null));
+        await library.PromptService.CreateAsync(new PromptContent("Plain", null, "nothing here", null));
+
+        Assert.Equal([arrow.Id], (await library.Search.SearchAsync(new PromptQuery { Text = "->" })).Select(r => r.Id));
+    }
+
     [Fact]
     public async Task Hash_words_match_tags_exactly()
     {
