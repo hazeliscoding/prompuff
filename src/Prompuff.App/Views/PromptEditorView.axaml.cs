@@ -33,9 +33,12 @@ public partial class PromptEditorView : UserControl
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
-        if (_subscribed is { IsNew: true })
+
+        // A new prompt starts at its title. An existing one opens with the cursor at the top of its body, so the
+        // keyboard can carry on editing straight away.
+        if (_subscribed is not null)
         {
-            OnFocusRequested(this, "title");
+            OnFocusRequested(this, _subscribed.IsNew ? "title" : "body");
         }
     }
 
@@ -45,6 +48,11 @@ public partial class PromptEditorView : UserControl
             if (target == "variable")
             {
                 VariableInputs.GetVisualDescendants().OfType<TextBox>().FirstOrDefault()?.Focus();
+            }
+            else if (target == "body")
+            {
+                BodyBox.Focus();
+                BodyBox.CaretIndex = 0;
             }
             else
             {

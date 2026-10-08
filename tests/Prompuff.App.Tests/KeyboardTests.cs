@@ -61,6 +61,47 @@ public class KeyboardTests
     }
 
     [AvaloniaFact]
+    public async Task A_prompt_can_be_found_edited_rendered_and_copied_without_the_mouse()
+    {
+        await using var app = await AppHarness.StartAsync();
+        var command = Platform.Shortcuts.CommandModifier == KeyModifiers.Meta ? RawInputModifiers.Meta : RawInputModifiers.Control;
+
+        // Find and open.
+        Press(app, PhysicalKey.F, command);
+        await app.SettleAsync();
+        app.Window.KeyTextInput("angular");
+        Press(app, PhysicalKey.Enter);
+        await app.SettleAsync(400);
+        var editor = Assert.IsType<PromptEditorViewModel>(app.ViewModel.CurrentPage);
+        Assert.Equal("Angular Upgrade Planner", editor.Title);
+
+        // The cursor waits at the top of the body.
+        app.Window.KeyTextInput("Context: monorepo. ");
+        await app.SettleAsync();
+        Assert.StartsWith("Context: monorepo. You are a senior Angular engineer", editor.Body);
+        Press(app, PhysicalKey.S, command);
+        await app.SettleAsync();
+        Assert.False(editor.IsDirty);
+        Assert.Equal(2, editor.CurrentVersion);
+
+        // Render, fill the first variable, and copy.
+        Press(app, PhysicalKey.Enter, command);
+        await app.SettleAsync();
+        Assert.Equal(EditorTab.Render, editor.Tab);
+        app.Window.KeyTextInput("acme");
+        await app.SettleAsync();
+        Press(app, PhysicalKey.Enter, command);
+        await app.SettleAsync();
+        var copied = await app.Get<Application.Interfaces.IClipboardService>().GetTextAsync();
+        Assert.StartsWith("Context: monorepo. You are a senior Angular engineer planning an upgrade of acme to Angular", copied);
+        app.Screenshot("editor-render-keyboard");
+
+        Press(app, PhysicalKey.Escape);
+        await app.SettleAsync();
+        Assert.IsType<LibraryViewModel>(app.ViewModel.CurrentPage);
+    }
+
+    [AvaloniaFact]
     public async Task List_rows_move_with_up_and_down()
     {
         await using var app = await AppHarness.StartAsync();
