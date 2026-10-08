@@ -47,13 +47,13 @@ public class MultiSelectTests
         app.ViewModel.Dialogs.Current.ConfirmCommand.Execute(null);
         await tagging;
         await app.SettleAsync();
-        Assert.All(library.Items.Where(item => item.IsSelected), card => Assert.Contains(card.Tags, tag => tag.Name == "batch"));
+        Assert.All(library.Items.Where(item => item.IsSelected), card => Assert.Contains("batch", card.TagNames));
         Assert.Contains(app.ViewModel.Sidebar.Tags, tag => tag is { Name: "triage", Count: 2 });
 
         // Remove a tag that only one of them has.
         await library.TagActions.Single(action => action.Label == "Remove #writing").RunCommand.ExecuteAsync(null);
         await app.SettleAsync();
-        Assert.DoesNotContain(library.Items, card => card.Tags.Any(tag => tag.Name == "writing") && card.Title == "README Cleanup");
+        Assert.DoesNotContain(library.Items, card => card.TagNames.Contains("writing") && card.Title == "README Cleanup");
 
         // Export keeps the selection; Move ends it.
         files.ExportPath = Path.Combine(app.Folder, "picked.zip");

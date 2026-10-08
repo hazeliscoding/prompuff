@@ -28,49 +28,47 @@ public sealed partial class MenuActionViewModel(string label, Func<Task> run)
     private Task Run() => run();
 }
 
+/// <remarks>
+/// A library can hold thousands of these while only the cards on screen are drawn, so anything only a drawn card
+/// needs, such as the edit time in words, is worked out when it's asked for.
+/// </remarks>
 public sealed partial class PromptCardViewModel : ObservableObject
 {
     private readonly LibraryViewModel _owner;
+    private readonly PromptSummary _summary;
+    private readonly DateTimeOffset _now;
+    private string? _editedLabel;
 
     public PromptCardViewModel(LibraryViewModel owner, PromptSummary summary, string? collectionName, DateTimeOffset now)
     {
         _owner = owner;
-        Id = summary.Id;
-        Title = summary.Title;
-        Description = summary.Description;
-        Tags = summary.Tags.Select(TagChipItem.For).ToList();
-        Rating = summary.Rating;
-        CollectionName = collectionName ?? "Uncategorized";
-        CollectionTone = summary.CollectionId is { } collectionId ? Tones.For(collectionId) : Tones.None;
+        _summary = summary;
+        _now = now;
         _isFavorite = summary.IsFavorite;
-        if (summary.DeletedAt is { } deletedAt)
-        {
-            IsDeleted = true;
-            var daysLeft = (int)Math.Ceiling((deletedAt + PromptService.DeletedRetention - now).TotalDays);
-            EditedLabel = daysLeft <= 1 ? "Last day" : $"{daysLeft} days left";
-            EditedTooltip = "Deleted " + Format.Timestamp(deletedAt);
-        }
-        else
-        {
-            EditedLabel = Format.Relative(summary.UpdatedAt, now);
-            EditedTooltip = "Edited " + Format.Timestamp(summary.UpdatedAt);
-        }
+        CollectionName = collectionName ?? "Uncategorized";
     }
 
-    public Guid Id { get; }
-    public string Title { get; }
-    public string? Description { get; }
+    public Guid Id => _summary.Id;
+    public string Title => _summary.Title;
+    public string? Description => _summary.Description;
     public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
-    public IReadOnlyList<TagChipItem> Tags { get; }
-    public int? Rating { get; }
+
+    /// <summary>The prompt's tag names, in order.</summary>
+    public IReadOnlyList<string> TagNames => _summary.Tags;
+
+    public int? Rating => _summary.Rating;
     public string RatingLabel => Format.Rating(Rating);
     public string CollectionName { get; }
-    public string CollectionTone { get; }
-    public string EditedLabel { get; }
-    public string EditedTooltip { get; }
+    public string CollectionTone => _summary.CollectionId is { } collectionId ? Tones.For(collectionId) : Tones.None;
+
+    public string EditedLabel => _editedLabel ??= _summary.DeletedAt is { } deletedAt ? TimeLeft(deletedAt) : Format.Relative(_summary.UpdatedAt, _now);
+
+    public string EditedTooltip => _summary.DeletedAt is { } deletedAt
+        ? "Deleted " + Format.Timestamp(deletedAt)
+        : "Edited " + Format.Timestamp(_summary.UpdatedAt);
 
     /// <summary>True in Recently deleted, where the card offers Restore instead of a favorite heart.</summary>
-    public bool IsDeleted { get; }
+    public bool IsDeleted => _summary.DeletedAt is not null;
 
     [ObservableProperty]
     private bool _isFavorite;
@@ -91,6 +89,12 @@ public sealed partial class PromptCardViewModel : ObservableObject
 
     [RelayCommand]
     private Task Restore() => _owner.RestoreAsync(this);
+
+    private string TimeLeft(DateTimeOffset deletedAt)
+    {
+        var daysLeft = (int)Math.Ceiling((deletedAt + PromptService.DeletedRetention - _now).TotalDays);
+        return daysLeft <= 1 ? "Last day" : $"{daysLeft} days left";
+    }
 }
 
 /// <summary>The library: filtered, searched and sorted prompts as cards or a list.</summary>
@@ -112,7 +116,6 @@ public sealed partial class LibraryViewModel : ObservableObject
     private CancellationTokenSource? _searchDelay;
     private Task _pendingSearch = Task.CompletedTask;
     private int _refreshGeneration;
-    private int _libraryTotal;
     private Guid? _currentId;
     private PromptQuery? _lastQuery;
     private string _typeAhead = string.Empty;
@@ -160,7 +163,7 @@ public sealed partial class LibraryViewModel : ObservableObject
     }
 
     public AppearanceState Appearance { get; }
-    public ObservableCollection<PromptCardViewModel> Items { get; } = [];
+    public BulkObservableCollection<PromptCardViewModel> Items { get; } = [];
 
     /// <summary>"Add tags…", then one "Remove" entry for each tag on the selected prompts.</summary>
     public ObservableCollection<MenuActionViewModel> TagActions { get; } = [];
@@ -263,7 +266,6 @@ public sealed partial class LibraryViewModel : ObservableObject
     public async Task RefreshAsync()
     {
         var generation = ++_refreshGeneration;
-        var collections = (await _collections.ListAsync()).ToDictionary(collection => collection.Id);
         var query = new PromptQuery
         {
             Text = SearchText,
@@ -272,8 +274,17 @@ public sealed partial class LibraryViewModel : ObservableObject
             Tag = Filter.Tag,
             Sort = SelectedSort.Sort,
         };
-        var results = await _search.SearchAsync(query);
-        _libraryTotal = (await _repository.GetCountsAsync()).All;
+
+        // The database work runs off the UI thread, so typing and scrolling carry on while a large library loads.
+        var (collections, results, libraryEmpty) = await Task.Run(async () =>
+        {
+            var collections = (await _collections.ListAsync()).ToDictionary(collection => collection.Id);
+            var results = await _search.SearchAsync(query);
+
+            // Prompts on screen outside Recently deleted already prove the library isn't empty.
+            var libraryEmpty = (results.Count == 0 || query.Filter == PromptFilterKind.Deleted) && (await _repository.GetCountsAsync()).All == 0;
+            return (collections, results, libraryEmpty);
+        });
         if (generation != _refreshGeneration)
         {
             return;
@@ -283,12 +294,14 @@ public sealed partial class LibraryViewModel : ObservableObject
         var sameView = query == _lastQuery;
         var previousIndex = CurrentItem is { } previous ? Items.IndexOf(previous) : -1;
         _lastQuery = query;
-        Items.Clear();
+        var cards = new List<PromptCardViewModel>(results.Count);
         foreach (var summary in results)
         {
             var collectionName = summary.CollectionId is { } id && collections.TryGetValue(id, out var collection) ? collection.Name : null;
-            Items.Add(new PromptCardViewModel(this, summary, collectionName, now));
+            cards.Add(new PromptCardViewModel(this, summary, collectionName, now));
         }
+
+        Items.ReplaceAll(cards);
 
         // The cursor stays on its prompt. If that prompt left this view, as after a delete, it moves to the card
         // that took its place.
@@ -302,10 +315,13 @@ public sealed partial class LibraryViewModel : ObservableObject
         SetCurrent(current);
 
         // The selection keeps only prompts still on screen, so a bulk action never touches one you can't see.
-        _selectedIds.IntersectWith(Items.Select(item => item.Id));
-        foreach (var item in Items)
+        if (_selectedIds.Count > 0)
         {
-            item.IsSelected = _selectedIds.Contains(item.Id);
+            _selectedIds.IntersectWith(Items.Select(item => item.Id));
+            foreach (var item in Items)
+            {
+                item.IsSelected = _selectedIds.Contains(item.Id);
+            }
         }
 
         RebuildMoveActions(collections.Values);
@@ -326,7 +342,7 @@ public sealed partial class LibraryViewModel : ObservableObject
             ? Format.Count(Items.Count, "prompt") + (IsDeletedView ? $" · removed for good after {PromptService.DeletedRetention.Days} days" : "")
             : $"{Format.Count(Items.Count, "match", "matches")} for “{SearchText.Trim()}”";
 
-        IsLibraryEmpty = _libraryTotal == 0;
+        IsLibraryEmpty = libraryEmpty;
         IsEmpty = Items.Count == 0;
         (EmptyTitle, EmptyMessage) = (IsLibraryEmpty, Filter.Kind, string.IsNullOrWhiteSpace(SearchText)) switch
         {
@@ -747,7 +763,7 @@ public sealed partial class LibraryViewModel : ObservableObject
 
     private async Task RemoveTagFromSelectedAsync(string tag)
     {
-        var ids = Items.Where(item => item.IsSelected && item.Tags.Any(chip => chip.Name == tag)).Select(item => item.Id).ToList();
+        var ids = Items.Where(item => item.IsSelected && item.TagNames.Contains(tag)).Select(item => item.Id).ToList();
         var done = await RunBulkAsync("Couldn't remove that tag.", ids, id => _prompts.RemoveTagAsync(id, tag));
         if (done > 0)
         {
@@ -833,7 +849,7 @@ public sealed partial class LibraryViewModel : ObservableObject
 
         TagActions.Clear();
         TagActions.Add(new MenuActionViewModel("Add tags…", AddTagsToSelectedAsync));
-        var tags = Items.Where(item => item.IsSelected).SelectMany(item => item.Tags).Select(chip => chip.Name).Distinct().Order(StringComparer.Ordinal);
+        var tags = Items.Where(item => item.IsSelected).SelectMany(item => item.TagNames).Distinct().Order(StringComparer.Ordinal);
         foreach (var tag in tags)
         {
             TagActions.Add(new MenuActionViewModel($"Remove #{tag}", () => RemoveTagFromSelectedAsync(tag)));

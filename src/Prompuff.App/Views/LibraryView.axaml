@@ -40,7 +40,7 @@
       <Setter Property="Foreground" Value="{DynamicResource TextInverseBrush}" />
     </Style>
 
-    <Style Selector="DockPanel.compact c|AdaptiveGrid">
+    <Style Selector="DockPanel.compact c|CardGrid">
       <Setter Property="MinItemWidth" Value="240" />
       <Setter Property="Spacing" Value="10" />
     </Style>
@@ -66,7 +66,7 @@
       <Setter Property="MaxHeight" Value="0" />
     </Style>
 
-    <Style Selector="DockPanel.dense c|AdaptiveGrid">
+    <Style Selector="DockPanel.dense c|CardGrid">
       <Setter Property="MinItemWidth" Value="220" />
       <Setter Property="Spacing" Value="8" />
     </Style>
@@ -246,15 +246,10 @@
         </StackPanel>
       </StackPanel>
 
-      <!-- Cards -->
+      <!-- Cards: only the rows on screen exist as controls, so a library of thousands scrolls like one of six -->
       <ScrollViewer IsVisible="{Binding IsCards}" HorizontalScrollBarVisibility="Disabled">
-        <ItemsControl x:Name="CardsList" ItemsSource="{Binding Items}" Margin="20,16,20,32">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <c:AdaptiveGrid />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
+        <c:CardGrid x:Name="CardsList" Cards="{Binding Items}" Margin="20,16,20,32">
+          <c:CardGrid.CardTemplate>
             <DataTemplate x:DataType="vm:PromptCardViewModel">
               <Button Classes="card" Classes.selected="{Binding IsSelected}" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus">
                 <StackPanel Classes="card-stack">
@@ -278,18 +273,7 @@
                                TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
                     <TextBlock Classes="compact faint" Text="No description yet." IsVisible="{Binding !HasDescription}" />
                   </Panel>
-                  <ItemsControl ItemsSource="{Binding Tags}" MinHeight="20">
-                    <ItemsControl.ItemsPanel>
-                      <ItemsPanelTemplate>
-                        <WrapPanel ItemSpacing="4" LineSpacing="4" />
-                      </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate x:DataType="vm:TagChipItem">
-                        <c:TagChip Text="{Binding Name}" Tone="{Binding Tone}" />
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+                  <c:TagChipStrip Names="{Binding TagNames}" MinHeight="20" />
                   <Border Classes="card-footer" Classes.deleted="{Binding IsDeleted}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0" Margin="0,2,0,0">
                     <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
                       <c:RatingPips Value="{Binding Rating, Mode=OneWay}" ToolTip.Tip="Usefulness" IsVisible="{Binding !IsDeleted}" />
@@ -306,11 +290,11 @@
                 </StackPanel>
               </Button>
             </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+          </c:CardGrid.CardTemplate>
+        </c:CardGrid>
       </ScrollViewer>
 
-      <!-- List -->
+      <!-- List: rows are created as they scroll into view -->
       <ScrollViewer IsVisible="{Binding IsList}" HorizontalScrollBarVisibility="Disabled">
         <Border Margin="20,16,20,32" CornerRadius="6" ClipToBounds="True"
                 BorderBrush="{DynamicResource Border1Brush}" BorderThickness="1" Background="{DynamicResource Bg1Brush}"
@@ -323,6 +307,11 @@
               <TextBlock Grid.Column="4" Classes="label" Text="{Binding EditedColumn}" VerticalAlignment="Center" />
             </Grid>
             <ItemsControl x:Name="RowsList" ItemsSource="{Binding Items}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <VirtualizingStackPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:PromptCardViewModel">
                   <Button Classes="row" Classes.selected="{Binding IsSelected}" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus">
@@ -337,18 +326,7 @@
                         <TextBlock Classes="strong" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
                         <TextBlock Classes="compact faint row-desc" Text="{Binding Description}" TextTrimming="CharacterEllipsis" IsVisible="{Binding HasDescription}" />
                       </StackPanel>
-                      <ItemsControl Grid.Column="2" ItemsSource="{Binding Tags}" VerticalAlignment="Center" ClipToBounds="True">
-                        <ItemsControl.ItemsPanel>
-                          <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" Spacing="4" />
-                          </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate x:DataType="vm:TagChipItem">
-                            <c:TagChip Text="{Binding Name}" Tone="{Binding Tone}" />
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
+                      <c:TagChipStrip Grid.Column="2" Names="{Binding TagNames}" Wrap="False" VerticalAlignment="Center" ClipToBounds="True" />
                       <c:RatingPips Grid.Column="3" Value="{Binding Rating, Mode=OneWay}" ToolTip.Tip="{Binding RatingLabel}" HorizontalAlignment="Left" />
                       <TextBlock Grid.Column="4" Classes="data faint" Text="{Binding EditedLabel}" ToolTip.Tip="{Binding EditedTooltip}" VerticalAlignment="Center" />
                       <Button Grid.Column="5" Classes="ghost icon sm" Classes.active="{Binding IsFavorite}" Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="Favorite" IsVisible="{Binding !IsDeleted}">

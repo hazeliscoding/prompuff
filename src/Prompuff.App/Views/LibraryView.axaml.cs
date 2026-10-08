@@ -4,7 +4,6 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
-using Prompuff.App.Controls;
 using Prompuff.App.ViewModels;
 
 namespace Prompuff.App.Views;
@@ -95,7 +94,7 @@ public partial class LibraryView : UserControl
             return;
         }
 
-        var columns = library.IsCards && CardsList.ItemsPanelRoot is AdaptiveGrid grid ? grid.ColumnCount : 1;
+        var columns = library.IsCards ? CardsList.ColumnCount : 1;
         var command = Platform.Shortcuts.CommandModifier;
         var extend = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
         switch (e.Key)
@@ -165,8 +164,19 @@ public partial class LibraryView : UserControl
             return;
         }
 
-        var list = library.IsCards ? CardsList : RowsList;
-        if (list.ContainerFromItem(current) is not { } container)
+        // Only the cards near the screen exist, so the one with the cursor may need scrolling to first.
+        Control? container = null;
+        if (library.IsCards)
+        {
+            container = CardsList.BringCardIntoView(current);
+        }
+        else if (library.Items.IndexOf(current) is var index and >= 0)
+        {
+            RowsList.ScrollIntoView(index);
+            container = RowsList.ContainerFromIndex(index);
+        }
+
+        if (container is null)
         {
             return;
         }

@@ -468,6 +468,15 @@
           <Setter Property="Foreground" Value="{DynamicResource AmberTextBrush}" />
         </Style>
       </ControlTheme>
+
+      <!-- Card grid: the library's rows of cards, nothing around them -->
+      <ControlTheme x:Key="{x:Type c:CardGrid}" TargetType="c:CardGrid">
+        <Setter Property="Template">
+          <ControlTemplate>
+            <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}" />
+          </ControlTemplate>
+        </Setter>
+      </ControlTheme>
     </ResourceDictionary>
   </Styles.Resources>
 

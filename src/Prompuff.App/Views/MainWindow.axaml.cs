@@ -76,7 +76,11 @@ public partial class MainWindow : Window
             }
 
             // Focus moves into the dialog, so Enter confirms it rather than pressing the button behind the scrim.
-            _focusBeforeDialog ??= FocusManager?.GetFocusedElement() as InputElement;
+            if (_focusBeforeDialog is null)
+            {
+                _focusBeforeDialog = FocusManager?.GetFocusedElement() as InputElement;
+                _focusBeforeDialogContext = _focusBeforeDialog?.DataContext;
+            }
             if (dialog.HasInput)
             {
                 FocusLater(DialogInput, selectAll: true);
@@ -92,6 +96,7 @@ public partial class MainWindow : Window
     public static bool UsingKeyboard { get; private set; }
 
     private InputElement? _focusBeforeDialog;
+    private object? _focusBeforeDialogContext;
 
     private MainWindowViewModel? ViewModel => DataContext as MainWindowViewModel;
 
@@ -215,10 +220,20 @@ public partial class MainWindow : Window
     private void RestoreFocusAfterDialog()
     {
         var previous = _focusBeforeDialog;
+        var context = _focusBeforeDialogContext;
         _focusBeforeDialog = null;
+        _focusBeforeDialogContext = null;
         if (previous is { IsEffectivelyVisible: true, IsEffectivelyEnabled: true } && TopLevel.GetTopLevel(previous) == this)
         {
-            Dispatcher.UIThread.Post(() => previous.Focus(UsingKeyboard ? NavigationMethod.Directional : NavigationMethod.Unspecified), DispatcherPriority.Input);
+            // The library reuses card controls for other prompts, as it does after a delete, and focus mustn't follow a
+            // card to a prompt it wasn't on. The library puts the cursor back itself.
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (previous.DataContext == context)
+                {
+                    previous.Focus(UsingKeyboard ? NavigationMethod.Directional : NavigationMethod.Unspecified);
+                }
+            }, DispatcherPriority.Input);
         }
     }
 

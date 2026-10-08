@@ -55,7 +55,7 @@ public class DensityTests
     private static int Columns(AppHarness app)
     {
         var view = app.Window.GetVisualDescendants().OfType<LibraryView>().Single();
-        var grid = view.GetVisualDescendants().OfType<AdaptiveGrid>().Single();
+        var grid = view.GetVisualDescendants().OfType<CardGrid>().Single();
         return grid.ColumnCount;
     }
 }

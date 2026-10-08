@@ -137,7 +137,7 @@ public class MainWindowTests
         await using var second = await AppHarness.StartAsync(importSamples: false, folder: folder);
         var card = Assert.Single(second.ViewModel.Library.Items);
         Assert.Equal("Release notes drafter", card.Title);
-        Assert.Equal(["writing", "release"], card.Tags.Select(tag => tag.Name));
+        Assert.Equal(["writing", "release"], card.TagNames);
         await card.OpenCommand.ExecuteAsync(null);
         await second.SettleAsync();
         var reopened = Assert.IsType<PromptEditorViewModel>(second.ViewModel.CurrentPage);
