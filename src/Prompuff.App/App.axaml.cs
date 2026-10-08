@@ -26,7 +26,11 @@ public sealed class App : Avalonia.Application
     /// <summary>Set by <see cref="Program"/> before the app starts. Null in the designer and in tests.</summary>
     internal static LaunchContext? Launch { get; set; }
 
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+        Themes.ThemeBuilder.Register(this);
+    }
 
     public override void OnFrameworkInitializationCompleted()
     {

@@ -5,6 +5,50 @@
              x:Class="Prompuff.App.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
   <UserControl.Styles>
+    <Style Selector="StackPanel.theme-group">
+      <Setter Property="Spacing" Value="2" />
+      <Setter Property="Margin" Value="0,14,0,0" />
+    </Style>
+    <!-- Each theme previews itself in its own colors: a sidebar, a card, a {{variable}} chip and the accent -->
+    <Style Selector="StackPanel.theme-group > ItemsControl">
+      <Setter Property="Margin" Value="-5,8,-5,4" />
+      <Setter Property="ItemsPanel">
+        <ItemsPanelTemplate>
+          <WrapPanel ItemSpacing="4" LineSpacing="6" />
+        </ItemsPanelTemplate>
+      </Setter>
+      <Setter Property="ItemTemplate">
+        <DataTemplate x:DataType="vm:ThemeCard">
+          <Button Classes="swatch" Classes.selected="{Binding IsSelected}" Command="{Binding SelectCommand}"
+                  AutomationProperties.Name="{Binding Name}" Width="152">
+            <StackPanel Spacing="6">
+              <Border Height="82" CornerRadius="6" Background="{Binding Window}" ClipToBounds="True">
+                <Grid ColumnDefinitions="36,*">
+                  <Border Background="{Binding Sidebar}">
+                    <StackPanel Margin="7,9" Spacing="6">
+                      <Border Height="4" Width="18" CornerRadius="2" Background="{Binding Accent}" HorizontalAlignment="Left" />
+                      <Border Height="3" Width="16" CornerRadius="2" Background="{Binding Muted}" HorizontalAlignment="Left" />
+                      <Border Height="3" Width="12" CornerRadius="2" Background="{Binding Muted}" HorizontalAlignment="Left" />
+                    </StackPanel>
+                  </Border>
+                  <Border Grid.Column="1" Margin="8,9" CornerRadius="4" Background="{Binding Card}" BorderBrush="{Binding Line}" BorderThickness="1" Padding="7,7">
+                    <StackPanel Spacing="6">
+                      <Border Height="4" Width="46" CornerRadius="2" Background="{Binding Title}" HorizontalAlignment="Left" />
+                      <Border Height="3" Width="62" CornerRadius="2" Background="{Binding Muted}" HorizontalAlignment="Left" />
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Border Height="9" Width="24" CornerRadius="3" Background="{Binding Puff}" />
+                        <Border Height="9" Width="16" CornerRadius="3" Background="{Binding Accent}" />
+                      </StackPanel>
+                    </StackPanel>
+                  </Border>
+                </Grid>
+              </Border>
+              <TextBlock Text="{Binding Name}" FontSize="12" Margin="3,0" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </Button>
+        </DataTemplate>
+      </Setter>
+    </Style>
     <Style Selector="Border.setting-row">
       <Setter Property="Padding" Value="0,14" />
       <Setter Property="BorderBrush" Value="{DynamicResource Border1Brush}" />
@@ -57,6 +101,16 @@
               </Border>
             </Grid>
           </Border>
+          <StackPanel Classes="theme-group">
+            <TextBlock Classes="strong" Text="Dark themes" />
+            <TextBlock Classes="compact faint" Text="For Dark, and for System while your computer is dark." />
+            <ItemsControl ItemsSource="{Binding DarkThemes}" />
+          </StackPanel>
+          <StackPanel Classes="theme-group">
+            <TextBlock Classes="strong" Text="Light themes" />
+            <TextBlock Classes="compact faint" Text="For Light, and for System while your computer is light." />
+            <ItemsControl ItemsSource="{Binding LightThemes}" />
+          </StackPanel>
           <Border Classes="setting-row">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
               <StackPanel>

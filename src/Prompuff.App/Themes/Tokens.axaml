@@ -1,6 +1,8 @@
 <!--
   Design tokens from the Prompuff design (Quorum design system). Dark is the primary theme; Light is a full
   re-tuning. Use DynamicResource for anything in the theme dictionaries so theme switches apply live.
+  The other themes (Darcula, Gruvbox and the rest) are palettes in ThemePalette.cs that ThemeBuilder turns into
+  these same keys, so a key added here must be added there too.
 -->
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -35,6 +37,7 @@
       <BoxShadows x:Key="Shadow1">0 1 2 0 #59000000</BoxShadows>
       <BoxShadows x:Key="Shadow3">0 8 24 0 #80000000</BoxShadows>
       <BoxShadows x:Key="Shadow4">0 24 64 0 #99000000</BoxShadows>
+      <BoxShadows x:Key="FocusRing">0 0 0 3 #1A2DD4BF</BoxShadows>
 
       <!-- Accent (interactive) -->
       <SolidColorBrush x:Key="AccentBrush" Color="#2DD4BF" />
@@ -135,13 +138,14 @@
       <BoxShadows x:Key="Shadow1">0 1 2 0 #0F171B22</BoxShadows>
       <BoxShadows x:Key="Shadow3">0 8 24 0 #1F171B22</BoxShadows>
       <BoxShadows x:Key="Shadow4">0 24 64 0 #2E171B22</BoxShadows>
+      <BoxShadows x:Key="FocusRing">0 0 0 3 #1A0F766E</BoxShadows>
 
-      <SolidColorBrush x:Key="AccentBrush" Color="#0D9488" />
-      <SolidColorBrush x:Key="AccentHoverBrush" Color="#0F766E" />
-      <SolidColorBrush x:Key="AccentActiveBrush" Color="#115E59" />
+      <SolidColorBrush x:Key="AccentBrush" Color="#0F766E" />
+      <SolidColorBrush x:Key="AccentHoverBrush" Color="#115E59" />
+      <SolidColorBrush x:Key="AccentActiveBrush" Color="#134E4A" />
       <SolidColorBrush x:Key="AccentTextBrush" Color="#0B7A70" />
-      <SolidColorBrush x:Key="AccentSubtleBrush" Color="#1A0D9488" />
-      <SolidColorBrush x:Key="AccentBorderBrush" Color="#590D9488" />
+      <SolidColorBrush x:Key="AccentSubtleBrush" Color="#1A0F766E" />
+      <SolidColorBrush x:Key="AccentBorderBrush" Color="#590F766E" />
 
       <SolidColorBrush x:Key="LavenderBrush" Color="#7C5CD6" />
       <SolidColorBrush x:Key="LavenderTextBrush" Color="#5E3FB8" />
@@ -181,14 +185,14 @@
       <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF" />
       <SolidColorBrush x:Key="TextControlBorderBrush" Color="#D7DBE2" />
       <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#BCC3CE" />
-      <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#0D9488" />
+      <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#0F766E" />
       <SolidColorBrush x:Key="TextControlForeground" Color="#171B22" />
       <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#171B22" />
       <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#171B22" />
       <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#7D8796" />
       <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#7D8796" />
       <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#7D8796" />
-      <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="#590D9488" />
+      <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="#590F766E" />
       <SolidColorBrush x:Key="ComboBoxBackground" Color="#FFFFFF" />
       <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#F6F7F9" />
       <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#EDEFF3" />

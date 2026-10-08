@@ -34,6 +34,12 @@ public sealed record WindowPlacement(double Width, double Height, bool IsMaximiz
 public sealed record AppSettings
 {
     public ThemePreference Theme { get; init; } = ThemePreference.Dark;
+
+    /// <summary>The theme for Dark, and for System while the OS is dark. An ID from Prompuff.App's theme catalog.</summary>
+    public string DarkTheme { get; init; } = "prompuff-dark";
+
+    /// <summary>The theme for Light, and for System while the OS is light.</summary>
+    public string LightTheme { get; init; } = "prompuff-light";
     public bool ShowMascot { get; init; } = true;
     public bool CheckForUpdatesAutomatically { get; init; } = true;
     public UpdateChannel UpdateChannel { get; init; } = UpdateChannel.Stable;

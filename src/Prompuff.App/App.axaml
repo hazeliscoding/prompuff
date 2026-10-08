@@ -23,7 +23,7 @@
                                ChromeMedium="#151920" ChromeMediumLow="#1B2029" ChromeWhite="#FFFFFF"
                                ListLow="#1B2029" ListMedium="#222834" RegionColor="#0A0C10" ErrorText="#FF8A90" />
         <ColorPaletteResources x:Key="Light"
-                               Accent="#0D9488"
+                               Accent="#0F766E"
                                AltHigh="#FFFFFF" AltLow="#FFFFFF" AltMedium="#FFFFFF" AltMediumHigh="#FFFFFF" AltMediumLow="#FFFFFF"
                                BaseHigh="#171B22" BaseLow="#D7DBE2" BaseMedium="#525C6B" BaseMediumHigh="#3A4250" BaseMediumLow="#7D8796"
                                ChromeAltLow="#3A4250" ChromeBlackHigh="#000000" ChromeBlackLow="#D7DBE2" ChromeBlackMedium="#525C6B" ChromeBlackMediumLow="#7D8796"

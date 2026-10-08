@@ -160,6 +160,29 @@
           <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         </Style>
 
+        <!-- Theme previews in Settings › Appearance -->
+        <Style Selector="^.swatch">
+          <Setter Property="Height" Value="NaN" />
+          <Setter Property="Background" Value="Transparent" />
+          <Setter Property="BorderBrush" Value="Transparent" />
+          <Setter Property="BorderThickness" Value="2" />
+          <Setter Property="CornerRadius" Value="9" />
+          <Setter Property="Padding" Value="3,3,3,5" />
+          <Setter Property="FontWeight" Value="Normal" />
+          <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="^.swatch:pointerover">
+          <Setter Property="Background" Value="{DynamicResource Bg3Brush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource Border2Brush}" />
+        </Style>
+        <Style Selector="^.swatch:pressed">
+          <Setter Property="RenderTransform" Value="none" />
+        </Style>
+        <Style Selector="^.swatch.selected">
+          <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+
         <!-- Rows in lists (library list mode, versions, palette results) -->
         <Style Selector="^.row">
           <Setter Property="Height" Value="NaN" />
@@ -666,7 +689,7 @@
     <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
   <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
-    <Setter Property="BoxShadow" Value="0 0 0 3 #1A2DD4BF" />
+    <Setter Property="BoxShadow" Value="{DynamicResource FocusRing}" />
   </Style>
   <!-- Borderless inputs that look like text until hovered: the prompt title and description -->
   <Style Selector="TextBox.plain">

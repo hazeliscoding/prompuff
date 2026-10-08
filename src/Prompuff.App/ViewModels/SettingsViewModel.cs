@@ -3,7 +3,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Avalonia.Input;
+using Avalonia.Media;
 using Prompuff.App.Platform;
+using Prompuff.App.Themes;
 using Prompuff.Application;
 using Prompuff.Application.DTOs;
 using Prompuff.Application.Interfaces;
@@ -39,6 +41,27 @@ public sealed partial class SettingsSectionItem(SettingsSection section, string 
 }
 
 public sealed record ShortcutRow(string Label, string Keys);
+
+/// <summary>A theme in Settings › Appearance, with a small preview drawn in its own colors.</summary>
+public sealed partial class ThemeCard(ThemePalette palette, Action<ThemePalette> select) : ObservableObject
+{
+    public ThemePalette Palette { get; } = palette;
+    public string Name => Palette.Name;
+    public IBrush Window { get; } = new SolidColorBrush(palette.Bg(0));
+    public IBrush Sidebar { get; } = new SolidColorBrush(palette.Bg(1));
+    public IBrush Card { get; } = new SolidColorBrush(palette.Bg(2));
+    public IBrush Line { get; } = new SolidColorBrush(palette.Border(2));
+    public IBrush Title { get; } = new SolidColorBrush(palette.Text(1));
+    public IBrush Muted { get; } = new SolidColorBrush(palette.Text(3));
+    public IBrush Accent { get; } = new SolidColorBrush(palette.AccentColor);
+    public IBrush Puff { get; } = new SolidColorBrush(palette.Lavender.Base);
+
+    [ObservableProperty]
+    private bool _isSelected;
+
+    [RelayCommand]
+    private void Select() => select(Palette);
+}
 
 /// <summary>One AI tool in the Integrations picker.</summary>
 public sealed partial class McpClientItem(McpClient client, string name, Action<McpClient> select) : ObservableObject
@@ -157,6 +180,8 @@ public sealed partial class SettingsViewModel : ObservableObject
             new(SettingsSection.About, "About", "Cloud", Select),
         ];
         Shortcuts = Platform.Shortcuts.Reference.Select(row => new ShortcutRow(row.Label, row.Keys)).ToList();
+        DarkThemes = ThemeCatalog.Dark.Select(palette => new ThemeCard(palette, ChooseTheme)).ToList();
+        LightThemes = ThemeCatalog.Light.Select(palette => new ThemeCard(palette, ChooseTheme)).ToList();
         _mcpSetup = McpClientSetup.For(McpClient.ClaudeCode, installer.CommandPath);
         McpClients = McpClientSetup.Clients
             .Select(client => new McpClientItem(client, McpClientSetup.For(client, string.Empty).Name, SelectMcpClient))
@@ -168,6 +193,13 @@ public sealed partial class SettingsViewModel : ObservableObject
     public AppearanceState Appearance { get; }
     public IReadOnlyList<SettingsSectionItem> Sections { get; }
     public IReadOnlyList<ShortcutRow> Shortcuts { get; }
+    public IReadOnlyList<ThemeCard> DarkThemes { get; }
+    public IReadOnlyList<ThemeCard> LightThemes { get; }
+
+    /// <summary>The chosen dark theme's ID, which Dark uses, and System while the OS is dark.</summary>
+    public string DarkTheme { get; private set; } = ThemeCatalog.PrompuffDark;
+
+    public string LightTheme { get; private set; } = ThemeCatalog.PrompuffLight;
     public ObservableCollection<CollectionOption> ExportCollections { get; } = [];
     public ObservableCollection<BackupRow> Backups { get; } = [];
     public bool HasBackups => Backups.Count > 0;
@@ -397,6 +429,9 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         _loading = true;
         var settings = _settings.Load();
+        DarkTheme = ThemeCatalog.Find(settings.DarkTheme, dark: true).Id;
+        LightTheme = ThemeCatalog.Find(settings.LightTheme, dark: false).Id;
+        MarkChosenThemes();
         Theme = settings.Theme;
         ShowMascot = settings.ShowMascot;
         Density = settings.Density;
@@ -407,7 +442,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         Hotkey = Platform.Hotkey.Parse(settings.QuickSaveHotkey);
         Appearance.ShowMascot = settings.ShowMascot;
         Appearance.Density = settings.Density;
-        ThemeApplier.Apply(settings.Theme);
+        ThemeApplier.Apply(settings.Theme, DarkTheme, LightTheme);
         UpdateStatus = _updates.IsSupported
             ? "Prompuff checks GitHub Releases for new versions. Nothing about your library is sent."
             : "Updates work in installed builds. This copy is running from a development build.";
@@ -686,9 +721,51 @@ public sealed partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private Task OpenLicenses() => _launcher.OpenUrlAsync(new Uri(LicensesUrl));
 
+    /// <summary>
+    /// Picking a theme also switches to its mode when the other mode is showing, so the choice is visible at once.
+    /// System keeps following the OS and uses the theme whenever the OS matches.
+    /// </summary>
+    private void ChooseTheme(ThemePalette palette)
+    {
+        if (palette.IsDark)
+        {
+            DarkTheme = palette.Id;
+            Persist(settings => settings with { DarkTheme = palette.Id });
+        }
+        else
+        {
+            LightTheme = palette.Id;
+            Persist(settings => settings with { LightTheme = palette.Id });
+        }
+
+        MarkChosenThemes();
+        _logger.LogInformation("Theme {Theme} chosen", palette.Id);
+        if (Theme != ThemePreference.System && palette.IsDark != (Theme == ThemePreference.Dark))
+        {
+            Theme = palette.IsDark ? ThemePreference.Dark : ThemePreference.Light;
+        }
+        else
+        {
+            ThemeApplier.Apply(Theme, DarkTheme, LightTheme);
+        }
+    }
+
+    private void MarkChosenThemes()
+    {
+        foreach (var card in DarkThemes)
+        {
+            card.IsSelected = card.Palette.Id == DarkTheme;
+        }
+
+        foreach (var card in LightThemes)
+        {
+            card.IsSelected = card.Palette.Id == LightTheme;
+        }
+    }
+
     partial void OnThemeChanged(ThemePreference value)
     {
-        ThemeApplier.Apply(value);
+        ThemeApplier.Apply(value, DarkTheme, LightTheme);
         Persist(settings => settings with { Theme = value });
     }
 

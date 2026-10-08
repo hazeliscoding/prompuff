@@ -158,20 +158,32 @@ public sealed class AvaloniaLauncher(TopLevelAccessor accessor, ILogger<Avalonia
     }
 }
 
+/// <summary>Applies the chosen themes, and in System mode follows the OS between the dark and the light one.</summary>
 public static class ThemeApplier
 {
-    public static void Apply(ThemePreference preference)
+    private static (ThemePreference Mode, string? Dark, string? Light) _choice = (ThemePreference.Dark, null, null);
+    private static bool _following;
+
+    public static void Apply(ThemePreference mode, string? darkTheme, string? lightTheme)
     {
         if (Avalonia.Application.Current is not { } application)
         {
             return;
         }
 
-        application.RequestedThemeVariant = preference switch
+        _choice = (mode, darkTheme, lightTheme);
+        if (!_following && application.PlatformSettings is { } platform)
         {
-            ThemePreference.Light => ThemeVariant.Light,
-            ThemePreference.System => ThemeVariant.Default,
-            _ => ThemeVariant.Dark,
+            _following = true;
+            platform.ColorValuesChanged += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(() => Apply(_choice.Mode, _choice.Dark, _choice.Light));
+        }
+
+        var dark = mode switch
+        {
+            ThemePreference.Dark => true,
+            ThemePreference.Light => false,
+            _ => application.PlatformSettings?.GetColorValues().ThemeVariant != Avalonia.Platform.PlatformThemeVariant.Light,
         };
+        application.RequestedThemeVariant = Themes.ThemeBuilder.Variant(Themes.ThemeCatalog.Find(dark ? darkTheme : lightTheme, dark));
     }
 }
