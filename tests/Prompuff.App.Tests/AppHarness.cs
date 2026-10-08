@@ -42,6 +42,7 @@ internal sealed class AppHarness : IAsyncDisposable
     }
 
     public string Folder { get; }
+    public FakeGlobalHotkeyService Hotkeys { get; private init; } = null!;
     public MainWindow Window { get; }
     public MainWindowViewModel ViewModel { get; }
 
@@ -55,7 +56,8 @@ internal sealed class AppHarness : IAsyncDisposable
         double width = 1280,
         double height = 800,
         IUpdateService? updates = null,
-        IFilePickerService? files = null)
+        IFilePickerService? files = null,
+        FakeGlobalHotkeyService? hotkeys = null)
     {
         folder ??= Path.Combine(Path.GetTempPath(), "prompuff-ui-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
@@ -64,8 +66,12 @@ internal sealed class AppHarness : IAsyncDisposable
             PlatformEnvironment.Current.HomeDirectory,
             name => name == AppDataPathProvider.OverrideVariable ? folder : null));
 
+        hotkeys ??= new FakeGlobalHotkeyService();
         var services = App.ConfigureServices(paths, replace: collection =>
         {
+            // Tests never grab real system-wide keys.
+            collection.AddSingleton<IGlobalHotkeyService>(hotkeys);
+
             if (updates is not null)
             {
                 collection.AddSingleton(updates);
@@ -92,7 +98,7 @@ internal sealed class AppHarness : IAsyncDisposable
         services.GetRequiredService<TopLevelAccessor>().TopLevel = window;
         window.Show();
         await viewModel.InitializeAsync();
-        var harness = new AppHarness(folder, services, window, viewModel);
+        var harness = new AppHarness(folder, services, window, viewModel) { Hotkeys = hotkeys };
         await harness.SettleAsync();
         return harness;
     }
@@ -150,5 +156,31 @@ internal sealed class AppHarness : IAsyncDisposable
         Window.Close();
         await _services.DisposeAsync();
         SqliteConnection.ClearAllPools();
+    }
+}
+
+/// <summary>Stands in for the system-wide hotkey: records what was registered and presses it on request.</summary>
+internal sealed class FakeGlobalHotkeyService : IGlobalHotkeyService
+{
+    public bool IsSupported { get; set; } = true;
+    public string? UnsupportedReason { get; set; }
+    public Hotkey? Registered { get; private set; }
+
+    /// <summary>Combinations "another app" already owns.</summary>
+    public HashSet<string> Taken { get; } = [];
+
+    public event EventHandler? Pressed;
+
+    public Task<bool> RegisterAsync(Hotkey? hotkey)
+    {
+        var ok = hotkey is null || !Taken.Contains(hotkey.ToString());
+        Registered = ok ? hotkey : null;
+        return Task.FromResult(ok);
+    }
+
+    public void Press() => Pressed?.Invoke(this, EventArgs.Empty);
+
+    public void Dispose()
+    {
     }
 }

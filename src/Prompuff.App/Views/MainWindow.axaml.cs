@@ -44,6 +44,7 @@ public partial class MainWindow : Window
 
         RestorePlacement(settings.Load().Window);
         AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
+        viewModel.Settings.HotkeyPressed += (_, _) => _ = HandleLaunchAsync(LaunchRequest.QuickSave);
         AddHandler(KeyDownEvent, OnUnhandledKeyDown, RoutingStrategies.Bubble);
         AddHandler(PointerPressedEvent, (_, _) => UsingKeyboard = false, RoutingStrategies.Tunnel, handledEventsToo: true);
         viewModel.FocusSearchRequested += (_, _) => FocusLater(SearchBox, selectAll: true);
@@ -97,6 +98,49 @@ public partial class MainWindow : Window
     /// <summary>True while the window is hidden in the tray rather than closed.</summary>
     public bool IsInTray { get; private set; }
 
+    /// <summary>
+    /// A second launch, the tray or the hotkey: brings the window forward, and for Quick save opens it with the
+    /// clipboard. If the window was in the tray or minimized, it goes back there once Quick save closes, so the hotkey
+    /// returns you to whatever you were doing.
+    /// </summary>
+    public async Task HandleLaunchAsync(LaunchRequest request)
+    {
+        var wasInTray = IsInTray;
+        var wasMinimized = WindowState == WindowState.Minimized;
+        WindowActivation.BringForward(this);
+        if (request != LaunchRequest.QuickSave || ViewModel is not { } viewModel)
+        {
+            return;
+        }
+
+        await viewModel.QuickSaveFromOutsideAsync();
+        if (!viewModel.QuickSave.IsOpen || !(wasInTray || wasMinimized))
+        {
+            return;
+        }
+
+        void OnQuickSaveChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(QuickSaveViewModel.IsOpen) || viewModel.QuickSave.IsOpen)
+            {
+                return;
+            }
+
+            viewModel.QuickSave.PropertyChanged -= OnQuickSaveChanged;
+            if (wasInTray)
+            {
+                IsInTray = true;
+                Hide();
+            }
+            else
+            {
+                WindowState = WindowState.Minimized;
+            }
+        }
+
+        viewModel.QuickSave.PropertyChanged += OnQuickSaveChanged;
+    }
+
     /// <summary>Closes the window for good, even when closing it would normally keep Prompuff in the tray.</summary>
     public void Quit()
     {
@@ -145,6 +189,14 @@ public partial class MainWindow : Window
     private void OnPreviewKeyDown(object? sender, KeyEventArgs e)
     {
         UsingKeyboard = true;
+
+        // Settings › Quick save is recording a new hotkey, so every key goes there first.
+        if (ViewModel is { Settings.IsRecordingHotkey: true } recording)
+        {
+            e.Handled = recording.Settings.RecordHotkey(e.Key, e.KeyModifiers);
+            return;
+        }
+
         if (ViewModel is { } viewModel && Shortcuts.Match(e) is { } action && viewModel.TryHandleShortcut(action))
         {
             e.Handled = true;

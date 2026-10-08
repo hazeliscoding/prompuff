@@ -122,6 +122,7 @@ public sealed class App : Avalonia.Application
         services.AddSingleton<IClipboardService, AvaloniaClipboardService>();
         services.AddSingleton<IFilePickerService, AvaloniaFilePickerService>();
         services.AddSingleton<IPlatformLauncher, AvaloniaLauncher>();
+        services.AddSingleton<IGlobalHotkeyService>(_ => GlobalHotkeys.Create());
 
         services.AddSingleton<Navigator>();
         services.AddSingleton<LibraryNotifier>();
@@ -141,17 +142,13 @@ public sealed class App : Avalonia.Application
         return services.BuildServiceProvider();
     }
 
-    private async Task HandleLaunchAsync(MainWindow window, MainWindowViewModel viewModel, LaunchRequest request)
+    private Task HandleLaunchAsync(MainWindow window, MainWindowViewModel viewModel, LaunchRequest request)
     {
-        _logger?.LogInformation("Another launch asked to {Request}", request);
-        WindowActivation.BringForward(window);
-        if (request == LaunchRequest.QuickSave)
-        {
-            await viewModel.QuickSaveFromOutsideAsync();
-        }
+        _logger?.LogInformation("Asked from outside the window to {Request}", request);
+        return window.HandleLaunchAsync(request);
     }
 
-        private void HookUnhandledErrors()
+    private void HookUnhandledErrors()
     {
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
             _logger?.LogCritical(e.ExceptionObject as Exception, "Unhandled exception");

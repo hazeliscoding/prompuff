@@ -87,7 +87,47 @@
         <StackPanel Spacing="4" IsVisible="{Binding IsQuickSave}">
           <TextBlock Classes="page-title" Text="Quick save" Margin="0,0,0,4" />
           <TextBlock Classes="muted" TextWrapping="Wrap" LineHeight="19.5" Margin="0,0,0,8"
-                     Text="Stash a prompt from any app: copy it, then reach for Prompuff's tray icon. Quick save opens with the clipboard, and Enter stashes it." />
+                     Text="Stash a prompt from any app: copy it, then press the hotkey or use Prompuff's tray icon. Quick save opens with the clipboard, and Enter stashes it." />
+          <Border Classes="setting-row" IsVisible="{Binding IsHotkeySupported}">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel Spacing="2">
+                <TextBlock Classes="strong" Text="Hotkey" />
+                <TextBlock Classes="compact faint" TextWrapping="Wrap" Text="{Binding HotkeyStatus}" IsVisible="{Binding !HotkeyProblem}" />
+                <TextBlock Classes="compact" TextWrapping="Wrap" Text="{Binding HotkeyStatus}" IsVisible="{Binding HotkeyProblem}"
+                           Foreground="{DynamicResource AmberTextBrush}" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Border Classes="kbd" Classes.recording="{Binding IsRecordingHotkey}" Padding="8,3" MinWidth="64">
+                  <TextBlock Text="{Binding HotkeyLabel}" FontSize="12" HorizontalAlignment="Center" />
+                </Border>
+                <Button Classes="sm" Content="Change" Command="{Binding StartRecordingHotkeyCommand}" IsVisible="{Binding !IsRecordingHotkey}" />
+                <Button Classes="ghost sm" Content="Cancel" Command="{Binding CancelRecordingHotkeyCommand}" IsVisible="{Binding IsRecordingHotkey}" />
+                <Button Classes="ghost sm" Content="Turn off" Command="{Binding TurnOffHotkeyCommand}" IsVisible="{Binding HasHotkey}" />
+                <Button Classes="ghost sm" Content="Turn on" Command="{Binding TurnOnHotkeyCommand}" IsVisible="{Binding !HasHotkey}" />
+              </StackPanel>
+            </Grid>
+          </Border>
+          <Border Classes="panel" Padding="16" Margin="0,4,0,8" IsVisible="{Binding !IsHotkeySupported}">
+            <StackPanel Spacing="8">
+              <TextBlock Classes="strong" Text="Use a desktop shortcut" />
+              <TextBlock Classes="compact faint" TextWrapping="Wrap" Text="{Binding HotkeyUnsupportedReason}" />
+              <TextBlock Classes="compact" TextWrapping="Wrap" Foreground="{DynamicResource Text2Brush}"
+                         Text="GNOME: Settings › Keyboard › View and Customize Shortcuts › Custom Shortcuts. KDE Plasma: System Settings › Keyboard › Shortcuts › Add New › Command or Script. Use this command, and pick any keys you like:" />
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Border Classes="well" CornerRadius="4" Padding="10,7">
+                  <SelectableTextBlock Text="{Binding QuickSaveCommand}" FontFamily="{StaticResource MonoFont}" FontSize="12" TextWrapping="Wrap" />
+                </Border>
+                <Button Grid.Column="1" Command="{Binding CopyQuickSaveCommandCommand}" VerticalAlignment="Top">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <c:Icon Kind="Copy" Size="13" />
+                    <TextBlock Text="Copy" />
+                  </StackPanel>
+                </Button>
+              </Grid>
+              <TextBlock Classes="compact faint" TextWrapping="Wrap"
+                         Text="If Prompuff is already running, the shortcut brings it forward with Quick save open; if not, it starts it." />
+            </StackPanel>
+          </Border>
           <Border Classes="setting-row">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
               <StackPanel>

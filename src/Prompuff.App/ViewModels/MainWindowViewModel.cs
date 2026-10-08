@@ -140,6 +140,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             }
 
             _ready = true;
+            _ = Settings.ApplyHotkeyAsync();
             _backups.StartDailySchedule();
             await PurgeExpiredAsync();
             await RefreshAllAsync();

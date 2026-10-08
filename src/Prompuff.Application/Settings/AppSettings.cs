@@ -42,6 +42,9 @@ public sealed record AppSettings
 
     /// <summary>Closing the window hides it and keeps Prompuff in the tray, so Quick save stays a keypress away.</summary>
     public bool KeepRunningInTray { get; init; }
+
+    /// <summary>The system-wide Quick save hotkey, such as "Ctrl+Alt+P". Empty turns it off.</summary>
+    public string QuickSaveHotkey { get; init; } = "Ctrl+Alt+P";
     public PromptSort LibrarySort { get; init; } = PromptSort.LastEdited;
     public WindowPlacement? Window { get; init; }
 
