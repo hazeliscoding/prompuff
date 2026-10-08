@@ -147,10 +147,10 @@ Trust Prompuff with more than a few prompts: nothing is lost by accident, search
 Ship the remaining platforms early, so every later feature is built for all of them.
 
 - [x] macOS in the CI matrix: build plus the headless UI tests on a macOS runner.
-- [ ] Release jobs for `osx-arm64` and `osx-x64`, one Velopack channel each, producing a `.pkg` and a zipped `.app` with an ad-hoc signature, which Apple Silicon needs to run them.
-- [ ] macOS conventions: Cmd shortcuts (already in the shortcut table), a native app menu with About, Settings and Quit, and a title bar that keeps the traffic-light buttons.
-- [ ] macOS smoke test on the runner: launch the app, take a screenshot, and check that `prompuff.db` lands in `~/Library/Application Support/Prompuff`.
-- [ ] `linux-arm64` AppImage, built and smoke-tested under Xvfb on GitHub's ARM runner.
+- [x] Release jobs for `osx-arm64` and `osx-x64`, one Velopack channel each, producing a `.pkg` and a zipped `.app` with an ad-hoc signature, which Apple Silicon needs to run them.
+- [x] macOS conventions: Cmd shortcuts (already in the shortcut table), a native app menu with About, Settings and Quit, and a title bar that keeps the traffic-light buttons.
+- [x] macOS smoke test on the runner: launch the app, take a screenshot, and check that `prompuff.db` lands in `~/Library/Application Support/Prompuff`.
+- [x] `linux-arm64` AppImage, built and smoke-tested under Xvfb on GitHub's ARM runner.
 - [ ] Windows signing with Azure Artifact Signing in the release workflow, checked on the runner with `signtool verify /pa`.
 - [ ] Signing switches on only when the Azure variables exist; forks and manual runs still build unsigned.
 - [ ] README: list macOS as CI-verified, and explain System Settings › Privacy & Security › Open Anyway, since the builds aren't notarized. macOS 15 removed the right-click › Open shortcut.
