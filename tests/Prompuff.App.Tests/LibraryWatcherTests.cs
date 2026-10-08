@@ -20,13 +20,14 @@ public class LibraryWatcherTests
             PlatformEnvironment.Current.HomeDirectory,
             name => name == AppDataPathProvider.OverrideVariable ? folder : null));
         var services = App.ConfigureServices(paths);
-        await services.GetRequiredService<SqliteDatabase>().InitializeAsync();
+        var database = services.GetRequiredService<SqliteDatabase>();
+        await database.InitializeAsync();
         await services.GetRequiredService<LibraryChangeMonitor>().CheckAsync();
 
         // The app disposes its services synchronously when the window closes.
         services.Dispose();
 
-        SqliteConnection.ClearAllPools();
+        database.ClearPool();
         try
         {
             Directory.Delete(folder, recursive: true);

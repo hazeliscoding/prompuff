@@ -1,5 +1,6 @@
-using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Logging.Abstractions;
 using Prompuff.Application.Settings;
+using Prompuff.Infrastructure.Persistence;
 using Prompuff.Infrastructure.Storage;
 
 namespace Prompuff.Cli.Tests;
@@ -48,7 +49,8 @@ internal sealed class CliHarness : IAsyncDisposable
 
     public ValueTask DisposeAsync()
     {
-        SqliteConnection.ClearAllPools();
+        // Only this library's pool: clearing every pool would close connections other tests are about to use.
+        new SqliteDatabase(Paths.GetDatabasePath(), Paths.GetBackupDirectory(), NullLogger<SqliteDatabase>.Instance).ClearPool();
         try
         {
             Directory.Delete(Folder, recursive: true);

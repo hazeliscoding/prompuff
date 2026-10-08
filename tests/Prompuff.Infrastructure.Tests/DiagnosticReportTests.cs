@@ -156,7 +156,7 @@ public class DiagnosticReportTests
     {
         await using var library = await TestLibrary.CreateAsync();
         var (report, paths, _) = Create(library);
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        library.Database.ClearPool();
         await File.WriteAllTextAsync(paths.GetDatabasePath(), "this isn't a database, it's a cake");
 
         var text = await report.BuildAsync(Facts);

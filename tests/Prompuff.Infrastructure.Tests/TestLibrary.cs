@@ -64,7 +64,8 @@ internal sealed class TestLibrary : IAsyncDisposable
 
     public ValueTask DisposeAsync()
     {
-        SqliteConnection.ClearAllPools();
+        // Only this library's pool: clearing every pool would close connections other tests are about to use.
+        Database.ClearPool();
         try
         {
             Directory.Delete(Folder, recursive: true);

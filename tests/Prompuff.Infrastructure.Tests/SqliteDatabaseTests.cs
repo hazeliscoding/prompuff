@@ -60,7 +60,7 @@ public class SqliteDatabaseTests
         var error = await Assert.ThrowsAsync<LibraryException>(() => database.InitializeAsync());
 
         Assert.Equal("Prompuff couldn't open your library.", error.Message);
-        SqliteConnection.ClearAllPools();
+        database.ClearPool();
         Directory.Delete(folder, recursive: true);
     }
 
@@ -104,7 +104,7 @@ public class SqliteDatabaseTests
         Assert.Equal([id], found.Select(summary => summary.Id));
         Assert.Single(Directory.GetFiles(Path.Combine(folder, "backups"), "prompuff-schema1-*.db"));
 
-        SqliteConnection.ClearAllPools();
+        database.ClearPool();
         Directory.Delete(folder, recursive: true);
     }
 
@@ -176,7 +176,7 @@ public class SqliteDatabaseTests
             Assert.Equal(1L, await Scalar(connection, "SELECT COUNT(*) FROM PromptSearchRows;"));
         }
 
-        SqliteConnection.ClearAllPools();
+        database.ClearPool();
         Directory.Delete(folder, recursive: true);
     }
 

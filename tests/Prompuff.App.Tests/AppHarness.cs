@@ -141,8 +141,9 @@ internal sealed class AppHarness : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         Window.Close();
+        var database = _services.GetRequiredService<Infrastructure.Persistence.SqliteDatabase>();
         await _services.DisposeAsync();
-        SqliteConnection.ClearAllPools();
+        database.ClearPool();
         try
         {
             Directory.Delete(Folder, recursive: true);
@@ -158,8 +159,9 @@ internal sealed class AppHarness : IAsyncDisposable
     {
         Assert.True(await ViewModel.PrepareToCloseAsync());
         Window.Close();
+        var database = _services.GetRequiredService<Infrastructure.Persistence.SqliteDatabase>();
         await _services.DisposeAsync();
-        SqliteConnection.ClearAllPools();
+        database.ClearPool();
     }
 }
 

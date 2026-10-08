@@ -28,6 +28,17 @@ public sealed class SqliteDatabase
     public string DatabasePath { get; }
     public string BackupDirectory { get; }
 
+    /// <summary>
+    /// Closes this library's idle pooled connections, so its files can be replaced or deleted. Unlike
+    /// <see cref="SqliteConnection.ClearAllPools"/>, it leaves every other library's connections alone, which matters
+    /// when another one is opening a connection at the same moment.
+    /// </summary>
+    public void ClearPool()
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        SqliteConnection.ClearPool(connection);
+    }
+
     public async Task<SqliteConnection> OpenAsync(CancellationToken cancellationToken = default)
     {
         var connection = new SqliteConnection(_connectionString);
