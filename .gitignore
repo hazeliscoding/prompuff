@@ -30,3 +30,6 @@ Thumbs.db
 # Agent instructions are committed in this repo (the global gitignore excludes them)
 !AGENTS.md
 !CLAUDE.md
+
+# /brag launch video work (the finished video is copied into the site)
+/brag-output*/
