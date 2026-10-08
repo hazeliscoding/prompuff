@@ -1,4 +1,4 @@
-"""Rasterize app-icon.svg into prompuff.png (512), prompuff-256.png and a multi-size ICO.
+"""Rasterize app-icon.svg into prompuff.png (512), prompuff-256.png, a multi-size ICO and a macOS ICNS.
 
 ICO entries: 32-bit BMP (DIB + AND mask) below 256 px for maximum compatibility,
 PNG-compressed for 256 px. Each size is rendered directly from the SVG.
@@ -72,4 +72,14 @@ for size, data in entries:
 for _, data in entries:
     ico += data
 (out / "prompuff.ico").write_bytes(bytes(ico))
+
+# ICNS for the macOS app bundle: PNG entries under Apple's type codes, which macOS 10.7 and later read.
+# Each @2x code holds the same pixels as the next size up, so Retina screens get a sharp icon.
+ICNS_TYPES = [
+    (b"icp4", 16), (b"ic11", 32), (b"icp5", 32), (b"ic12", 64), (b"ic07", 128),
+    (b"ic13", 256), (b"ic08", 256), (b"ic14", 512), (b"ic09", 512), (b"ic10", 1024),
+]
+icns_entries = b"".join(code + struct.pack(">I", 8 + len(data)) + data
+                        for code, data in ((code, png_bytes(render(size))) for code, size in ICNS_TYPES))
+(out / "prompuff.icns").write_bytes(b"icns" + struct.pack(">I", 8 + len(icns_entries)) + icns_entries)
 print("wrote", [p.name for p in sorted(out.glob("prompuff*"))])
