@@ -282,7 +282,7 @@ Let scripts and coding agents use the vault without opening the app.
 
 **Done when:** Claude Code, GitHub Copilot CLI and Codex can each search the vault and render a prompt with variables through MCP, and `prompuff render "Angular Upgrade Planner" --var repo_name=acme` prints the result on all three platforms.
 
-## v0.8: Beta channel and themes
+## v0.8: Beta channel and themes (tagged 2026-10-08)
 
 - [x] A `SHA256SUMS` file with every release.
 - [x] A Beta channel: `-beta` tags publish pre-releases to `*-beta` Velopack channels, and the Beta option in Settings › Updates works.
