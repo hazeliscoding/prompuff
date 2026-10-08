@@ -63,7 +63,8 @@ internal sealed record RenderedPrompt(string Id, string Title, string Rendered, 
 
 internal sealed record SavedPrompt(string Id, string Title);
 
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
+// One line ending everywhere, so scripts and AI tools see the same output on every platform.
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, NewLine = "\n")]
 [JsonSerializable(typeof(List<PromptListItem>))]
 [JsonSerializable(typeof(PromptDetails))]
 [JsonSerializable(typeof(RenderedPrompt))]
