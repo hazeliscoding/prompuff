@@ -90,6 +90,8 @@ ICONS: list[tuple[str, str]] = [
     ("ArrowDown", "arrow-down"),
     ("ArrowRight", "arrow-right"),
     ("CircleCheck", "circle-check"),
+    ("Plug", "plug"),
+    ("Terminal", "terminal"),
 ]
 
 # Older/newer Lucide names to try when the primary file name is missing.

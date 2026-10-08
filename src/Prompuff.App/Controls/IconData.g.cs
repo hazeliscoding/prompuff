@@ -66,5 +66,7 @@ internal static class IconData
             ["ArrowDown"] = "M 12 5 v 14 M 19 12 l -7 7 l -7 -7",
             ["ArrowRight"] = "M 5 12 h 14 M 12 5 l 7 7 l -7 7",
             ["CircleCheck"] = "M 2 12 A 10 10 0 1 0 22 12 A 10 10 0 1 0 2 12 Z M 9 12 l 2 2 l 4 -4",
+            ["Plug"] = "M 12 22 v -5 M 9 8 V 2 M 15 8 V 2 M 18 8 v 5 a 4 4 0 0 1 -4 4 h -4 a 4 4 0 0 1 -4 -4 V 8 Z",
+            ["Terminal"] = "M 4 17 L 10 11 L 4 5 M 12 19 L 20 19",
         };
 }
