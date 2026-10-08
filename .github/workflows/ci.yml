@@ -18,7 +18,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            rid: win-x64
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: macos-latest
+            rid: osx-arm64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -40,6 +46,14 @@ jobs:
           xvfb-run -a -s "-screen 0 1280x800x24" dotnet test --no-build -c Release
         env:
           PROMPUFF_SCREENSHOTS: ${{ runner.temp }}/screenshots
+      # The trimmed single-file prompuff behaves differently from the test build, so publish it and use it.
+      - name: Smoke test the command-line tool
+        shell: bash
+        run: |
+          dotnet publish src/Prompuff.Cli -c Release -r ${{ matrix.rid }} -o artifacts/cli
+          cli=artifacts/cli/prompuff
+          if [ "$RUNNER_OS" = Windows ]; then cli=$cli.exe; fi
+          bash scripts/smoke-cli.sh "$cli"
       # The headless UI tests save a PNG of every state they visit; look at them after UI changes.
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()

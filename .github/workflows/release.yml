@@ -56,6 +56,8 @@ jobs:
       - run: dotnet test -c Release
       - name: Publish self-contained win-x64
         run: dotnet publish src/Prompuff.App -c Release -r win-x64 --self-contained true -p:Version=${{ env.VERSION }} -o publish
+      - name: Publish the command-line tool beside it
+        run: dotnet publish src/Prompuff.Cli -c Release -r win-x64 -p:Version=${{ env.VERSION }} -o publish/cli
       - name: Download the previous release for delta updates
         # Only tag builds make deltas; a manual run's version may be lower than the latest release, which vpk refuses.
         if: github.ref_type == 'tag'
@@ -94,6 +96,16 @@ jobs:
             Where-Object FullName -like '*\x64\*' | Sort-Object FullName -Descending | Select-Object -First 1
           & $signtool.FullName verify /pa /v "releases\$env:PACK_ID-win-Setup.exe"
           if ($LASTEXITCODE -ne 0) { throw "Prompuff-Setup.exe isn't signed" }
+          Expand-Archive "releases\$env:PACK_ID-win-Portable.zip" portable
+          & $signtool.FullName verify /pa (Get-ChildItem portable -Recurse -Filter prompuff.exe).FullName
+          if ($LASTEXITCODE -ne 0) { throw "The command-line tool isn't signed" }
+      - name: Smoke test the command-line tool from the package
+        shell: bash
+        run: |
+          [ -d portable ] || unzip -q "releases/${PACK_ID}-win-Portable.zip" -d portable
+          cli=$(find portable -name prompuff.exe | head -1)
+          test -n "$cli" || { echo "The package has no command-line tool"; exit 1; }
+          bash scripts/smoke-cli.sh "$cli"
       - name: Collect this version's files
         shell: bash
         run: |
@@ -136,6 +148,8 @@ jobs:
       - run: dotnet test -c Release
       - name: Publish self-contained ${{ matrix.rid }}
         run: dotnet publish src/Prompuff.App -c Release -r "$RID" --self-contained true -p:Version=$VERSION -o publish
+      - name: Publish the command-line tool beside it
+        run: dotnet publish src/Prompuff.Cli -c Release -r "$RID" -p:Version=$VERSION -o publish/cli
       - name: Download the previous release for delta updates
         # Only tag builds make deltas; a manual run's version may be lower than the latest release, which vpk refuses.
         if: github.ref_type == 'tag'
@@ -182,6 +196,14 @@ jobs:
           cat "$XDG_DATA_HOME"/prompuff/logs/*.log
           grep -q "Quick save hotkey Ctrl+Alt+P is ready" "$XDG_DATA_HOME"/prompuff/logs/*.log || { echo "The X11 hotkey didn't register"; exit 1; }
           grep -q "Created prompt" "$XDG_DATA_HOME"/prompuff/logs/*.log || { echo "The hotkey didn't stash a prompt"; exit 1; }
+      - name: Smoke test the command-line tool from the AppImage
+        run: |
+          mkdir appimage && cd appimage
+          "../dist/Prompuff-$RID.AppImage" --appimage-extract > /dev/null
+          cli=$(find squashfs-root -path '*/cli/prompuff' | head -1)
+          test -n "$cli" || { echo "The AppImage has no command-line tool"; exit 1; }
+          test -x "$cli" || { echo "The command-line tool isn't executable"; exit 1; }
+          cd .. && bash scripts/smoke-cli.sh "appimage/$cli"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -218,6 +240,8 @@ jobs:
       - run: dotnet tool restore
       - name: Publish self-contained ${{ matrix.rid }}
         run: dotnet publish src/Prompuff.App -c Release -r "$RID" --self-contained true -p:Version=$VERSION -o publish
+      - name: Publish the command-line tool beside it
+        run: dotnet publish src/Prompuff.Cli -c Release -r "$RID" -p:Version=$VERSION -o publish/cli
       - name: Download the previous release for delta updates
         # Only tag builds make deltas; a manual run's version may be lower than the latest release, which vpk refuses.
         if: github.ref_type == 'tag'
@@ -239,6 +263,17 @@ jobs:
           # The whole bundle must carry a valid ad-hoc signature. Apple Silicon won't run unsigned code, and a
           # downloaded app with a broken signature is reported as damaged, with no Open Anyway.
           codesign --verify --deep --strict --verbose=2 "$app"
+          codesign -dv "$app/Contents/MacOS/cli/prompuff" 2>&1 | sed 's/^/  /'
+          codesign --verify --strict --verbose=2 "$app/Contents/MacOS/cli/prompuff"
+      - name: Smoke test the command-line tool from the app
+        run: |
+          run=()
+          if [ "$ARCH" = x64 ]; then
+            /usr/bin/pgrep -q oahd || softwareupdate --install-rosetta --agree-to-license
+            run=(arch -x86_64)
+          fi
+          app=$(ls -d unpacked/*.app)
+          bash scripts/smoke-cli.sh "$app/Contents/MacOS/cli/prompuff" "${run[@]}"
       - name: Collect this version's files
         run: |
           mkdir dist
