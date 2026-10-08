@@ -75,7 +75,9 @@ On macOS, use ⌘ Cmd wherever the table says Ctrl.
 | Ctrl+Shift+S | Quick save from the clipboard |
 | Ctrl+D | Toggle favorite |
 | Ctrl+H | Version history |
-| Esc | Close a dialog or the palette |
+| Esc | Close a dialog or the palette, or go back from a prompt to the library |
+
+In the library, the arrow keys, Home and End move between prompts, Enter opens one, and Delete (⌘⌫ on macOS) deletes it after asking. Typing the first letters of a title jumps to it. From the search box, ↓ moves to the results and Enter opens the best match.
 
 ## Development
 

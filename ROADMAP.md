@@ -65,6 +65,12 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **GitHub's OIDC subject includes immutable IDs.** The signing app's federated credential trusts `repo:hazeliscoding@23608664/prompuff@1408214273:environment:release`. The plain `repo:hazeliscoding/prompuff:...` form doesn't match, and the IDs mean a renamed or transferred repo can't inherit the trust.
 - **SmartScreen reputation isn't a release gate.** Signed builds name the publisher right away, but the "unrecognized app" warning only fades as people download and run them, and no certificate skips that since 2024. It gets a re-check before 1.0.
 
+## Decisions: v0.4 (2026-10-08)
+
+- **Library keys:** arrows, Home and End move a cursor that focus follows, and the cursor stays on its prompt across refreshes. After a delete it moves to the card that took the deleted one's place. Up and Down move a whole row of cards. Type-ahead matches the start of a title, resets after a second, and cycles when the same letter is typed again.
+- **Esc goes back** from a prompt or Settings to the library, but only when nothing else used the key, so closing a dropdown or a dialog never leaves the page.
+- **Dialogs take focus** when they open, so Enter confirms the dialog instead of pressing the button behind it, and focus returns where it was when they close.
+
 ## v0.1: MVP (tagged 2026-10-07)
 
 ### M0: Foundation
@@ -169,7 +175,7 @@ Ship the remaining platforms early, so every later feature is built for all of t
 
 Make daily use fast, and keep track of where prompts came from.
 
-- [ ] Library keyboard navigation: arrow keys move through cards and rows, Enter opens, Delete deletes after confirming, and typing jumps to a title.
+- [x] Library keyboard navigation: arrow keys move through cards and rows, Enter opens, Delete deletes after confirming, and typing jumps to a title.
 - [ ] Density modes from the design (Cozy, Compact, Dense).
 - [ ] Prompt lineage: Duplicate records `ParentPromptId`, and the detail view shows "Duplicated from" and a list of copies.
 - [ ] Multi-select in the library to tag, move, export or delete several prompts.
