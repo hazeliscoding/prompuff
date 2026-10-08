@@ -407,13 +407,10 @@ public sealed partial class SettingsViewModel : ObservableObject
         _notifier.Notify();
         await RefreshAsync();
         var skipped = result.SkippedCount == 0 ? string.Empty : $" Skipped {Format.Count(result.SkippedCount, "prompt")} you already have.";
-        var others = result.SkippedFiles.Count switch
-        {
-            0 => string.Empty,
-            1 => " Passed over 1 file that isn't Markdown.",
-            var count => $" Passed over {count} files that aren't Markdown.",
-        };
-        var othersList = result.SkippedFiles.Count == 0 ? null : "Not Markdown, so not imported:\n" + string.Join("\n", result.SkippedFiles);
+        var others = result.SkippedFiles.Count == 0 ? string.Empty : $" Passed over {Format.Count(result.SkippedFiles.Count, "file")} that Prompuff doesn't import.";
+        var othersList = result.SkippedFiles.Count == 0
+            ? null
+            : "Not imported, because only Markdown files are and links aren't followed:\n" + string.Join("\n", result.SkippedFiles);
         if (result.Failures.Count == 0)
         {
             if (result.SkippedFiles.Count > 0)

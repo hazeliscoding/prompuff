@@ -76,7 +76,7 @@ public class FolderImportTests
         var dialog = app.ViewModel.Dialogs.Current;
         Assert.NotNull(dialog);
         Assert.Equal("Imported 2 prompts.", dialog.Title);
-        Assert.Equal("Passed over 1 file that isn't Markdown.", dialog.Message);
+        Assert.Equal("Passed over 1 file that Prompuff doesn't import.", dialog.Message);
         Assert.Contains("diagram.png", dialog.Details);
         Assert.False(dialog.IsError);
         dialog.ToggleDetailsCommand.Execute(null);

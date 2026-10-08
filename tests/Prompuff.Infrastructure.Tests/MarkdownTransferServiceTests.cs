@@ -207,6 +207,31 @@ public class MarkdownTransferServiceTests
     }
 
     [Fact]
+    public async Task A_folder_import_lists_links_instead_of_following_them()
+    {
+        await using var library = await TestLibrary.CreateAsync();
+        var outside = Path.Combine(library.Folder, "outside.md");
+        await File.WriteAllTextAsync(outside, "Lives outside the vault");
+        var vault = Directory.CreateDirectory(Path.Combine(library.Folder, "vault")).FullName;
+        await File.WriteAllTextAsync(Path.Combine(vault, "Inside.md"), "Lives in the vault");
+        await File.WriteAllTextAsync(Path.Combine(vault, "Empty.md"), string.Empty);
+        try
+        {
+            File.CreateSymbolicLink(Path.Combine(vault, "Linked.md"), outside);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Assert.Skip("This machine doesn't allow symbolic links without extra rights.");
+        }
+
+        var result = await library.Transfer.ImportFolderAsync(vault);
+
+        Assert.Equal(["Linked.md (a link)"], result.SkippedFiles);
+        Assert.Equal("The file is empty.", Assert.Single(result.Failures).Reason);
+        Assert.Equal(["Inside"], (await library.Search.SearchAsync(PromptQuery.All)).Select(p => p.Title));
+    }
+
+    [Fact]
     public async Task A_missing_folder_is_reported()
     {
         await using var library = await TestLibrary.CreateAsync();

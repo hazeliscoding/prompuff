@@ -166,13 +166,19 @@ public sealed class MarkdownTransferService(
                     return Finish(import);
                 }
 
-                if (MarkdownExtensions.Contains(entry.Extension))
+                var relative = Path.GetRelativePath(root.FullName, entry.FullName);
+                if (entry.LinkTarget is not null)
+                {
+                    // A link could lead anywhere on the machine, so only files that really live in the folder are read.
+                    import.OtherFiles.Add(relative + " (a link)");
+                }
+                else if (MarkdownExtensions.Contains(entry.Extension))
                 {
                     files.Add(entry.FullName);
                 }
                 else
                 {
-                    import.OtherFiles.Add(Path.GetRelativePath(root.FullName, entry.FullName));
+                    import.OtherFiles.Add(relative);
                 }
             }
         }
@@ -204,10 +210,22 @@ public sealed class MarkdownTransferService(
             {
                 import.Failures.Add(new ImportFailure(path, TooLarge));
             }
+            else if (info.Length == 0)
+            {
+                // Also keeps pipes and device files, which report no length, from being opened at all.
+                import.Failures.Add(new ImportFailure(path, "The file is empty."));
+            }
             else
             {
-                var text = await File.ReadAllTextAsync(path, cancellationToken);
-                await ImportTextAsync(path, text, Path.GetFileNameWithoutExtension(path), import, cancellationToken);
+                await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
+                if (await ReadLimitedAsync(stream, cancellationToken) is { } text)
+                {
+                    await ImportTextAsync(path, text, Path.GetFileNameWithoutExtension(path), import, cancellationToken);
+                }
+                else
+                {
+                    import.Failures.Add(new ImportFailure(path, TooLarge));
+                }
             }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or DecoderFallbackException or InvalidDataException)
@@ -255,27 +273,40 @@ public sealed class MarkdownTransferService(
                 continue;
             }
 
-            // The size in the zip's directory can lie, so the read itself stops past the limit.
             await using var stream = await entry.OpenAsync(cancellationToken);
-            using var buffer = new MemoryStream();
-            var chunk = new byte[81920];
-            int read;
-            while ((read = await stream.ReadAsync(chunk, cancellationToken)) > 0 && buffer.Length <= MaxImportBytes)
+            if (await ReadLimitedAsync(stream, cancellationToken) is { } text)
             {
-                buffer.Write(chunk, 0, read);
+                await ImportTextAsync(entryPath, text, Path.GetFileNameWithoutExtension(entry.Name), import, cancellationToken);
             }
-
-            if (buffer.Length > MaxImportBytes)
+            else
             {
                 import.Failures.Add(new ImportFailure(entryPath, TooLarge));
-                continue;
             }
-
-            buffer.Position = 0;
-            using var reader = new StreamReader(buffer, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
-            var text = await reader.ReadToEndAsync(cancellationToken);
-            await ImportTextAsync(entryPath, text, Path.GetFileNameWithoutExtension(entry.Name), import, cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// Reads text in memory, stopping as soon as it passes the 5 MB limit. Sizes reported by a zip's directory or by
+    /// the file system can lie, so the read itself enforces the limit. Returns null when the text is too large.
+    /// </summary>
+    private static async Task<string?> ReadLimitedAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        using var buffer = new MemoryStream();
+        var chunk = new byte[81920];
+        int read;
+        while (buffer.Length <= MaxImportBytes && (read = await stream.ReadAsync(chunk, cancellationToken)) > 0)
+        {
+            buffer.Write(chunk, 0, read);
+        }
+
+        if (buffer.Length > MaxImportBytes)
+        {
+            return null;
+        }
+
+        buffer.Position = 0;
+        using var reader = new StreamReader(buffer, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        return await reader.ReadToEndAsync(cancellationToken);
     }
 
     private async Task ImportTextAsync(string path, string text, string fallbackTitle, ImportProgress import, CancellationToken cancellationToken)
