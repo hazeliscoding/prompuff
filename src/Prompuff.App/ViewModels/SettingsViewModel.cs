@@ -196,6 +196,42 @@ public sealed partial class SettingsViewModel : ObservableObject
     private bool _checkForUpdatesAutomatically;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsStableChannel), nameof(IsBetaChannel), nameof(ChannelNote))]
+    private UpdateChannel _releaseChannel;
+
+    public bool IsStableChannel
+    {
+        get => ReleaseChannel == UpdateChannel.Stable;
+        set
+        {
+            if (value)
+            {
+                ReleaseChannel = UpdateChannel.Stable;
+            }
+        }
+    }
+
+    public bool IsBetaChannel
+    {
+        get => ReleaseChannel == UpdateChannel.Beta;
+        set
+        {
+            if (value)
+            {
+                ReleaseChannel = UpdateChannel.Beta;
+            }
+        }
+    }
+
+    /// <summary>Updates never go back a version, so leaving Beta waits for the next stable release.</summary>
+    public string ChannelNote => (ReleaseChannel, CurrentVersion.Contains('-')) switch
+    {
+        (UpdateChannel.Beta, _) => "Beta gets new versions first, for trying them early. Stable releases reach it too.",
+        (_, true) => "This copy is a beta. It stays on it until a newer stable release comes out.",
+        _ => "Stable gets new versions once they've been through beta.",
+    };
+
+    [ObservableProperty]
     private bool _keepRunningInTray;
 
     [ObservableProperty]
@@ -365,6 +401,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         ShowMascot = settings.ShowMascot;
         Density = settings.Density;
         CheckForUpdatesAutomatically = settings.CheckForUpdatesAutomatically;
+        ReleaseChannel = settings.UpdateChannel;
         KeepRunningInTray = settings.KeepRunningInTray;
         AllowMcp = settings.AllowMcp;
         Hotkey = Platform.Hotkey.Parse(settings.QuickSaveHotkey);
@@ -880,6 +917,19 @@ public sealed partial class SettingsViewModel : ObservableObject
         _toasts.Show("Copied.", AllowMcp ? $"Paste it into {McpSetup.Name}." : "Turn on MCP here when you're ready.");
     }
 
+    partial void OnReleaseChannelChanged(UpdateChannel value)
+    {
+        Persist(settings => settings with { UpdateChannel = value });
+        if (!_loading)
+        {
+            // An update found on the other channel may not apply to this one.
+            _availableUpdate = null;
+            CanInstallUpdate = false;
+            AvailableUpdateLabel = string.Empty;
+            UpdateStatus = value == UpdateChannel.Beta ? "Switched to Beta. Check for updates to see the latest beta." : "Switched to Stable.";
+        }
+    }
+
     partial void OnCheckForUpdatesAutomaticallyChanged(bool value) =>
         Persist(settings => settings with { CheckForUpdatesAutomatically = value });
 
@@ -895,7 +945,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         _availableUpdate = update;
         CanInstallUpdate = true;
-        AvailableUpdateLabel = $"Prompuff {update.Version} is available";
+        AvailableUpdateLabel = $"Update {update.Version} is ready";
         UpdateStatus = $"Prompuff {update.Version} is available.";
     }
 

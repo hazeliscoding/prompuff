@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Prompuff.Application;
 using Prompuff.Application.Interfaces;
@@ -12,11 +13,18 @@ namespace Prompuff.Infrastructure.Updates;
 /// Checks GitHub Releases for new versions with Velopack. This is the only network code in Prompuff,
 /// and it sends nothing about the library.
 /// </summary>
+/// <remarks>
+/// Every release goes to one channel per platform: "win", "linux", "linux-arm64", "osx-arm64" or "osx-x64" for stable
+/// tags, and the same name with "-beta" for <c>-beta</c> tags, which are GitHub pre-releases. Stable installs only read
+/// the stable channel. Beta installs read both and take the newer version, so a stable release that's newer than the
+/// last beta reaches them too. Neither ever moves to an older version, so switching back to Stable from a beta waits
+/// for the next stable release.
+/// </remarks>
 public sealed class VelopackUpdateService(ILogger<VelopackUpdateService> logger) : IUpdateService
 {
     public const string RepositoryUrl = "https://github.com/hazeliscoding/prompuff";
 
-    private readonly Lazy<UpdateManager> _stableManager = new(() => CreateManager(UpdateChannel.Stable));
+    private readonly Dictionary<UpdateChannel, UpdateManager> _managers = [];
     private UpdateManager? _activeManager;
     private UpdateInfo? _pending;
 
@@ -26,7 +34,7 @@ public sealed class VelopackUpdateService(ILogger<VelopackUpdateService> logger)
         {
             try
             {
-                return _stableManager.Value.IsInstalled;
+                return Manager(UpdateChannel.Stable).IsInstalled;
             }
             catch (Exception exception)
             {
@@ -40,7 +48,7 @@ public sealed class VelopackUpdateService(ILogger<VelopackUpdateService> logger)
     {
         get
         {
-            if (IsSupported && _stableManager.Value.CurrentVersion is { } version)
+            if (IsSupported && Manager(UpdateChannel.Stable).CurrentVersion is { } version)
             {
                 return version.ToString();
             }
@@ -59,11 +67,21 @@ public sealed class VelopackUpdateService(ILogger<VelopackUpdateService> logger)
 
         try
         {
-            var manager = channel == UpdateChannel.Stable ? _stableManager.Value : CreateManager(channel);
-            var info = await manager.CheckForUpdatesAsync();
+            UpdateManager? manager = null;
+            UpdateInfo? info = null;
+            UpdateChannel[] channels = channel == UpdateChannel.Beta ? [UpdateChannel.Beta, UpdateChannel.Stable] : [UpdateChannel.Stable];
+            foreach (var candidate in channels)
+            {
+                var found = await Manager(candidate).CheckForUpdatesAsync();
+                if (found is not null && (info is null || found.TargetFullRelease.Version > info.TargetFullRelease.Version))
+                {
+                    (manager, info) = (Manager(candidate), found);
+                }
+            }
+
             _activeManager = manager;
             _pending = info;
-            logger.LogInformation("Update check finished; update available: {Available}", info is not null);
+            logger.LogInformation("Update check on the {Channel} channel finished; update available: {Available}", channel, info is not null);
             return info is null
                 ? null
                 : new AvailableUpdate(info.TargetFullRelease.Version.ToString(), info.TargetFullRelease.NotesMarkdown);
@@ -97,6 +115,19 @@ public sealed class VelopackUpdateService(ILogger<VelopackUpdateService> logger)
         manager.ApplyUpdatesAndRestart(info.TargetFullRelease);
     }
 
+    /// <summary>
+    /// The Velopack channel a release workflow packs for this platform. The channel is always set explicitly, so an
+    /// install that came from a beta follows the Stable setting once it's chosen, and the other way round.
+    /// </summary>
+    internal static string ChannelName(UpdateChannel channel, OSPlatform os, Architecture architecture)
+    {
+        var arm = architecture == Architecture.Arm64;
+        var stable = os == OSPlatform.Windows ? "win"
+            : os == OSPlatform.OSX ? (arm ? "osx-arm64" : "osx-x64")
+            : arm ? "linux-arm64" : "linux";
+        return channel == UpdateChannel.Beta ? stable + "-beta" : stable;
+    }
+
     private (UpdateManager Manager, UpdateInfo Info) RequirePending(AvailableUpdate update)
     {
         if (_activeManager is null || _pending is null || _pending.TargetFullRelease.Version.ToString() != update.Version)
@@ -107,17 +138,19 @@ public sealed class VelopackUpdateService(ILogger<VelopackUpdateService> logger)
         return (_activeManager, _pending);
     }
 
-    private static UpdateManager CreateManager(UpdateChannel channel)
+    private UpdateManager Manager(UpdateChannel channel)
     {
-        var prerelease = channel == UpdateChannel.Beta;
-        var options = new UpdateOptions
+        lock (_managers)
         {
-            // Stable uses Velopack's default channel for the platform ("win", "linux"); Beta appends "-beta".
-            ExplicitChannel = prerelease ? DefaultChannel() + "-beta" : null,
-        };
-        return new UpdateManager(new GithubSource(RepositoryUrl, accessToken: null, prerelease: prerelease), options);
-    }
+            if (!_managers.TryGetValue(channel, out var manager))
+            {
+                var os = OperatingSystem.IsWindows() ? OSPlatform.Windows : OperatingSystem.IsMacOS() ? OSPlatform.OSX : OSPlatform.Linux;
+                var options = new UpdateOptions { ExplicitChannel = ChannelName(channel, os, RuntimeInformation.ProcessArchitecture) };
+                manager = new UpdateManager(new GithubSource(RepositoryUrl, accessToken: null, prerelease: channel == UpdateChannel.Beta), options);
+                _managers[channel] = manager;
+            }
 
-    private static string DefaultChannel() =>
-        OperatingSystem.IsWindows() ? "win" : OperatingSystem.IsMacOS() ? "osx" : "linux";
+            return manager;
+        }
+    }
 }

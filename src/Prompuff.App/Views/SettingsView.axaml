@@ -345,12 +345,12 @@
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
               <StackPanel>
                 <TextBlock Classes="strong" Text="Release channel" />
-                <TextBlock Classes="compact faint" Text="Beta builds arrive in a later version." />
+                <TextBlock Classes="compact faint" TextWrapping="Wrap" Text="{Binding ChannelNote}" />
               </StackPanel>
               <Border Grid.Column="1" Classes="segmented" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Spacing="1">
-                  <RadioButton Theme="{StaticResource SegmentButton}" GroupName="channel" IsChecked="True" Content="Stable" />
-                  <RadioButton Theme="{StaticResource SegmentButton}" GroupName="channel" IsEnabled="False" Content="Beta" ToolTip.Tip="Coming later" />
+                  <RadioButton Theme="{StaticResource SegmentButton}" GroupName="channel" IsChecked="{Binding IsStableChannel}" Content="Stable" />
+                  <RadioButton Theme="{StaticResource SegmentButton}" GroupName="channel" IsChecked="{Binding IsBetaChannel}" Content="Beta" />
                 </StackPanel>
               </Border>
             </Grid>
