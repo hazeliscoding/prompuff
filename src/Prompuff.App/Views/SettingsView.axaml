@@ -497,6 +497,21 @@
               </StackPanel>
             </Grid>
           </Border>
+          <Border Classes="panel" Padding="16">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel Spacing="2">
+                <TextBlock Classes="strong" Text="Diagnostic info" />
+                <TextBlock Classes="compact faint" TextWrapping="Wrap" LineHeight="18"
+                           Text="For bug reports: versions, settings, folder paths and recent log lines, never your prompts. Paths can show your user name, so give it a read before posting." />
+              </StackPanel>
+              <Button Grid.Column="1" Classes="sm" VerticalAlignment="Center" Command="{Binding CopyDiagnosticInfoCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <c:Icon Kind="Copy" Size="12" />
+                  <TextBlock Text="Copy diagnostic info" />
+                </StackPanel>
+              </Button>
+            </Grid>
+          </Border>
           <TextBlock Classes="compact faint" TextWrapping="Wrap" LineHeight="18"
                      Text="Made by one person who had too many prompts in too many places. Prompuff never uploads your prompts. The only thing it asks the internet is whether there's a new version, and you can turn that off." />
           <TextBlock Classes="compact faint" TextWrapping="Wrap"

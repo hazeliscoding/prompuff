@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,7 @@ using Prompuff.Application.DTOs;
 using Prompuff.Application.Interfaces;
 using Prompuff.Application.Services;
 using Prompuff.Application.Settings;
+using Prompuff.Infrastructure.Diagnostics;
 using Prompuff.Infrastructure.Persistence;
 
 namespace Prompuff.App.ViewModels;
@@ -119,6 +121,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly IClipboardService _clipboard;
     private readonly ICommandLineInstaller _installer;
     private readonly LibraryBackups _backups;
+    private readonly DiagnosticReport _diagnostics;
     private readonly DialogService _dialogs;
     private readonly ToastService _toasts;
     private readonly LibraryNotifier _notifier;
@@ -141,6 +144,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         IClipboardService clipboard,
         ICommandLineInstaller installer,
         LibraryBackups backups,
+        DiagnosticReport diagnostics,
         DialogService dialogs,
         ToastService toasts,
         LibraryNotifier notifier,
@@ -162,6 +166,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _installer = installer;
         hotkeys.Pressed += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(() => HotkeyPressed?.Invoke(this, EventArgs.Empty));
         _backups = backups;
+        _diagnostics = diagnostics;
         _dialogs = dialogs;
         _toasts = toasts;
         _notifier = notifier;
@@ -720,6 +725,22 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     [RelayCommand]
     private Task OpenLicenses() => _launcher.OpenUrlAsync(new Uri(LicensesUrl));
+
+    /// <summary>Copies a report for a bug report. It's gathered on this machine and goes nowhere until the user pastes it.</summary>
+    [RelayCommand]
+    private async Task CopyDiagnosticInfo()
+    {
+        var hotkey = !_hotkeys.IsSupported ? "unsupported in this session" : HotkeyProblem ? "taken by another app" : "ready";
+        var report = await _diagnostics.BuildAsync(new DiagnosticFacts(AvaloniaVersion, _installer.IsInstalled, hotkey));
+        await _clipboard.SetTextAsync(report);
+        _logger.LogInformation("Copied diagnostic info");
+        _toasts.Show("Copied.", "Give it a read, then paste it into your bug report.");
+    }
+
+    private static string AvaloniaVersion =>
+        typeof(Avalonia.Application).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0]
+        ?? typeof(Avalonia.Application).Assembly.GetName().Version?.ToString()
+        ?? "unknown";
 
     /// <summary>
     /// Picking a theme also switches to its mode when the other mode is showing, so the choice is visible at once.

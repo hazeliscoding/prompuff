@@ -9,6 +9,7 @@ using Prompuff.App.ViewModels;
 using Prompuff.App.Views;
 using Prompuff.Application.Interfaces;
 using Prompuff.Infrastructure;
+using Prompuff.Infrastructure.Diagnostics;
 using Prompuff.Infrastructure.Logging;
 using Prompuff.Infrastructure.Storage;
 
@@ -130,6 +131,7 @@ public sealed class App : Avalonia.Application
         services.AddSingleton<IPlatformLauncher, AvaloniaLauncher>();
         services.AddSingleton<IGlobalHotkeyService>(_ => GlobalHotkeys.Create());
         services.AddSingleton<ICommandLineInstaller, CommandLineInstaller>();
+        services.AddSingleton<DiagnosticReport>();
 
         services.AddSingleton<Navigator>();
         services.AddSingleton<LibraryNotifier>();
