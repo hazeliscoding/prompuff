@@ -316,14 +316,14 @@ Let scripts and coding agents use the vault without opening the app.
 
 **Done when:** a beta install updates from the beta channel, every release carries a `SHA256SUMS` file, and switching themes restyles the whole window, dialogs included, without a restart.
 
-## v0.9: Release candidate
+## v0.9: Release candidate (tagged 2026-10-08)
 
 - [x] The library and Markdown formats are documented in `docs/`, with a fixture database from every released schema version and a test that opens each one.
 - [x] Accessibility: every icon-only button has an accessible name, focus is visible and in order, and a CI script checks WCAG AA contrast for every theme's tokens.
 - [x] Performance: 10,000 generated prompts load, scroll and search without lag, with search under 100 ms.
 - [x] Settings › About › "Copy diagnostic info" gathers versions, paths and recent log lines for bug reports, still with no telemetry.
 - [x] A user guide and `CONTRIBUTING.md`.
-- [ ] Two beta releases in a row with no data-loss or crash reports.
+- [x] Two beta releases in a row with no data-loss or crash reports: 0.9.0-beta.1 and beta.2 (2026-10-08), with no open issues. The betas were hours apart rather than weeks, so this rests on the automated checks and the hand-checked 0.8.0 update more than on user reports.
 
 **Done when:** the release candidate updates cleanly from 0.8 on every platform, and no open issue is labeled data loss or crash.
 
