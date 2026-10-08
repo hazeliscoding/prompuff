@@ -49,7 +49,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **macOS comes early (v0.3)**, so the hotkey, tray, CLI and MCP work after it is built for all three platforms from the start.
 - **1.0 installers are signed.** Windows uses Azure Trusted Signing (about $10 a month). macOS uses a Developer ID and notarization from CI with an App Store Connect API key (Apple Developer account, $99 a year). Signing switches on only when the secrets exist, so forks and dry runs still build unsigned. (Changed in v0.3: there's no Apple Developer account, so only Windows is signed; see the v0.3 decisions.)
 - **Capture at 1.0** is a system-wide Quick save hotkey and a tray icon. Wayland doesn't let apps grab global keys, so Wayland users bind a desktop shortcut to `prompuff quick-save` instead. The browser extension comes after 1.0.
-- **Integrations at 1.0:** a `prompuff` CLI and a local MCP server over stdio, so Claude Code and similar tools can search and render prompts. Both read the same SQLite library, and neither opens a network connection.
+- **Integrations at 1.0:** a `prompuff` CLI and a local MCP server over stdio, so Claude Code and similar tools can search and render prompts. (2026-10-08: GitHub Copilot CLI and Codex are named clients too.) Both read the same SQLite library, and neither opens a network connection.
 - **The 1.0 promise is format stability.** Every later version opens a 1.0 library, the Markdown format stays compatible, and every schema migration is tested from every released version.
 
 ## Decisions: v0.3 (2026-10-07)
@@ -58,6 +58,11 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Bundle ID** is `io.github.hazeliscoding.prompuff`. macOS ties settings and permissions to it, so it doesn't change.
 - **Windows signing moves up from v0.8.** The release workflow signs with Azure Artifact Signing (formerly Trusted Signing) through `vpk pack --azureTrustedSignFile`. GitHub Actions signs in to Azure with OIDC (`azure/login`), so no Azure secret is stored, and signing switches on only when the Azure variables exist. The app registration `prompuff-release-signing` trusts only jobs in the repo's `release` environment, which only `v*` tags can use, and it can only sign with the `EZMoneyCert` profile.
 - **No Apple Developer account,** now or planned. macOS builds are ad-hoc signed and never notarized, through 1.0. Gatekeeper blocks them on first launch, so the README explains Open Anyway, and Mac signing leaves the roadmap.
+
+## Decisions (2026-10-08)
+
+- **MCP clients:** besides Claude Code and Claude Desktop, GitHub Copilot CLI and Codex are supported clients. The stdio server is the same for all of them; each client gets its own ready-to-paste setup, since each reads a different config (`claude mcp add`, Claude Desktop's JSON, Copilot CLI's `mcp-config.json`, Codex's `config.toml`). Check each format against the client's docs when building v0.7.
+- **GitHub's OIDC subject includes immutable IDs.** The signing app's federated credential trusts `repo:hazeliscoding@23608664/prompuff@1408214273:environment:release`. The plain `repo:hazeliscoding/prompuff:...` form doesn't match, and the IDs mean a renamed or transferred repo can't inherit the trust.
 
 ## v0.1: MVP (tagged 2026-10-07)
 
@@ -198,10 +203,10 @@ Let scripts and coding agents use the vault without opening the app.
 - [ ] `prompuff` CLI: `search`, `list`, `get`, `render` with `--var name=value`, and `quick-save` from stdin.
 - [ ] Ship the CLI in every package, and add an "Install command-line tool" button to Settings that puts it on the user's PATH (`~/.local/bin` on Linux and macOS, a user PATH entry on Windows).
 - [ ] `prompuff mcp`: a read-only MCP server over stdio with search, get and render tools, and prompts as resources.
-- [ ] A "Copy MCP config" button in Settings for Claude Code and Claude Desktop.
+- [ ] "Copy MCP config" in Settings, with a ready-to-paste setup for each client: Claude Code, Claude Desktop, GitHub Copilot CLI and Codex. The README shows the same setups.
 - [ ] The app picks up changes the CLI makes without a restart, using SQLite's `data_version`.
 
-**Done when:** Claude Code can search the vault and render a prompt with variables through MCP, and `prompuff render "Angular Upgrade Planner" --var repo_name=acme` prints the result on all three platforms.
+**Done when:** Claude Code, GitHub Copilot CLI and Codex can each search the vault and render a prompt with variables through MCP, and `prompuff render "Angular Upgrade Planner" --var repo_name=acme` prints the result on all three platforms.
 
 ## v0.8: Beta channel
 
