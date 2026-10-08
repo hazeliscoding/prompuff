@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prompuff: a local-first home for prompts worth keeping</title>
+  <meta name="description" content="Prompuff is a small desktop app for the prompts that worked. Save them, tag them, fill in their {{variables}} and copy the result. No account, no cloud, no telemetry. MIT, for Windows, macOS and Linux.">
+  <link rel="canonical" href="https://hazeliscoding.github.io/prompuff/">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0A0C10" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FAFAFB" media="(prefers-color-scheme: light)">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Prompuff">
+  <meta property="og:title" content="Prompuff: a local-first home for prompts worth keeping">
+  <meta property="og:description" content="Save the prompts that worked, fill in their {{variables}} and copy the result. No account, no cloud, no telemetry.">
+  <meta property="og:url" content="https://hazeliscoding.github.io/prompuff/">
+  <meta property="og:image" content="https://hazeliscoding.github.io/prompuff/assets/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The Prompuff logo and “A local-first home for prompts worth keeping.” beside the Prompuff library window, with prompt cards, tags and ratings.">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="assets/brand/mark.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/brand/app-icon-256.png">
+  <link rel="preload" href="assets/fonts/Manrope-Bold.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="assets/fonts/Manrope-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="assets/site.css">
+  <script src="assets/site.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="home" href="#top" aria-label="Prompuff, back to the top">
+        <img src="assets/brand/mark.svg" alt="" width="38" height="27">
+      </a>
+      <nav aria-label="Sections">
+        <ul class="nav-list">
+          <li class="nav-extra"><a href="#features">Features</a></li>
+          <li class="nav-extra"><a href="#themes">Themes</a></li>
+          <li class="nav-extra"><a href="#terminal">Terminal</a></li>
+          <li class="nav-extra"><a href="#privacy">Privacy</a></li>
+          <li><a href="#download">Download</a></li>
+          <li><a href="https://github.com/hazeliscoding/prompuff">GitHub</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="wrap">
+        <figure class="bubble">
+          <blockquote>
+            <p><span class="nowrap">Talk is cheap.</span> <span class="nowrap">Show me the prompts.</span></p>
+          </blockquote>
+          <figcaption>Puff, with apologies to Linus Torvalds</figcaption>
+        </figure>
+        <h1 class="lockup">
+          <picture>
+            <source srcset="assets/brand/lockup.svg" media="(prefers-color-scheme: light)">
+            <img src="assets/brand/lockup-dark.svg" alt="Prompuff" width="643" height="118">
+          </picture>
+        </h1>
+        <p class="pitch">A local-first home for prompts worth keeping.</p>
+        <p class="hero-text">Save the prompts that worked, fill in their <code class="var">{{variables}}</code> and copy the result. Every saved change becomes a version you can read back or restore. Your prompts stay on your machine: no account, no cloud, no telemetry.</p>
+        <div class="cta">
+          <a class="button button-primary" id="get" href="#download">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M 21 15 v 4 a 2 2 0 0 1 -2 2 H 5 a 2 2 0 0 1 -2 -2 v -4 M 7 10 L 12 15 L 17 10 M 12 15 L 12 3"/></svg>
+            <span id="get-label">Download Prompuff</span>
+          </a>
+          <a class="button button-quiet" href="https://github.com/hazeliscoding/prompuff">View on GitHub</a>
+        </div>
+        <p class="cta-note"><span id="get-note">Free and open source, for Windows, macOS and Linux.</span> <a id="get-other" href="#download" hidden>Other platforms</a></p>
+      </div>
+    </section>
+
+    <section class="launch" aria-labelledby="launch-title">
+      <div class="wrap">
+        <h2 class="visually-hidden" id="launch-title">The launch video</h2>
+        <figure class="video" id="launch-video">
+          <div class="video-stage">
+            <video controls playsinline preload="metadata" poster="assets/video/prompuff-launch.jpg" width="1920" height="1080" aria-describedby="launch-caption">
+              <source src="assets/video/prompuff-launch.mp4" type="video/mp4">
+              <p>Your browser can’t play this video. <a href="assets/video/prompuff-launch.mp4">Download the launch video</a> instead.</p>
+            </video>
+            <div class="video-missing" hidden>
+              <img src="assets/brand/mark.svg" alt="" width="76" height="54">
+              <p>The launch video is on its way. Until it lands, the screenshots below are the real thing.</p>
+            </div>
+          </div>
+          <figcaption id="launch-caption">A short tour of Prompuff 1.0.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" id="features" aria-labelledby="features-title">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="features-title">What it does</h2>
+          <p>A small desktop app for the prompts that actually worked, and a note on why each one did.</p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-text">
+            <h3>Keeps the prompts that worked</h3>
+            <p>Each prompt has a title, a description, the prompt itself and a note on why it worked. File it in a collection, tag it, give it a heart, and rate it from Meh to Cooked.</p>
+          </div>
+          <figure class="shot">
+            <img src="assets/screenshots/library.webp" width="1280" height="800" loading="lazy" decoding="async" alt="The Prompuff library in Prompuff Dark: a sidebar with collections and tags, and six prompt cards, each with its tags, a usefulness rating and when it was last edited.">
+          </figure>
+        </div>
+
+        <div class="feature">
+          <div class="feature-text">
+            <h3>Renders <code class="var">{{variables}}</code></h3>
+            <p>Fill in the blanks, watch the preview update, and copy the result. Anything you leave empty stays as a <code class="var">{{token}}</code>, and each prompt remembers its values for next time.</p>
+          </div>
+          <figure class="shot">
+            <img src="assets/screenshots/render.webp" width="1280" height="800" loading="lazy" decoding="async" alt="The Render and copy tab for Angular Upgrade Planner: four variables on the left with three filled in, and the rendered prompt on the right with the filled values marked and the empty tone variable highlighted.">
+          </figure>
+        </div>
+
+        <div class="feature">
+          <div class="feature-text">
+            <h3>Chains prompts into workflows</h3>
+            <p>Plan, build, then check. Fill in the shared details once, copy each step into your model, and carry its answer to the next. Prompuff never runs a model itself.</p>
+          </div>
+          <figure class="shot">
+            <img src="assets/screenshots/workflow.webp" width="1280" height="800" loading="lazy" decoding="async" alt="The workflow Angular upgrade, start to finish, on step 2 of 3: shared variables filled in once on the left, and step 2 rendered on the right with the plan pasted in from step 1.">
+          </figure>
+        </div>
+
+        <div class="feature">
+          <div class="feature-text">
+            <h3>Captures from anywhere</h3>
+            <p>Copy a prompt in any app and press <kbd>Ctrl+Alt+P</kbd> (<kbd>⌃⌥P</kbd> on a Mac). Quick save opens with your clipboard, <kbd>Enter</kbd> stashes it, and you’re back where you were.</p>
+          </div>
+          <figure class="shot">
+            <img src="assets/screenshots/quick-save.webp" width="1280" height="800" loading="lazy" decoding="async" alt="The Quick save dialog over the library, holding a copied prompt with a suggested title, a collection picker, tags, and Worked well, Template and Idea buttons above Stash it.">
+          </figure>
+        </div>
+
+        <div class="feature">
+          <div class="feature-text">
+            <h3>Keeps every version</h3>
+            <p>Every saved change to the title, description, prompt or notes becomes a version. Read the line diff, and Restore brings an old one back as a new version, so nothing is lost.</p>
+          </div>
+          <figure class="shot">
+            <img src="assets/screenshots/history.webp" width="1280" height="800" loading="lazy" decoding="async" alt="The History tab for README Cleanup Prompt: three versions on the left with short notes, and a line diff on the right showing two added lines.">
+          </figure>
+        </div>
+
+        <div class="extras">
+          <h3 class="extras-title">And the small things</h3>
+          <dl class="extras-list">
+            <div>
+              <dt>Finds things fast</dt>
+              <dd>Ranked search that ignores case and accents, so “cafe” finds “Café”. Type <code>#tag</code> to filter.</dd>
+            </div>
+            <div>
+              <dt>Keeps up with the keyboard</dt>
+              <dd><kbd>Ctrl+K</kbd> opens the command palette. Arrows, <kbd>Enter</kbd> and type-to-jump get around the library.</dd>
+            </div>
+            <div>
+              <dt>Travels as Markdown</dt>
+              <dd>Export one <code>.zip</code> for another machine or a teammate, or import a whole folder, such as an Obsidian vault.</dd>
+            </div>
+            <div>
+              <dt>Forgives</dt>
+              <dd>Deleted prompts wait 30 days in Recently deleted, and the library is backed up once a day.</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="themes" aria-labelledby="themes-title">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="themes-title">Dresses up in thirteen themes</h2>
+          <p>Prompuff Dark and Light, plus palettes you know from your editor. Pick a dark one and a light one, and System follows your computer between them.</p>
+        </div>
+
+        <div class="swatch-group">
+          <h3 class="swatch-title">Dark</h3>
+          <ul class="swatches">
+            <li class="swatch swatch-featured t-prompuff-dark"><span class="swatch-name">Prompuff Dark</span><span class="swatch-note">The default. Dark is where Prompuff feels most at home.</span><img class="swatch-puff" src="assets/brand/mark.svg" alt="" width="77" height="55"><span class="swatch-line">Rewrite the README for <span class="s-val">acme</span> in a <span class="s-var">{{tone}}</span> voice.</span><span class="swatch-tones" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></li>
+            <li class="swatch t-darcula"><span class="swatch-name">Darcula</span><span class="swatch-line">Rewrite the README for <span class="s-val">acme</span> in a <span class="s-var">{{tone}}</span> voice.</span><span class="swatch-tones" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></li>
+            <li class="swatch t-gruvbox-dark"><span class="swatch-name">Gruvbox Dark</span><span class="swatch-line">Rewrite the README for <span class="s-val">acme</span> in a <span class="s-var">{{tone}}</span> voice.</span><span class="swatch-tones" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></li>
+            <li class="swatch t-dracula"><span class="swatch-name">Dracula</span><span class="swatch-line">Rewrite the README for <span class="s-val">acme</span> in a <span class="s-var">{{tone}}</span> voice.</span><span class="swatch-tones" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></li>
+            <li class="swatch t-nord"><span class="swatch-name">Nord</span><span class="swatch-line">Rewrite the README for <span class="s-val">acme</span> in a <span class="s-var">{{tone}}</span> voice.</span><span class="swatch-tones" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></li>
+            <li class="swatch t-one-dark"><span class="swatch-name">One Dark</span><span class="swatch-line">Rewrite the README for <span class="s-val">acme</span> in a <span class="s-var">{{tone}}</span> voice.</span><span class="swatch-tones" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></li>
+            <li class="swatch t-tokyo-night"><span class="swatch-name">Tokyo Night</span><span class="swatch-line">Rewrite the README for <span class="s-val">acme</span> in a <span class="s-var">{{tone}}</span> voice.</span><span class="swatch-tones" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></li>
+            <li class="swatch t-solarized-dark"><span class="swatch-name">Solarized Dark</span><span class="swatch-line">Rewrite the README for <span class="s-val">acme</span> in a <span class="s-var">{{tone}}</span> voice.</span><span class="swatch-tones" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></li>
+            <li class="swatch t-catppuccin-mocha"><span class="swatch-name">Catppuccin Mocha</span><span class="swatch-line">Rewrite the README for <span class="s-val">acme</span> in a <span class="s-var">{{tone}}</span> voice.</span><span class="swatch-tones" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></li>
+          </ul>
+        </div>
+
+        <div class="swatch-group">
+          <h3 class="swatch-title">Light</h3>
+          <ul class="swatches">
+            <li class="swatch t-prompuff-light"><span class="swatch-name">Prompuff Light</span><span class="swatch-line">Rewrite the README for <span class="s-val">acme</span> in a <span class="s-var">{{tone}}</span> voice.</span><span class="swatch-tones" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></li>
+            <li class="swatch t-gruvbox-light"><span class="swatch-name">Gruvbox Light</span><span class="swatch-line">Rewrite the README for <span class="s-val">acme</span> in a <span class="s-var">{{tone}}</span> voice.</span><span class="swatch-tones" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></li>
+            <li class="swatch t-solarized-light"><span class="swatch-name">Solarized Light</span><span class="swatch-line">Rewrite the README for <span class="s-val">acme</span> in a <span class="s-var">{{tone}}</span> voice.</span><span class="swatch-tones" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></li>
+            <li class="swatch t-catppuccin-latte"><span class="swatch-name">Catppuccin Latte</span><span class="swatch-line">Rewrite the README for <span class="s-val">acme</span> in a <span class="s-var">{{tone}}</span> voice.</span><span class="swatch-tones" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></li>
+          </ul>
+        </div>
+
+        <div class="shot-pair">
+          <figure class="shot-with-caption">
+            <div class="shot">
+              <img src="assets/screenshots/theme-picker.webp" width="1280" height="800" loading="lazy" decoding="async" alt="Settings, Appearance, in Gruvbox Dark: a Dark, Light and System switch, nine dark themes and four light themes shown as small previews, with Gruvbox Dark and Prompuff Light picked.">
+            </div>
+            <figcaption>Settings › Appearance, wearing Gruvbox Dark.</figcaption>
+          </figure>
+          <figure class="shot-with-caption">
+            <div class="shot">
+              <img src="assets/screenshots/catppuccin-latte.webp" width="1280" height="800" loading="lazy" decoding="async" alt="Angular Upgrade Planner in Catppuccin Latte: the prompt in the editor, its four variables listed on the right, and a Why this worked note below them.">
+            </div>
+            <figcaption>Catppuccin Latte, with a note on why the prompt worked.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="terminal" aria-labelledby="terminal-title">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="terminal-title">Works from a terminal, and from your AI tools</h2>
+          <p>Same library, whether or not the app is open. The app picks up changes within two seconds.</p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-text">
+            <h3>The <code>prompuff</code> command</h3>
+            <p>Install it from Settings › Integrations. It searches, renders and saves prompts, names them by title or a few words only they match, and prints JSON with <code>--json</code> for scripts.</p>
+          </div>
+          <pre class="terminal"><code><span class="t-prompt">$ </span>prompuff search angular
+<span class="t-out">Angular Upgrade Planner  · #angular #migration</span>
+
+<span class="t-prompt">$ </span>prompuff render "Angular Upgrade Planner" --var repo_name=acme --var target_version=22
+<span class="t-out">You are a senior Angular engineer planning an upgrade of <span class="val">acme</span> to Angular <span class="val">22</span>.</span>
+<span class="t-dim">⋮</span>
+<span class="t-out">Package manager: <span class="var">{{package_manager}}</span>. Keep the tone <span class="var">{{tone}}</span>. End with a risk table.</span>
+<span class="t-dim">Not filled, so left as {{tokens}}: package_manager, tone. Pass --var name=value to fill one.</span>
+
+<span class="t-prompt">$ </span>git diff | prompuff quick-save --title "Review this diff" --tag review
+<span class="t-out">Saved “Review this diff”.</span></code></pre>
+        </div>
+
+        <div class="feature">
+          <div class="feature-text">
+            <h3>An MCP server, off until you say so</h3>
+            <p>Claude Code, Claude Desktop, GitHub Copilot CLI and Codex can search, read and render your prompts, and your favorites turn up as slash commands. It’s read-only, and it shares nothing until you turn on <b>Let AI tools read my library</b> in Settings › Integrations.</p>
+            <p>Settings has each tool’s setup ready to copy, with the full path filled in.</p>
+          </div>
+          <div class="feature-visual">
+            <pre class="snippet"><code>claude mcp add --scope user prompuff -- prompuff mcp
+codex mcp add prompuff -- prompuff mcp
+copilot mcp add prompuff -- prompuff mcp</code></pre>
+            <figure class="shot">
+              <img src="assets/screenshots/integrations.webp" width="1280" height="800" loading="lazy" decoding="async" alt="Settings, Integrations: an Install button for the command-line tool, the Let AI tools read my library switch turned off, and a ready-to-copy Claude Code setup command.">
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section download" id="download" aria-labelledby="download-title">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="download-title">Download</h2>
+          <p>Free and MIT-licensed. Every build is self-contained, so there’s no .NET to install, and every build updates itself.</p>
+        </div>
+
+        <div class="platforms">
+          <section class="platform" data-platform="windows" aria-labelledby="dl-windows">
+            <div class="platform-head">
+              <h3 id="dl-windows">Windows</h3>
+              <span class="badge" hidden>Your system</span>
+            </div>
+            <p class="platform-meta">x64, Windows 10 and 11</p>
+            <ul class="files">
+              <li><a class="file" data-asset="Prompuff-Setup.exe" href="https://github.com/hazeliscoding/prompuff/releases/latest/download/Prompuff-Setup.exe"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M 21 15 v 4 a 2 2 0 0 1 -2 2 H 5 a 2 2 0 0 1 -2 -2 v -4 M 7 10 L 12 15 L 17 10 M 12 15 L 12 3"/></svg><span class="file-name">Prompuff-Setup.exe</span><span class="file-desc">Installer, signed. Installs for your user.</span></a></li>
+              <li><a class="file" data-asset="Prompuff-win-x64-Portable.zip" href="https://github.com/hazeliscoding/prompuff/releases/latest/download/Prompuff-win-x64-Portable.zip"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M 21 15 v 4 a 2 2 0 0 1 -2 2 H 5 a 2 2 0 0 1 -2 -2 v -4 M 7 10 L 12 15 L 17 10 M 12 15 L 12 3"/></svg><span class="file-name">Prompuff-win-x64-Portable.zip</span><span class="file-desc">Portable. Unzip it and run.</span></a></li>
+            </ul>
+          </section>
+
+          <section class="platform" data-platform="mac" aria-labelledby="dl-mac">
+            <div class="platform-head">
+              <h3 id="dl-mac">macOS</h3>
+              <span class="badge" hidden>Your system</span>
+            </div>
+            <p class="platform-meta">Apple Silicon and Intel</p>
+            <h4 class="files-title">Apple Silicon</h4>
+            <ul class="files">
+              <li><a class="file" data-asset="Prompuff-macOS-arm64.pkg" href="https://github.com/hazeliscoding/prompuff/releases/latest/download/Prompuff-macOS-arm64.pkg"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M 21 15 v 4 a 2 2 0 0 1 -2 2 H 5 a 2 2 0 0 1 -2 -2 v -4 M 7 10 L 12 15 L 17 10 M 12 15 L 12 3"/></svg><span class="file-name">Prompuff-macOS-arm64.pkg</span><span class="file-desc">Installer.</span></a></li>
+              <li><a class="file" data-asset="Prompuff-macOS-arm64.zip" href="https://github.com/hazeliscoding/prompuff/releases/latest/download/Prompuff-macOS-arm64.zip"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M 21 15 v 4 a 2 2 0 0 1 -2 2 H 5 a 2 2 0 0 1 -2 -2 v -4 M 7 10 L 12 15 L 17 10 M 12 15 L 12 3"/></svg><span class="file-name">Prompuff-macOS-arm64.zip</span><span class="file-desc">The app on its own, no installer.</span></a></li>
+            </ul>
+            <h4 class="files-title">Intel</h4>
+            <ul class="files">
+              <li><a class="file" data-asset="Prompuff-macOS-x64.pkg" href="https://github.com/hazeliscoding/prompuff/releases/latest/download/Prompuff-macOS-x64.pkg"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M 21 15 v 4 a 2 2 0 0 1 -2 2 H 5 a 2 2 0 0 1 -2 -2 v -4 M 7 10 L 12 15 L 17 10 M 12 15 L 12 3"/></svg><span class="file-name">Prompuff-macOS-x64.pkg</span><span class="file-desc">Installer.</span></a></li>
+              <li><a class="file" data-asset="Prompuff-macOS-x64.zip" href="https://github.com/hazeliscoding/prompuff/releases/latest/download/Prompuff-macOS-x64.zip"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M 21 15 v 4 a 2 2 0 0 1 -2 2 H 5 a 2 2 0 0 1 -2 -2 v -4 M 7 10 L 12 15 L 17 10 M 12 15 L 12 3"/></svg><span class="file-name">Prompuff-macOS-x64.zip</span><span class="file-desc">The app on its own, no installer.</span></a></li>
+            </ul>
+            <p class="note">The builds aren’t notarized by Apple, so macOS blocks the first launch. Open Prompuff once and close the warning, then choose <b>Open Anyway</b> in System Settings › Privacy &amp; Security.</p>
+            <p class="note">Prompuff is checked on GitHub’s macOS runners, not by hand, because the developer has no Mac. If something looks off, <a href="https://github.com/hazeliscoding/prompuff/issues">open an issue</a>.</p>
+          </section>
+
+          <section class="platform" data-platform="linux" aria-labelledby="dl-linux">
+            <div class="platform-head">
+              <h3 id="dl-linux">Linux</h3>
+              <span class="badge" hidden>Your system</span>
+            </div>
+            <p class="platform-meta">X11, or Wayland through XWayland</p>
+            <ul class="files">
+              <li><a class="file" data-asset="Prompuff-linux-x64.AppImage" href="https://github.com/hazeliscoding/prompuff/releases/latest/download/Prompuff-linux-x64.AppImage"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M 21 15 v 4 a 2 2 0 0 1 -2 2 H 5 a 2 2 0 0 1 -2 -2 v -4 M 7 10 L 12 15 L 17 10 M 12 15 L 12 3"/></svg><span class="file-name">Prompuff-linux-x64.AppImage</span><span class="file-desc">For x64.</span></a></li>
+              <li><a class="file" data-asset="Prompuff-linux-arm64.AppImage" href="https://github.com/hazeliscoding/prompuff/releases/latest/download/Prompuff-linux-arm64.AppImage"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M 21 15 v 4 a 2 2 0 0 1 -2 2 H 5 a 2 2 0 0 1 -2 -2 v -4 M 7 10 L 12 15 L 17 10 M 12 15 L 12 3"/></svg><span class="file-name">Prompuff-linux-arm64.AppImage</span><span class="file-desc">For ARM64.</span></a></li>
+            </ul>
+            <p class="note">Make it executable, then run it:</p>
+            <pre class="snippet"><code>chmod +x Prompuff-linux-x64.AppImage
+./Prompuff-linux-x64.AppImage</code></pre>
+            <p class="note">If your distribution doesn’t ship FUSE 2, run it with <code>APPIMAGE_EXTRACT_AND_RUN=1</code> set.</p>
+          </section>
+        </div>
+
+        <div class="download-more">
+          <details class="checksums">
+            <summary>Check a download</summary>
+            <p>Every release has a <a href="https://github.com/hazeliscoding/prompuff/releases/latest/download/SHA256SUMS">SHA256SUMS</a> file. Put it beside your download and run:</p>
+            <dl class="check-list">
+              <div><dt>Linux</dt><dd><code>sha256sum --check --ignore-missing SHA256SUMS</code></dd></div>
+              <div><dt>macOS</dt><dd><code>shasum -a 256 --check --ignore-missing SHA256SUMS</code></dd></div>
+              <div><dt>Windows</dt><dd><code>Get-FileHash Prompuff-Setup.exe</code> in PowerShell, then compare it with the line in SHA256SUMS.</dd></div>
+            </dl>
+          </details>
+          <p>Want new versions early? Settings › Updates has a Beta channel. Every version is on the <a href="https://github.com/hazeliscoding/prompuff/releases">releases page</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="section promises">
+      <div class="wrap promise-grid">
+        <section class="promise" id="privacy" aria-labelledby="privacy-title">
+          <h2 id="privacy-title">Your prompts stay on your machine</h2>
+          <p class="promise-lead">No account, no cloud, no telemetry.</p>
+          <ul class="promise-list">
+            <li>No analytics, crash reporting or AI calls.</li>
+            <li>The only thing Prompuff asks the internet is whether there’s a new version. It sends nothing about your library, and you can turn it off in Settings › Updates.</li>
+            <li>The <code>prompuff</code> command and its MCP server never go online. The MCP server answers only the AI tool that started it, and only while Settings allows it.</li>
+            <li>Logs record prompt IDs and counts, never titles, prompts, notes or variable values.</li>
+          </ul>
+          <p class="site-promise">This page keeps the promise too: no analytics, no trackers, and nothing loaded from another site. The fonts, images and video all come from here.</p>
+        </section>
+        <section class="promise" id="promise" aria-labelledby="promise-title">
+          <h2 id="promise-title">The 1.0 promise</h2>
+          <p class="promise-lead">From 1.0 on, Prompuff’s formats stay stable.</p>
+          <ul class="promise-list">
+            <li>Every later version opens a 1.0 library, and a library from any earlier release, by migrating it forward after a backup.</li>
+            <li>Markdown exported from 1.0 imports into every later version.</li>
+            <li>Every migration is tested from every released schema version, using a fixture library for each.</li>
+          </ul>
+          <p class="site-promise">The <a href="https://github.com/hazeliscoding/prompuff/blob/main/docs/library-format.md">library format</a> and the <a href="https://github.com/hazeliscoding/prompuff/blob/main/docs/markdown-format.md">Markdown format</a> are written down, for anyone reading them with other tools.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <div class="footer-brand">
+        <img src="assets/brand/mark.svg" alt="" width="44" height="31">
+        <p>Prompuff is free software under the <a href="https://github.com/hazeliscoding/prompuff/blob/main/LICENSE">MIT license</a>.</p>
+      </div>
+      <ul class="footer-links">
+        <li><a href="https://github.com/hazeliscoding/prompuff">Source on GitHub</a></li>
+        <li><a href="https://github.com/hazeliscoding/prompuff/blob/main/docs/user-guide.md">User guide</a></li>
+        <li><a href="https://github.com/hazeliscoding/prompuff/issues">Report a bug</a></li>
+        <li><a href="https://github.com/hazeliscoding/prompuff/releases">Releases</a></li>
+      </ul>
+      <p class="credits">Manrope and IBM Plex Mono are under the SIL Open Font License (<a href="assets/fonts/Manrope-OFL.txt">Manrope</a>, <a href="assets/fonts/IBMPlexMono-OFL.txt">IBM Plex Mono</a>). Icons are from <a href="https://lucide.dev">Lucide</a> (ISC). The theme palettes come from Darcula, gruvbox, Dracula, Nord, One Dark, Tokyo Night, Solarized and Catppuccin, credited with their licenses in <a href="https://github.com/hazeliscoding/prompuff/blob/main/licenses/Themes.md">licenses/Themes.md</a>; their authors don’t endorse Prompuff.</p>
+    </div>
+  </footer>
+</body>
+</html>
