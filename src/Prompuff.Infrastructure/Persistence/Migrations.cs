@@ -119,6 +119,36 @@ public static class Migrations
             ALTER TABLE Prompts ADD COLUMN ParentPromptId TEXT NULL REFERENCES Prompts (Id) ON DELETE SET NULL;
             CREATE INDEX IX_Prompts_ParentPromptId ON Prompts (ParentPromptId);
             """),
+
+        // A step points at a prompt in the library rather than copying it, so editing the prompt edits the workflow.
+        // Removing a prompt for good removes its steps. Values filled in on the Run tab are kept per workflow, like
+        // RenderValues are per prompt.
+        new(6, "Workflows", """
+            CREATE TABLE Workflows (
+                Id           TEXT PRIMARY KEY,
+                Name         TEXT NOT NULL,
+                Description  TEXT NULL,
+                CreatedAt    TEXT NOT NULL,
+                UpdatedAt    TEXT NOT NULL
+            );
+
+            CREATE TABLE WorkflowSteps (
+                Id          TEXT PRIMARY KEY,
+                WorkflowId  TEXT NOT NULL REFERENCES Workflows (Id) ON DELETE CASCADE,
+                Position    INTEGER NOT NULL,
+                PromptId    TEXT NOT NULL REFERENCES Prompts (Id) ON DELETE CASCADE,
+                Note        TEXT NULL
+            );
+            CREATE INDEX IX_WorkflowSteps_WorkflowId ON WorkflowSteps (WorkflowId, Position);
+            CREATE INDEX IX_WorkflowSteps_PromptId ON WorkflowSteps (PromptId);
+
+            CREATE TABLE WorkflowValues (
+                WorkflowId  TEXT NOT NULL REFERENCES Workflows (Id) ON DELETE CASCADE,
+                Name        TEXT NOT NULL,
+                Value       TEXT NOT NULL,
+                PRIMARY KEY (WorkflowId, Name)
+            );
+            """),
     ];
 
     public static int LatestVersion => All[^1].Version;

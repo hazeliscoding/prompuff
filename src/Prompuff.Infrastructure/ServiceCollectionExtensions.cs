@@ -28,6 +28,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITagRepository, SqliteTagRepository>();
         services.AddSingleton<IPromptSearch, SqlitePromptSearch>();
         services.AddSingleton<SqliteRenderValues>();
+        services.AddSingleton<IWorkflowRepository, SqliteWorkflowRepository>();
         services.AddSingleton<ISettingsStore, JsonSettingsStore>();
         services.AddSingleton<IPromptTransferService, MarkdownTransferService>();
         services.AddSingleton<IUpdateService, VelopackUpdateService>();
@@ -35,6 +36,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPromptTemplateService, PromptTemplateService>();
         services.AddSingleton<PromptService>();
         services.AddSingleton<CollectionService>();
+        services.AddSingleton<WorkflowService>();
         return services;
     }
 }
