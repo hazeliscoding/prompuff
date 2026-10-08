@@ -98,8 +98,9 @@ public class ThemeTests
     }
 
     /// <summary>
-    /// Body text, secondary text, tone text such as tags, and labels on the accent reach WCAG AA (4.5:1) on every
-    /// background they sit on. Faint text (Text3, for hints and timestamps) needs 3:1 for now; v0.9 reviews it.
+    /// Body, secondary and faint text (Text1 to Text3), tone text such as tags, and labels on the accent reach WCAG AA
+    /// (4.5:1) on every background they sit on. Text4 is only for decoration that has a text equivalent beside it, such
+    /// as empty rating dots next to "Great", and the editor's line numbers, so it has no bar.
     /// </summary>
     [Theory]
     [MemberData(nameof(ThemeIds))]
@@ -122,7 +123,7 @@ public class ThemeTests
         {
             Check("Text1", theme.Text(1), background, name, 4.5);
             Check("Text2", theme.Text(2), background, name, 4.5);
-            Check("Text3", theme.Text(3), background, name, 3.0);
+            Check("Text3", theme.Text(3), background, name, 4.5);
         }
 
         foreach (var (name, background) in new[] { ("Bg1", theme.Bg(1)), ("Bg2", theme.Bg(2)) })
