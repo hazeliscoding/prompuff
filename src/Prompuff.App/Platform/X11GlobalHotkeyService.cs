@@ -30,8 +30,10 @@ internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
     private static readonly XErrorHandler ErrorHandler = OnXError;
     private static IntPtr s_previousHandler;
     private static bool s_handlerInstalled;
-    private static IntPtr s_display;
-    private static int s_lastError;
+
+    // Every connection this class opened, with the last error X reported on it. Errors on any other connection,
+    // such as Avalonia's, go on to the handler that was there before.
+    private static readonly Dictionary<IntPtr, int> s_lastErrors = [];
 
     private readonly Thread _thread;
     private readonly TaskCompletionSource<bool> _started = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -168,12 +170,11 @@ internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
             }
 
             Marshal.FreeHGlobal(xEvent);
+            XCloseDisplay(display);
             lock (ErrorGate)
             {
-                s_display = IntPtr.Zero;
+                s_lastErrors.Remove(display);
             }
-
-            XCloseDisplay(display);
         }
     }
 
@@ -193,7 +194,7 @@ internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
 
         lock (ErrorGate)
         {
-            s_lastError = 0;
+            s_lastErrors[display] = 0;
         }
 
         foreach (var locks in IgnoredLocks)
@@ -206,7 +207,7 @@ internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
         int error;
         lock (ErrorGate)
         {
-            error = s_lastError;
+            error = s_lastErrors.GetValueOrDefault(display);
         }
 
         if (error == BadAccess)
@@ -232,7 +233,7 @@ internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
     {
         lock (ErrorGate)
         {
-            s_display = display;
+            s_lastErrors[display] = 0;
             if (!s_handlerInstalled)
             {
                 // Xlib keeps one handler for the whole process. Avalonia's stays in charge of its own connection.
@@ -247,10 +248,10 @@ internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
         IntPtr previous;
         lock (ErrorGate)
         {
-            if (display == s_display)
+            if (s_lastErrors.ContainsKey(display))
             {
                 // XErrorEvent: type, display, resource id and serial, then the error code.
-                s_lastError = Marshal.ReadByte(errorEvent, 32);
+                s_lastErrors[display] = Marshal.ReadByte(errorEvent, 32);
                 return 0;
             }
 
