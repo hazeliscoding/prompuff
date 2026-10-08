@@ -23,8 +23,18 @@ public class SearchPerformanceTests(SeededLibrary seeded)
     /// </summary>
     private static readonly TimeSpan EverythingLimit = TimeSpan.FromMilliseconds(300);
 
-    /// <summary>Counts and saves were 55–120 ms when they scaled with the library; now they don't.</summary>
+    /// <summary>Counts were 55–100 ms when they scaled with the library; now they don't.</summary>
     private static readonly TimeSpan SidebarAndSaveLimit = TimeSpan.FromMilliseconds(50);
+
+    /// <summary>
+    /// A write commits to disk, which on a shared CI runner can take 40–60 ms whatever the library's size, so writes are
+    /// compared with the same writes to a small library in the same run. Before v0.9 a favorite took about twenty times
+    /// as long with 10,000 prompts as with 200; now it takes about the same. The ceiling only catches a disaster.
+    /// </summary>
+    private const double WriteScaleLimit = 3.0;
+
+    private static readonly TimeSpan WriteSlack = TimeSpan.FromMilliseconds(15);
+    private static readonly TimeSpan WriteCeiling = TimeSpan.FromMilliseconds(250);
 
     public static TheoryData<string> Searches =>
     [
@@ -95,8 +105,32 @@ public class SearchPerformanceTests(SeededLibrary seeded)
     [Fact]
     public async Task Saving_a_prompt_doesnt_scale_with_the_library()
     {
-        var folder = seeded.CopyToNewFolder();
-        var database = Database(Path.Combine(folder, "prompuff.db"));
+        var smallPath = Path.Combine(seeded.CopyToNewFolder(), "small", "prompuff.db");
+        Directory.CreateDirectory(Path.GetDirectoryName(smallPath)!);
+        await LibrarySeeder.SeedAsync(smallPath, 200);
+        var small = await TimeWritesAsync(smallPath);
+        var large = await TimeWritesAsync(Path.Combine(seeded.CopyToNewFolder(), "prompuff.db"));
+
+        Timing.Report($"200 prompts: {small}");
+        Timing.Report($"10,000 prompts: {large}");
+        foreach (var (what, smallTime, largeTime) in new[] { ("A favorite", small.Favorite, large.Favorite), ("A save", small.Save, large.Save), ("Adding a tag", small.Tag, large.Tag) })
+        {
+            Assert.True(largeTime < (smallTime * WriteScaleLimit) + WriteSlack,
+                $"{what} took {largeTime.TotalMilliseconds:F0} ms with 10,000 prompts and {smallTime.TotalMilliseconds:F0} ms with 200.");
+            Assert.True(largeTime < WriteCeiling, $"{what} took {largeTime.TotalMilliseconds:F0} ms with 10,000 prompts.");
+        }
+    }
+
+    private sealed record WriteTimes(TimeSpan Favorite, TimeSpan Save, TimeSpan Tag)
+    {
+        public override string ToString() =>
+            $"favorite {Favorite.TotalMilliseconds:F1} ms, save {Save.TotalMilliseconds:F1} ms, tag {Tag.TotalMilliseconds:F1} ms";
+    }
+
+    /// <summary>Median times for a favorite, a content save and a new tag, then a check that search kept up with them.</summary>
+    private static async Task<WriteTimes> TimeWritesAsync(string databasePath)
+    {
+        var database = Database(databasePath);
         var service = new PromptService(new SqlitePromptRepository(database), TimeProvider.System, NullLogger<PromptService>.Instance);
         var ids = (await new SqlitePromptSearch(database).SearchAsync(PromptQuery.All)).Take(20).Select(summary => summary.Id).ToList();
         var next = 0;
@@ -117,15 +151,11 @@ public class SearchPerformanceTests(SeededLibrary seeded)
             return service.AddTagAsync(id, added[^1].Tag);
         });
 
-        Timing.Report($"favorite: median {favorite.TotalMilliseconds:F1} ms, save: {save.TotalMilliseconds:F1} ms, tag: {tag.TotalMilliseconds:F1} ms");
-        Assert.True(favorite < SidebarAndSaveLimit, $"A favorite took {favorite.TotalMilliseconds:F0} ms.");
-        Assert.True(save < SidebarAndSaveLimit, $"A save took {save.TotalMilliseconds:F0} ms.");
-        Assert.True(tag < SidebarAndSaveLimit, $"Adding a tag took {tag.TotalMilliseconds:F0} ms.");
-
         // The index kept up with all of it.
         var search = new SqlitePromptSearch(database);
         Assert.Equal([added[3].Id], (await search.SearchAsync(new PromptQuery { Text = "#" + added[3].Tag })).Select(result => result.Id));
         Assert.Equal(saved.Order(), (await search.SearchAsync(new PromptQuery { Text = "zebrafish" })).Select(result => result.Id).Order());
+        return new WriteTimes(favorite, save, tag);
     }
 
     private SqlitePromptSearch Search() => new(Database(seeded.DatabasePath));
