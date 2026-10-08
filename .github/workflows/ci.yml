@@ -28,6 +28,16 @@ jobs:
       - run: dotnet restore
       - run: dotnet build --no-restore -c Release
       - run: dotnet test --no-build -c Release
+        if: runner.os != 'Linux'
+        env:
+          PROMPUFF_SCREENSHOTS: ${{ runner.temp }}/screenshots
+      # Linux runs under Xvfb, so the X11 hotkey test can grab keys and press them with XTest.
+      - name: dotnet test (under Xvfb)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb libxtst6 > /dev/null
+          xvfb-run -a -s "-screen 0 1280x800x24" dotnet test --no-build -c Release
         env:
           PROMPUFF_SCREENSHOTS: ${{ runner.temp }}/screenshots
       # The headless UI tests save a PNG of every state they visit; look at them after UI changes.

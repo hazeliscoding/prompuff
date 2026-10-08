@@ -153,7 +153,7 @@ jobs:
       - name: Smoke test the AppImage under Xvfb
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq xvfb x11-apps imagemagick > /dev/null
+          sudo apt-get install -y -qq xvfb x11-apps imagemagick xdotool xclip > /dev/null
           export XDG_DATA_HOME="$RUNNER_TEMP/xdg-data" XDG_CONFIG_HOME="$RUNNER_TEMP/xdg-config"
           export APPIMAGE_EXTRACT_AND_RUN=1
           chmod +x "dist/Prompuff-$RID.AppImage"
@@ -163,15 +163,24 @@ jobs:
             sleep 20
             import -window root "$RUNNER_TEMP/smoke-$RID.png"
             kill -0 $pid || { echo "Prompuff exited early"; cat "$RUNNER_TEMP/app.log"; exit 1; }
+            # Capture anywhere: copy text, press the global hotkey, and stash it with Enter.
+            printf "Review {{diff}} for behavior changes." | xclip -selection clipboard
+            xdotool key ctrl+alt+p
+            sleep 4
+            import -window root "$RUNNER_TEMP/smoke-$RID-quick-save.png"
+            xdotool key Return
+            sleep 3
             kill $pid'
           test -f "$XDG_DATA_HOME/prompuff/prompuff.db" || { echo "No database in the XDG data folder"; cat "$RUNNER_TEMP/app.log"; exit 1; }
           ls -la "$XDG_DATA_HOME/prompuff" "$XDG_CONFIG_HOME/prompuff" || true
           cat "$XDG_DATA_HOME"/prompuff/logs/*.log
+          grep -q "Quick save hotkey Ctrl+Alt+P is ready" "$XDG_DATA_HOME"/prompuff/logs/*.log || { echo "The X11 hotkey didn't register"; exit 1; }
+          grep -q "Created prompt" "$XDG_DATA_HOME"/prompuff/logs/*.log || { echo "The hotkey didn't stash a prompt"; exit 1; }
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: smoke-${{ matrix.rid }}
-          path: ${{ runner.temp }}/smoke-${{ matrix.rid }}.png
+          path: ${{ runner.temp }}/smoke-${{ matrix.rid }}*.png
           if-no-files-found: ignore
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -252,6 +261,7 @@ jobs:
           test -f "$data/prompuff.db" || { echo "No database in $data"; cat "$RUNNER_TEMP/app.log"; exit 1; }
           ls -la "$data"
           cat "$data"/logs/*.log
+          grep -q "Quick save hotkey Ctrl+Alt+P is ready" "$data"/logs/*.log || { echo "The Carbon hotkey didn't register"; exit 1; }
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
