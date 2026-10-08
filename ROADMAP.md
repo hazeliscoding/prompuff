@@ -86,6 +86,14 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Wayland** can't give an app a global hotkey, so Settings shows the desktop-shortcut steps for GNOME and KDE and the exact command (the AppImage path from `APPIMAGE`, plus `--quick-save`). Once v0.7 puts `prompuff` on the PATH, the command can become `prompuff quick-save`.
 - **Verification:** the Windows hotkey was checked by hand on Windows 11. X11 is tested in CI under Xvfb (grab, BadAccess for a second client, a press through XTest), and the release smoke test copies text, presses the hotkey and Enter, and checks a prompt was stashed. macOS is checked on the runner by the app logging that Carbon registered the hotkey; pressing it there needs Accessibility rights the runner doesn't have.
 
+## Decisions: v0.6 (2026-10-08)
+
+- **Steps point at prompts** in the library rather than copying them, so editing a prompt updates every workflow that uses it. A prompt can appear in more than one step. Removing a prompt for good removes its steps (migration 6); a prompt in Recently deleted keeps its step, marked, until then.
+- **Saving:** adding, moving and removing steps save at once; the name, description and hand-off notes save a moment after typing stops, and when you leave the page. Workflows have no versions and no Recently deleted. Deleting one asks first and leaves its prompts in the library.
+- **Shared variables** are every variable across the steps, listed once in order of first appearance with the steps that use it. Their values are remembered per workflow in `WorkflowValues`, like `RenderValues` for prompts: never exported or logged. The inputs take several lines, because a step's answer is often pasted into the next step's variable, and the hand-off note can say which.
+- **Run:** Copy renders the current step with the shared values, marks it copied and moves to the next; Ctrl+Enter does the same. The copied marks last for the visit; Start over clears them.
+- **Markdown format:** frontmatter with `type: workflow`, `title` and `description`, then `## Step N: Title` per step, the prompt in a fenced `prompt` block longer than any backtick run inside it, and the note as a `> **Hands off:**` quote. Only each prompt's title and body travel. Importing one reuses the library's prompt with the same title and body, or creates it with just those, and a workflow with the same name and steps is skipped. The regular Import picks workflow documents out by their frontmatter.
+
 ## v0.1: MVP (tagged 2026-10-07)
 
 ### M0: Foundation
@@ -214,10 +222,10 @@ Stash a good prompt from any app in a few seconds.
 
 The design's Workflows view: prompts that run in order, with a person copying between steps. Prompuff never runs a model.
 
-- [ ] A workflow is a named, ordered list of prompts, with a note per step on what it hands to the next.
-- [ ] Shared variables: a variable that appears in several steps is filled once.
-- [ ] Render and copy step by step, with progress through the steps.
-- [ ] Export a workflow as one Markdown document, and import it back.
+- [x] A workflow is a named, ordered list of prompts, with a note per step on what it hands to the next.
+- [x] Shared variables: a variable that appears in several steps is filled once.
+- [x] Render and copy step by step, with progress through the steps.
+- [x] Export a workflow as one Markdown document, and import it back.
 
 **Done when:** the design's "Angular upgrade, start to finish" workflow can be built, filled once and copied step by step.
 

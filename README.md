@@ -25,6 +25,7 @@ Your prompts stay on your machine. There is no account, no cloud and no telemetr
 
 - **Keeps** prompts with a title, description, body, notes ("why this worked"), a collection, tags, a favorite flag and a 1–5 usefulness rating.
 - **Renders** `{{variable_name}}` placeholders. Fill in the values, watch the preview update, and copy the result. Unfilled variables stay as `{{tokens}}`, and each prompt remembers its values until you clear them.
+- **Chains** prompts into workflows: plan, build, then check. Fill in the shared details once, and copy each step into your model in turn, carrying its answer to the next. A workflow travels as one Markdown document.
 - **Versions** every saved change to the title, description, body or notes. The History tab shows a line diff, and Restore brings an old version back as a new one.
 - **Keeps up with the keyboard:** arrow keys, type-to-jump and Enter in the library, and Select to tag, move, export or delete many prompts at once. Duplicates remember where they came from.
 - **Finds** prompts fast: ranked search across titles, descriptions, bodies, notes and tags that ignores case and accents ("cafe" finds "Café"), or type `#tag`. Filter by Favorites, Recent, a collection or a tag.
@@ -108,7 +109,7 @@ To keep a development run away from your real library, point Prompuff at another
 PROMPUFF_DATA_DIR=/tmp/prompuff-dev dotnet run --project src/Prompuff.App
 ```
 
-In PowerShell, use `$env:PROMPUFF_DATA_DIR = "$env:TEMP\prompuff-dev"`. The prompts in [`samples/`](samples) can be imported from Settings › Import / export.
+In PowerShell, use `$env:PROMPUFF_DATA_DIR = "$env:TEMP\prompuff-dev"`. The prompts in [`samples/`](samples), and the workflow in [`samples/workflows/`](samples/workflows), can be imported from Settings › Import / export.
 
 The UI tests drive the real main window headlessly. Set `PROMPUFF_SCREENSHOTS` to a folder to save a PNG of each state they visit:
 
