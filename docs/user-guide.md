@@ -179,7 +179,7 @@ Installed copies check GitHub Releases each time Prompuff opens. When an update 
 
 The **Beta** channel in Settings › Updates gets new versions early, as GitHub pre-releases, and every stable release too. Updates never move to an older version, so switching back to **Stable** keeps the beta until a newer stable release comes out.
 
-Updates replace the app, never your library.
+Updates replace the app, never your library. When a new version changes how the library is stored, Prompuff copies it to the backups folder first. From 1.0 on, every later version opens a 1.0 library and imports the Markdown 1.0 exports; Settings › About states this promise.
 
 ## The prompuff command and MCP
 

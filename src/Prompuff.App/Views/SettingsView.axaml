@@ -498,6 +498,13 @@
             </Grid>
           </Border>
           <Border Classes="panel" Padding="16">
+            <StackPanel Spacing="2">
+              <TextBlock Classes="strong" Text="The 1.0 promise" />
+              <TextBlock Classes="compact faint" TextWrapping="Wrap" LineHeight="18"
+                         Text="Every later version of Prompuff opens a 1.0 library, and imports the Markdown that 1.0 exports. A change to how the library is stored is backed up first and tested from every released version." />
+            </StackPanel>
+          </Border>
+          <Border Classes="panel" Padding="16">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
               <StackPanel Spacing="2">
                 <TextBlock Classes="strong" Text="Diagnostic info" />
@@ -515,7 +522,7 @@
           <TextBlock Classes="compact faint" TextWrapping="Wrap" LineHeight="18"
                      Text="Made by one person who had too many prompts in too many places. Prompuff never uploads your prompts. The only thing it asks the internet is whether there's a new version, and you can turn that off." />
           <TextBlock Classes="compact faint" TextWrapping="Wrap"
-                     Text="MIT licensed. Manrope and IBM Plex Mono under the SIL Open Font License; icons from Lucide (ISC)." />
+                     Text="MIT licensed. Manrope and IBM Plex Mono under the SIL Open Font License; icons from Lucide (ISC); theme palettes belong to their authors, credited under Licenses." />
         </StackPanel>
       </Panel>
     </ScrollViewer>

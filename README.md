@@ -224,6 +224,14 @@ This writes the `.AppImage` and its update files (`*-full.nupkg`, `releases.linu
 
 Running the workflow by hand from the Actions tab builds the same artifacts without publishing anything.
 
+## The 1.0 promise
+
+From 1.0 on, Prompuff's formats stay stable:
+
+- Every later version opens a 1.0 library, and a library from any earlier release, by migrating it forward after a backup.
+- Markdown exported from 1.0 imports into every later version.
+- Every migration is tested from every released schema version, using a fixture library for each. [`docs/library-format.md`](docs/library-format.md) describes the library and [`docs/markdown-format.md`](docs/markdown-format.md) the files.
+
 ## Privacy
 
 Prompuff stores prompts locally and does not upload prompt content.
