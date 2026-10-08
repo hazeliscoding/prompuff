@@ -156,8 +156,8 @@ Ship the remaining platforms early, so every later feature is built for all of t
 - [x] macOS conventions: Cmd shortcuts (already in the shortcut table), a native app menu with About, Settings and Quit, and a title bar that keeps the traffic-light buttons.
 - [x] macOS smoke test on the runner: launch the app, take a screenshot, and check that `prompuff.db` lands in `~/Library/Application Support/Prompuff`.
 - [x] `linux-arm64` AppImage, built and smoke-tested under Xvfb on GitHub's ARM runner.
-- [ ] Windows signing with Azure Artifact Signing in the release workflow, checked on the runner with `signtool verify /pa`.
-- [ ] Signing switches on only when the Azure variables exist; forks and manual runs still build unsigned.
+- [x] Windows signing with Azure Artifact Signing in the release workflow, checked on the runner with `signtool verify /pa`.
+- [x] Signing switches on only when the Azure variables exist; forks and manual runs still build unsigned.
 - [x] README: list macOS as CI-verified, and explain System Settings › Privacy & Security › Open Anyway, since the builds aren't notarized. macOS 15 removed the right-click › Open shortcut.
 
 **Done when:** one tag produces Windows, Linux x64, Linux ARM64 and both macOS packages, each one launches and creates its library on a CI runner, and `Prompuff-Setup.exe` is signed and installs without a SmartScreen warning.
