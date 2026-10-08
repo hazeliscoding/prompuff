@@ -129,7 +129,11 @@ It's off until you turn on **Let AI tools read my library (MCP)** in Settings â€
 
 Claude Desktop starts outside a terminal and may not see your PATH, so give it the full path that Settings shows.
 
+The [user guide](docs/user-guide.md) walks through every feature. [`docs/library-format.md`](docs/library-format.md) and [`docs/markdown-format.md`](docs/markdown-format.md) describe the files, for anyone reading them with other tools.
+
 ## Development
+
+[CONTRIBUTING.md](CONTRIBUTING.md) has the short version of how to work on Prompuff.
 
 ### Requirements
 
@@ -176,6 +180,7 @@ PROMPUFF_SCREENSHOTS=./screenshots dotnet test tests/Prompuff.App.Tests
 | | Library, logs and backups | Settings |
 |---|---|---|
 | Windows | `%LOCALAPPDATA%\Prompuff\` | `%LOCALAPPDATA%\Prompuff\settings.json` |
+| macOS | `~/Library/Application Support/Prompuff/` | `~/Library/Application Support/Prompuff/settings.json` |
 | Linux | `$XDG_DATA_HOME/prompuff/` (default `~/.local/share/prompuff/`) | `$XDG_CONFIG_HOME/prompuff/settings.json` (default `~/.config/prompuff/`) |
 
 The library is one SQLite file, `prompuff.db`. Prompuff never writes next to its executable or inside the AppImage, so updates and reinstalls leave your prompts alone. Prompuff copies the library to `backups/` once a day and keeps the last 30, plus a copy before a new version changes the database format. Settings â€º Storage shows the folder and lists the backups, and restoring one copies the current library aside first.

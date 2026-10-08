@@ -127,6 +127,16 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Fixed in 0.8.0:** a failed workflow import logged its reason, which can quote a step's title, a prompt title. The log now only says a workflow was skipped; the import result still names the step.
 - **1.0 launches with a video and a landing page.** The video is made with the `/brag` skill. The landing page is a static site on GitHub Pages and keeps the app's promise: no analytics or trackers, and nothing loaded from other sites.
 
+## Decisions: v0.9 (2026-10-08)
+
+- **Format docs:** `docs/library-format.md` covers the SQLite library (where it lives, its files, tables, FTS5, migrations, what makes a version, and the 1.0 promise). `docs/markdown-format.md` covers prompt and workflow Markdown and the `.zip` layout.
+- **Released schemas,** read from each tag's `Migrations.cs`: 1 (v0.1.x), 4 (v0.2.0–v0.3.0), 5 (v0.4.0–v0.5.0) and 6 (v0.6.0 on). Schemas 2 and 3 never shipped on their own.
+- **Fixtures:** `tests/Prompuff.Infrastructure.Tests/Fixtures/schema-N.db`, one per released schema, made by migrating up to N with today's migrations and filling it with raw SQL in that schema, with fixed IDs and times and a rollback journal. The normal test run only reads them; `PROMPUFF_WRITE_FIXTURES=7 dotnet test tests/Prompuff.Infrastructure.Tests --filter "FullyQualifiedName~Rewrite_fixtures"` writes a new one. A test fails when the newest migration has no fixture, and another when a shipped migration changes, because today's migrations must still build each fixture's exact schema.
+- **Diagnostic info** is "Copy diagnostic info" in Settings › About: plain text for a GitHub issue with versions, install type and channel, OS and session, folders, the schema and library counts, the settings that change behavior, and the last 100 app and 30 command log lines. `DiagnosticReport` builds it and opens the library read-only, so a broken library is described rather than created or migrated. A note beside the button, not a dialog, says what it holds and that paths can show your user name.
+- **Log lines get a second look** before they go in the report. Logs never hold prompt text by design, so this is a backstop: only lines shaped like log output stay, quoted text is blanked, and a line that holds a `{{variable}}`, a prompt or workflow title, or five words in a row from any library text is left out, with the count shown.
+- **Found while building:** a failed workflow import logged a reason that could quote a step's title. Fixed and shipped in 0.8.0.
+- **The user guide is `docs/user-guide.md`,** task by task and checked against the views. A change to behavior or a label updates it in the same change. `CONTRIBUTING.md` is the short version of AGENTS.md for people.
+
 ## v0.1: MVP (tagged 2026-10-07)
 
 ### M0: Foundation
@@ -296,11 +306,11 @@ Let scripts and coding agents use the vault without opening the app.
 
 ## v0.9: Release candidate
 
-- [ ] The library and Markdown formats are documented in `docs/`, with a fixture database from every released schema version and a test that opens each one.
+- [x] The library and Markdown formats are documented in `docs/`, with a fixture database from every released schema version and a test that opens each one.
 - [ ] Accessibility: every icon-only button has an accessible name, focus is visible and in order, and a CI script checks WCAG AA contrast for every theme's tokens.
 - [ ] Performance: 10,000 generated prompts load, scroll and search without lag, with search under 100 ms.
-- [ ] Settings › About › "Copy diagnostic info" gathers versions, paths and recent log lines for bug reports, still with no telemetry.
-- [ ] A user guide and `CONTRIBUTING.md`.
+- [x] Settings › About › "Copy diagnostic info" gathers versions, paths and recent log lines for bug reports, still with no telemetry.
+- [x] A user guide and `CONTRIBUTING.md`.
 - [ ] Two beta releases in a row with no data-loss or crash reports.
 
 **Done when:** the release candidate updates cleanly from 0.8 on every platform, and no open issue is labeled data loss or crash.

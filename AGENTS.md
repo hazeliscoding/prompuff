@@ -1,6 +1,6 @@
 # AGENTS.md
 
-These are the working rules for agents in this repo. Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12, SQLite, Velopack, MIT) for Windows x64 and Linux x64.
+These are the working rules for agents in this repo. Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12, SQLite, Velopack, MIT) for Windows x64, Linux x64 and ARM64, and macOS.
 
 ## Sources of truth
 
