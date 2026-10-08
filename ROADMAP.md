@@ -115,6 +115,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 ## Decisions: v0.8 and 1.0 (2026-10-08)
 
 - **Themes join v0.8.** They land before v0.9, so v0.9's contrast check covers every theme, not only Prompuff Dark and Light.
+- **SmartScreen waits until after 1.0.** The signing certificate is new, and reputation only builds as people download signed builds, so the check moves from v0.9 to Later.
 - **1.0 launches with a video and a landing page.** The video is made with the `/brag` skill. The landing page is a static site on GitHub Pages and keeps the app's promise: no analytics or trackers, and nothing loaded from other sites.
 
 ## v0.1: MVP (tagged 2026-10-07)
@@ -291,7 +292,6 @@ Let scripts and coding agents use the vault without opening the app.
 - [ ] Settings › About › "Copy diagnostic info" gathers versions, paths and recent log lines for bug reports, still with no telemetry.
 - [ ] A user guide and `CONTRIBUTING.md`.
 - [ ] Two beta releases in a row with no data-loss or crash reports.
-- [ ] Check that a fresh download of `Prompuff-Setup.exe` no longer gets SmartScreen's "unrecognized app" warning. If it still does, note it in the README instead of blocking.
 
 **Done when:** the release candidate updates cleanly from 0.8 on every platform, and no open issue is labeled data loss or crash.
 
@@ -307,6 +307,7 @@ Let scripts and coding agents use the vault without opening the app.
 
 ## Later
 
+- Check that a fresh download of `Prompuff-Setup.exe` no longer gets SmartScreen's "unrecognized app" warning, once the certificate has built reputation.
 - A browser extension for capturing from ChatGPT and Claude through native messaging.
 - `prompuff://` links to open, copy or render a prompt.
 - A Markdown mirror folder: a live export you can keep in Git or Syncthing.
