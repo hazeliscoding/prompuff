@@ -262,6 +262,7 @@ Let scripts and coding agents use the vault without opening the app.
 - [x] "Copy MCP config" in Settings, with a ready-to-paste setup for each client: Claude Code, Claude Desktop, GitHub Copilot CLI and Codex. The README shows the same setups.
 - [x] The app picks up changes the CLI makes without a restart, using SQLite's `data_version`.
 - [x] CI and the release workflow smoke-test the packaged CLI on every platform: quick-save, render, and an MCP session before and after the switch.
+- [x] Publish v0.7.0 (2026-10-08).
 - [ ] Run the Copilot CLI setup by hand, which the owner's machine doesn't have yet.
 
 **Done when:** Claude Code, GitHub Copilot CLI and Codex can each search the vault and render a prompt with variables through MCP, and `prompuff render "Angular Upgrade Planner" --var repo_name=acme` prints the result on all three platforms.
