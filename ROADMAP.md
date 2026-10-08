@@ -324,6 +324,7 @@ Let scripts and coding agents use the vault without opening the app.
 - [x] Settings › About › "Copy diagnostic info" gathers versions, paths and recent log lines for bug reports, still with no telemetry.
 - [x] A user guide and `CONTRIBUTING.md`.
 - [x] Two beta releases in a row with no data-loss or crash reports: 0.9.0-beta.1 and beta.2 (2026-10-08), with no open issues. The betas were hours apart rather than weeks, so this rests on the automated checks and the hand-checked 0.8.0 update more than on user reports.
+- [x] Publish v0.9.0 as the release candidate (2026-10-08). Every stable channel built its delta from the real 0.8.0 package; the update itself was checked by hand on Windows (0.8.0 to 0.9.0-beta.1, the same code).
 
 **Done when:** the release candidate updates cleanly from 0.8 on every platform, and no open issue is labeled data loss or crash.
 
