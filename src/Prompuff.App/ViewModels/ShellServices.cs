@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Prompuff.Application.DTOs;
 using Prompuff.Application.Interfaces;
+using Prompuff.Application.Settings;
 using Prompuff.Infrastructure.Repositories;
 
 namespace Prompuff.App.ViewModels;
@@ -45,6 +46,13 @@ public sealed partial class AppearanceState : ObservableObject
 {
     [ObservableProperty]
     private bool _showMascot = true;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsCompact), nameof(IsDense))]
+    private Density _density = Density.Cozy;
+
+    public bool IsCompact => Density == Density.Compact;
+    public bool IsDense => Density == Density.Dense;
 }
 
 /// <summary>Variable values typed in the Render tab, remembered per prompt in the local library. Never exported or logged.</summary>

@@ -60,6 +60,21 @@
           <Border Classes="setting-row">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
               <StackPanel>
+                <TextBlock Classes="strong" Text="Density" />
+                <TextBlock Classes="compact faint" Text="How much room each prompt gets in the library." />
+              </StackPanel>
+              <Border Grid.Column="1" Classes="segmented" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="1">
+                  <RadioButton Theme="{StaticResource SegmentButton}" GroupName="density" IsChecked="{Binding IsCozyDensity}" Content="Cozy" />
+                  <RadioButton Theme="{StaticResource SegmentButton}" GroupName="density" IsChecked="{Binding IsCompactDensity}" Content="Compact" />
+                  <RadioButton Theme="{StaticResource SegmentButton}" GroupName="density" IsChecked="{Binding IsDenseDensity}" Content="Dense" />
+                </StackPanel>
+              </Border>
+            </Grid>
+          </Border>
+          <Border Classes="setting-row">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel>
                 <TextBlock Classes="strong" Text="Puff, the mascot" />
                 <TextBlock Classes="compact faint" Text="Shows up on saves, empty states and the About page." />
               </StackPanel>

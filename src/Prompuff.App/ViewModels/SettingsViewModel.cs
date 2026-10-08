@@ -148,6 +148,10 @@ public sealed partial class SettingsViewModel : ObservableObject
     private bool _showMascot;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsCozyDensity), nameof(IsCompactDensity), nameof(IsDenseDensity))]
+    private Density _density;
+
+    [ObservableProperty]
     private bool _checkForUpdatesAutomatically;
 
     [ObservableProperty]
@@ -219,6 +223,42 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
+    public bool IsCozyDensity
+    {
+        get => Density == Density.Cozy;
+        set
+        {
+            if (value)
+            {
+                Density = Density.Cozy;
+            }
+        }
+    }
+
+    public bool IsCompactDensity
+    {
+        get => Density == Density.Compact;
+        set
+        {
+            if (value)
+            {
+                Density = Density.Compact;
+            }
+        }
+    }
+
+    public bool IsDenseDensity
+    {
+        get => Density == Density.Dense;
+        set
+        {
+            if (value)
+            {
+                Density = Density.Dense;
+            }
+        }
+    }
+
     /// <summary>Loads saved settings and applies the ones that affect the whole app.</summary>
     public void LoadSettings()
     {
@@ -226,8 +266,10 @@ public sealed partial class SettingsViewModel : ObservableObject
         var settings = _settings.Load();
         Theme = settings.Theme;
         ShowMascot = settings.ShowMascot;
+        Density = settings.Density;
         CheckForUpdatesAutomatically = settings.CheckForUpdatesAutomatically;
         Appearance.ShowMascot = settings.ShowMascot;
+        Appearance.Density = settings.Density;
         ThemeApplier.Apply(settings.Theme);
         UpdateStatus = _updates.IsSupported
             ? "Prompuff checks GitHub Releases for new versions. Nothing about your library is sent."
@@ -461,6 +503,12 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         Appearance.ShowMascot = value;
         Persist(settings => settings with { ShowMascot = value });
+    }
+
+    partial void OnDensityChanged(Density value)
+    {
+        Appearance.Density = value;
+        Persist(settings => settings with { Density = value });
     }
 
     partial void OnCheckForUpdatesAutomaticallyChanged(bool value) =>

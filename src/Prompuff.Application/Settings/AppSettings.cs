@@ -21,6 +21,14 @@ public enum LibraryLayout
     List,
 }
 
+/// <summary>How much room the library gives each prompt: Cozy shows everything, Dense fits the most on screen.</summary>
+public enum Density
+{
+    Cozy,
+    Compact,
+    Dense,
+}
+
 public sealed record WindowPlacement(double Width, double Height, bool IsMaximized);
 
 public sealed record AppSettings
@@ -30,6 +38,7 @@ public sealed record AppSettings
     public bool CheckForUpdatesAutomatically { get; init; } = true;
     public UpdateChannel UpdateChannel { get; init; } = UpdateChannel.Stable;
     public LibraryLayout LibraryLayout { get; init; } = LibraryLayout.Cards;
+    public Density Density { get; init; } = Density.Cozy;
     public PromptSort LibrarySort { get; init; } = PromptSort.LastEdited;
     public WindowPlacement? Window { get; init; }
 

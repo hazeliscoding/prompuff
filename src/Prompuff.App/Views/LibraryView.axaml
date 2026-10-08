@@ -4,7 +4,80 @@
              xmlns:c="using:Prompuff.App.Controls"
              x:Class="Prompuff.App.Views.LibraryView"
              x:DataType="vm:LibraryViewModel">
-  <DockPanel>
+  <UserControl.Styles>
+    <!-- Density: Cozy is the default look; Compact trims padding and descriptions; Dense keeps titles and tags -->
+    <Style Selector="StackPanel.card-stack">
+      <Setter Property="Spacing" Value="10" />
+    </Style>
+    <Style Selector="TextBlock.card-title">
+      <Setter Property="MaxLines" Value="2" />
+    </Style>
+    <Style Selector="Panel.card-desc">
+      <Setter Property="MinHeight" Value="34" />
+    </Style>
+    <Style Selector="Panel.card-desc > TextBlock">
+      <Setter Property="MaxLines" Value="2" />
+    </Style>
+    <Style Selector="Border.card-footer">
+      <Setter Property="Padding" Value="0,10,0,0" />
+    </Style>
+    <Style Selector="Button.row">
+      <Setter Property="Height" Value="46" />
+    </Style>
+
+    <Style Selector="DockPanel.compact c|AdaptiveGrid">
+      <Setter Property="MinItemWidth" Value="240" />
+      <Setter Property="Spacing" Value="10" />
+    </Style>
+    <Style Selector="DockPanel.compact Button.card">
+      <Setter Property="Padding" Value="12,10,12,9" />
+    </Style>
+    <Style Selector="DockPanel.compact StackPanel.card-stack">
+      <Setter Property="Spacing" Value="7" />
+    </Style>
+    <Style Selector="DockPanel.compact Panel.card-desc">
+      <Setter Property="MinHeight" Value="17" />
+    </Style>
+    <Style Selector="DockPanel.compact Panel.card-desc > TextBlock">
+      <Setter Property="MaxLines" Value="1" />
+    </Style>
+    <Style Selector="DockPanel.compact Border.card-footer">
+      <Setter Property="Padding" Value="0,7,0,0" />
+    </Style>
+    <Style Selector="DockPanel.compact Button.row">
+      <Setter Property="Height" Value="38" />
+    </Style>
+    <Style Selector="DockPanel.compact TextBlock.row-desc">
+      <Setter Property="MaxHeight" Value="0" />
+    </Style>
+
+    <Style Selector="DockPanel.dense c|AdaptiveGrid">
+      <Setter Property="MinItemWidth" Value="220" />
+      <Setter Property="Spacing" Value="8" />
+    </Style>
+    <Style Selector="DockPanel.dense Button.card">
+      <Setter Property="Padding" Value="10,8,10,9" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="DockPanel.dense StackPanel.card-stack">
+      <Setter Property="Spacing" Value="6" />
+    </Style>
+    <Style Selector="DockPanel.dense TextBlock.card-title">
+      <Setter Property="MaxLines" Value="1" />
+    </Style>
+    <!-- Recently deleted keeps the footer, because Restore lives there -->
+    <Style Selector="DockPanel.dense Panel.card-desc, DockPanel.dense Border.card-footer:not(.deleted)">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="DockPanel.dense Button.row">
+      <Setter Property="Height" Value="30" />
+    </Style>
+    <Style Selector="DockPanel.dense TextBlock.row-desc">
+      <Setter Property="MaxHeight" Value="0" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Classes.compact="{Binding Appearance.IsCompact}" Classes.dense="{Binding Appearance.IsDense}">
     <!-- Header -->
     <Border DockPanel.Dock="Top" Height="56" Padding="20,0" Classes="hairline-bottom">
       <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="12">
@@ -89,24 +162,24 @@
         <ItemsControl x:Name="CardsList" ItemsSource="{Binding Items}" Margin="20,16,20,32">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
-              <c:AdaptiveGrid MinItemWidth="272" Spacing="12" />
+              <c:AdaptiveGrid />
             </ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:PromptCardViewModel">
               <Button Classes="card" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus">
-                <StackPanel Spacing="10">
+                <StackPanel Classes="card-stack">
                   <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                     <c:ToneDot Tone="{Binding CollectionTone}" VerticalAlignment="Top" Margin="0,6,0,0" ToolTip.Tip="{Binding CollectionName}" />
-                    <TextBlock Grid.Column="1" Classes="card-title" Text="{Binding Title}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="1" Classes="card-title" Text="{Binding Title}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
                     <Button Grid.Column="2" Classes="ghost icon sm" Classes.active="{Binding IsFavorite}" Margin="0,-3,-4,0" VerticalAlignment="Top"
                             Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="Favorite" IsVisible="{Binding !IsDeleted}">
                       <c:Icon Kind="Heart" Size="14" IsFilled="{Binding IsFavorite}" />
                     </Button>
                   </Grid>
-                  <Panel MinHeight="34">
+                  <Panel Classes="card-desc">
                     <TextBlock Classes="compact muted" Text="{Binding Description}" IsVisible="{Binding HasDescription}"
-                               TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                               TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
                     <TextBlock Classes="compact faint" Text="No description yet." IsVisible="{Binding !HasDescription}" />
                   </Panel>
                   <ItemsControl ItemsSource="{Binding Tags}" MinHeight="20">
@@ -121,7 +194,7 @@
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
-                  <Border BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,2,0,0">
+                  <Border Classes="card-footer" Classes.deleted="{Binding IsDeleted}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0" Margin="0,2,0,0">
                     <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
                       <c:RatingPips Value="{Binding Rating, Mode=OneWay}" ToolTip.Tip="Usefulness" IsVisible="{Binding !IsDeleted}" />
                       <TextBlock Grid.Column="1" Classes="compact faint" Text="{Binding RatingLabel}" VerticalAlignment="Center" IsVisible="{Binding !IsDeleted}" />
@@ -156,12 +229,12 @@
             <ItemsControl x:Name="RowsList" ItemsSource="{Binding Items}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:PromptCardViewModel">
-                  <Button Classes="row" Height="46" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus">
+                  <Button Classes="row" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus">
                     <Grid ColumnDefinitions="28,2*,1.6*,120,100,36" ColumnSpacing="12">
                       <c:ToneDot Tone="{Binding CollectionTone}" HorizontalAlignment="Center" ToolTip.Tip="{Binding CollectionName}" />
                       <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
                         <TextBlock Classes="strong" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
-                        <TextBlock Classes="compact faint" Text="{Binding Description}" TextTrimming="CharacterEllipsis" IsVisible="{Binding HasDescription}" />
+                        <TextBlock Classes="compact faint row-desc" Text="{Binding Description}" TextTrimming="CharacterEllipsis" IsVisible="{Binding HasDescription}" />
                       </StackPanel>
                       <ItemsControl Grid.Column="2" ItemsSource="{Binding Tags}" VerticalAlignment="Center" ClipToBounds="True">
                         <ItemsControl.ItemsPanel>
