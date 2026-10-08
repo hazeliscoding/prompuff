@@ -11,8 +11,15 @@ public interface IPromptTransferService
     /// <summary>Saves a workflow as one Markdown document that holds each step's prompt and hand-off note.</summary>
     Task ExportWorkflowAsync(Guid workflowId, string filePath, CancellationToken cancellationToken = default);
 
-    /// <summary>Saves the prompts as one .zip of Markdown files, for moving them to another machine or another person.</summary>
-    Task<ExportResult> ExportArchiveAsync(IReadOnlyList<Guid> promptIds, string zipPath, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Saves the prompts as one .zip of Markdown files, for moving them to another machine or another person. Workflows
+    /// go in a workflows/ folder inside it, one document each.
+    /// </summary>
+    Task<ExportResult> ExportArchiveAsync(
+        IReadOnlyList<Guid> promptIds,
+        string zipPath,
+        IReadOnlyList<Guid>? workflowIds = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>Imports .md files and .zip exports. Prompts the library already has (same title and body) are skipped.</summary>
     Task<ImportResult> ImportFilesAsync(IReadOnlyList<string> filePaths, CancellationToken cancellationToken = default);

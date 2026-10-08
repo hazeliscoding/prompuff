@@ -130,6 +130,77 @@ public class WorkflowTests
         Assert.False(MarkdownWorkflowFormat.IsWorkflow("---\ntitle: Just a prompt\n---\n\n# Prompt\n\nHello"));
 
     [Fact]
+    public async Task A_library_zip_carries_workflows_and_their_prompts_keep_their_details()
+    {
+        await using var library = await TestLibrary.CreateAsync();
+        var coding = await library.CollectionService.CreateAsync("Coding");
+        var plan = await library.PromptService.CreateAsync(
+            new PromptContent("Plan", "Plans the work", "Plan {{repo}}.", "Small steps work."),
+            new Application.Services.PromptMetadata(true, 5, coding.Id, ["planning"]));
+        var apply = await library.PromptService.CreateAsync(Content("Apply", "Apply {{plan}}."));
+        var first = await library.WorkflowService.CreateAsync("Ship it", steps: [(plan.Id, "The plan"), (apply.Id, null)]);
+        var second = await library.WorkflowService.CreateAsync("Ship it", steps: [(apply.Id, null)]);
+        var zip = library.TempFile("everything.zip");
+
+        var exported = await library.Transfer.ExportArchiveAsync([plan.Id, apply.Id], zip, [first.Id, second.Id]);
+
+        Assert.Equal(new ExportResult(2, zip, 2), exported);
+        using (var archive = System.IO.Compression.ZipFile.OpenRead(zip))
+        {
+            Assert.Equal(["apply.md", "plan.md", "workflows/ship-it-2.md", "workflows/ship-it.md"], archive.Entries.Select(entry => entry.FullName).Order());
+        }
+
+        await using var other = await TestLibrary.CreateAsync();
+        var result = await other.Transfer.ImportFilesAsync([zip]);
+
+        Assert.Empty(result.Failures);
+        Assert.Equal(2, result.ImportedCount);
+        Assert.Equal(2, result.ImportedWorkflowIds.Count);
+        var importedPlan = await other.Prompts.GetAsync((await other.PromptService.FindAsync("Plan", "Plan {{repo}}."))!.Value);
+        Assert.Equal("Small steps work.", importedPlan!.Notes);
+        Assert.Equal(["planning"], importedPlan.Tags);
+        Assert.True(importedPlan.IsFavorite);
+        var workflows = new List<Domain.Entities.Workflow>();
+        foreach (var id in result.ImportedWorkflowIds)
+        {
+            workflows.Add((await other.WorkflowService.GetAsync(id))!);
+        }
+
+        var twoSteps = Assert.Single(workflows, workflow => workflow.Steps.Count == 2);
+        Assert.Equal("Ship it", twoSteps.Name);
+        Assert.Equal(importedPlan.Id, twoSteps.Steps[0].PromptId);
+    }
+
+    [Fact]
+    public async Task A_workflow_read_before_its_prompts_still_uses_them()
+    {
+        await using var library = await TestLibrary.CreateAsync();
+        var zip = library.TempFile("workflow-first.zip");
+        using (var archive = System.IO.Compression.ZipFile.Open(zip, System.IO.Compression.ZipArchiveMode.Create))
+        {
+            var workflow = MarkdownWorkflowFormat.Write(new MarkdownWorkflow("Flow", null, [new MarkdownWorkflowStep("Plan", "Plan {{repo}}.", null)]));
+            await using (var writer = new StreamWriter(archive.CreateEntry("a-flow.md").Open()))
+            {
+                await writer.WriteAsync(workflow);
+            }
+
+            await using (var writer = new StreamWriter(archive.CreateEntry("plan.md").Open()))
+            {
+                await writer.WriteAsync("---\ntitle: Plan\ntags: [planning]\n---\n\n# Prompt\n\nPlan {{repo}}.\n\n# Notes\n\nKeep it short.\n");
+            }
+        }
+
+        var result = await library.Transfer.ImportFilesAsync([zip]);
+
+        Assert.Equal(1, result.ImportedCount);
+        var prompt = await library.Prompts.GetAsync(Assert.Single(result.ImportedPromptIds));
+        Assert.Equal(["planning"], prompt!.Tags);
+        Assert.Equal("Keep it short.", prompt.Notes);
+        var workflowSteps = (await library.WorkflowService.GetAsync(Assert.Single(result.ImportedWorkflowIds)))!.Steps;
+        Assert.Equal(prompt.Id, Assert.Single(workflowSteps).PromptId);
+    }
+
+    [Fact]
     public async Task Export_then_import_rebuilds_the_workflow_and_reuses_prompts_already_there()
     {
         await using var library = await TestLibrary.CreateAsync();

@@ -54,25 +54,35 @@ public sealed class MarkdownTransferService(
     {
         try
         {
-            var workflow = await workflows.GetAsync(workflowId, cancellationToken) ?? throw new LibraryException("That workflow no longer exists.");
-            var steps = new List<MarkdownWorkflowStep>(workflow.Steps.Count);
-            foreach (var step in workflow.Steps)
-            {
-                if (await prompts.GetAsync(step.PromptId, cancellationToken) is { } prompt)
-                {
-                    steps.Add(new MarkdownWorkflowStep(prompt.Title, prompt.Body, step.Note));
-                }
-            }
-
-            var markdown = MarkdownWorkflowFormat.Write(new MarkdownWorkflow(workflow.Name, workflow.Description, steps));
-            await File.WriteAllTextAsync(filePath, markdown, Utf8NoBom, cancellationToken);
-            logger.LogInformation("Exported workflow {WorkflowId} with {Count} steps", workflowId, steps.Count);
+            var workflow = await WorkflowMarkdownAsync(workflowId, cancellationToken) ?? throw new LibraryException("That workflow no longer exists.");
+            await File.WriteAllTextAsync(filePath, workflow.Markdown, Utf8NoBom, cancellationToken);
+            logger.LogInformation("Exported workflow {WorkflowId}", workflowId);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             logger.LogError(exception, "Export failed for workflow {WorkflowId}", workflowId);
             throw new LibraryException("Prompuff couldn't write that file. Check that the folder exists and you can save there.", exception);
         }
+    }
+
+    /// <summary>The workflow as one document holding each step's prompt, or null when it no longer exists.</summary>
+    private async Task<(string Name, string Markdown)?> WorkflowMarkdownAsync(Guid workflowId, CancellationToken cancellationToken)
+    {
+        if (await workflows.GetAsync(workflowId, cancellationToken) is not { } workflow)
+        {
+            return null;
+        }
+
+        var steps = new List<MarkdownWorkflowStep>(workflow.Steps.Count);
+        foreach (var step in workflow.Steps)
+        {
+            if (await prompts.GetAsync(step.PromptId, cancellationToken) is { } prompt)
+            {
+                steps.Add(new MarkdownWorkflowStep(prompt.Title, prompt.Body, step.Note));
+            }
+        }
+
+        return (workflow.Name, MarkdownWorkflowFormat.Write(new MarkdownWorkflow(workflow.Name, workflow.Description, steps)));
     }
 
     public async Task ExportPromptAsync(Guid promptId, string filePath, CancellationToken cancellationToken = default)
@@ -91,13 +101,18 @@ public sealed class MarkdownTransferService(
         }
     }
 
-    public async Task<ExportResult> ExportArchiveAsync(IReadOnlyList<Guid> promptIds, string zipPath, CancellationToken cancellationToken = default)
+    public async Task<ExportResult> ExportArchiveAsync(
+        IReadOnlyList<Guid> promptIds,
+        string zipPath,
+        IReadOnlyList<Guid>? workflowIds = null,
+        CancellationToken cancellationToken = default)
     {
         // Written beside the target first, so a failed export never leaves half a zip under the chosen name.
         var temporary = zipPath + ".tmp";
         try
         {
             var exported = 0;
+            var exportedWorkflows = 0;
             await using (var file = File.Create(temporary))
             await using (var archive = new ZipArchive(file, ZipArchiveMode.Create))
             {
@@ -115,11 +130,24 @@ public sealed class MarkdownTransferService(
                     await writer.WriteAsync(await ToMarkdownAsync(prompt, cancellationToken));
                     exported++;
                 }
+
+                foreach (var id in workflowIds ?? [])
+                {
+                    if (await WorkflowMarkdownAsync(id, cancellationToken) is not { } workflow)
+                    {
+                        continue;
+                    }
+
+                    var entry = archive.CreateEntry(UniqueName(names, SuggestFileName(workflow.Name), "workflows/"), CompressionLevel.Optimal);
+                    await using var writer = new StreamWriter(await entry.OpenAsync(cancellationToken), Utf8NoBom);
+                    await writer.WriteAsync(workflow.Markdown);
+                    exportedWorkflows++;
+                }
             }
 
             File.Move(temporary, zipPath, overwrite: true);
-            logger.LogInformation("Exported {Count} prompts to a zip", exported);
-            return new ExportResult(exported, zipPath);
+            logger.LogInformation("Exported {Count} prompts and {Workflows} workflows to a zip", exported, exportedWorkflows);
+            return new ExportResult(exported, zipPath, exportedWorkflows);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -137,6 +165,7 @@ public sealed class MarkdownTransferService(
             await ImportFileAsync(path, import, cancellationToken);
         }
 
+        await ImportWorkflowsAsync(import, cancellationToken);
         return Finish(import);
     }
 
@@ -214,6 +243,8 @@ public sealed class MarkdownTransferService(
         {
             await ImportFileAsync(path, import, cancellationToken);
         }
+
+        await ImportWorkflowsAsync(import, cancellationToken);
 
         import.OtherFiles.Sort(StringComparer.OrdinalIgnoreCase);
         return Finish(import);
@@ -339,7 +370,9 @@ public sealed class MarkdownTransferService(
     {
         if (MarkdownWorkflowFormat.IsWorkflow(text))
         {
-            await ImportWorkflowAsync(path, text, fallbackTitle, import, cancellationToken);
+            // Workflows wait until every prompt is in, so a step finds the prompt from the same export, with its tags,
+            // notes and collection, instead of creating a bare copy of it.
+            import.PendingWorkflows.Add((path, text, fallbackTitle));
             return;
         }
 
@@ -407,6 +440,16 @@ public sealed class MarkdownTransferService(
         });
     }
 
+    private async Task ImportWorkflowsAsync(ImportProgress import, CancellationToken cancellationToken)
+    {
+        foreach (var (path, text, fallbackTitle) in import.PendingWorkflows)
+        {
+            await ImportWorkflowAsync(path, text, fallbackTitle, import, cancellationToken);
+        }
+
+        import.PendingWorkflows.Clear();
+    }
+
     /// <summary>
     /// A workflow document becomes a workflow. Each step uses the library's prompt with the same title and body, or a
     /// new prompt when there isn't one. Importing the same workflow twice is skipped, as a prompt would be.
@@ -457,14 +500,15 @@ public sealed class MarkdownTransferService(
         import.Workflows.Add(workflow.Id);
     }
 
-    private static string UniqueName(HashSet<string> taken, string fileName)
+    /// <param name="folder">A folder inside the zip, ending in "/", or empty for the top level.</param>
+    private static string UniqueName(HashSet<string> taken, string fileName, string folder = "")
     {
-        var name = fileName;
+        var name = folder + fileName;
         var stem = Path.GetFileNameWithoutExtension(fileName);
         var extension = Path.GetExtension(fileName);
         for (var n = 2; !taken.Add(name); n++)
         {
-            name = $"{stem}-{n}{extension}";
+            name = $"{folder}{stem}-{n}{extension}";
         }
 
         return name;
@@ -486,6 +530,9 @@ public sealed class MarkdownTransferService(
     {
         public List<Guid> Imported { get; } = [];
         public List<Guid> Workflows { get; } = [];
+
+        /// <summary>Workflow documents read so far, imported once every prompt is in.</summary>
+        public List<(string Path, string Text, string FallbackTitle)> PendingWorkflows { get; } = [];
         public List<ImportFailure> Failures { get; } = [];
         public List<string> OtherFiles { get; } = [];
         public int Skipped { get; set; }

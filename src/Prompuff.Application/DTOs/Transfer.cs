@@ -17,4 +17,5 @@ public sealed record ImportResult(
     public IReadOnlyList<Guid> ImportedWorkflowIds => Workflows ?? [];
 }
 
-public sealed record ExportResult(int ExportedCount, string FilePath);
+/// <param name="WorkflowCount">Workflows saved alongside the prompts, each as its own document under workflows/.</param>
+public sealed record ExportResult(int ExportedCount, string FilePath, int WorkflowCount = 0);
