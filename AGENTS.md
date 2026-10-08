@@ -15,6 +15,7 @@ These are the working rules for agents in this repo. Prompuff is a local-first d
 - The only network code is the Velopack update check in `Prompuff.Infrastructure/Updates`. Don't add any other.
 - Never log prompt titles, bodies, notes or variable values. Log prompt IDs and counts.
 - Fonts and icons are bundled. Nothing loads from a CDN at runtime.
+- The website in `site/` keeps the same promise: no analytics or trackers, and nothing loaded from another site. Its Content-Security-Policy enforces it, and `.github/workflows/pages.yml` refuses to deploy a page that breaks it.
 
 ## Cross-platform (hard rules)
 
