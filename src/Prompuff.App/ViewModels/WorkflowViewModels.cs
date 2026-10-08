@@ -159,7 +159,7 @@ public sealed partial class WorkflowVariableViewModel(string name, IReadOnlyList
         : $"Steps {string.Join(", ", steps.Take(steps.Count - 1))} and {steps[^1]}";
 
     public bool IsShared { get; } = steps.Count > 1;
-    public string Placeholder => $"Value for {name}";
+    public string Placeholder => $"Value for {Name}";
 
     [ObservableProperty]
     private string _value = value;
