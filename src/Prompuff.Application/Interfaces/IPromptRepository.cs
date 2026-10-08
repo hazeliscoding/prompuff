@@ -28,6 +28,9 @@ public interface IPromptRepository
     /// <summary>Versions of one prompt, newest first.</summary>
     Task<IReadOnlyList<PromptVersion>> GetVersionsAsync(Guid promptId, CancellationToken cancellationToken = default);
 
+    /// <summary>Prompts duplicated from this one, oldest first, including any in Recently deleted.</summary>
+    Task<IReadOnlyList<PromptLink>> GetCopiesAsync(Guid promptId, CancellationToken cancellationToken = default);
+
     Task<int> GetLatestVersionNumberAsync(Guid promptId, CancellationToken cancellationToken = default);
 
     Task MarkOpenedAsync(Guid id, DateTimeOffset openedAt, CancellationToken cancellationToken = default);

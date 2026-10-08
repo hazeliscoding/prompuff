@@ -215,4 +215,29 @@ public class SqliteLibraryTests
 
         Assert.Equal(new LibraryCounts(2, 1, 2, 3, 0), await library.Prompts.GetCountsAsync());
     }
+
+    [Fact]
+    public async Task A_copy_keeps_its_lineage_until_the_parent_is_removed_for_good()
+    {
+        await using var library = await TestLibrary.CreateAsync();
+        var parent = await library.PromptService.CreateAsync(new PromptContent("Parent", null, "body", null));
+        var copy = await library.PromptService.DuplicateAsync(parent.Id);
+
+        Assert.Equal(parent.Id, (await library.Prompts.GetAsync(copy.Id))!.ParentPromptId);
+        Assert.Equal([copy.Id], (await library.PromptService.GetLineageAsync(parent.Id)).Copies.Select(link => link.Id));
+
+        // Editing the copy doesn't touch its lineage.
+        await library.PromptService.SaveContentAsync(copy.Id, new PromptContent("Copy", null, "body v2", null));
+        await library.PromptService.SetFavoriteAsync(copy.Id, true);
+        Assert.Equal(parent.Id, (await library.Prompts.GetAsync(copy.Id))!.ParentPromptId);
+
+        await library.PromptService.DeleteAsync(parent.Id);
+        Assert.True((await library.PromptService.GetLineageAsync(copy.Id)).Parent?.IsDeleted);
+
+        await library.PromptService.EmptyRecentlyDeletedAsync();
+        var orphan = await library.Prompts.GetAsync(copy.Id);
+        Assert.NotNull(orphan);
+        Assert.Null(orphan.ParentPromptId);
+        Assert.Null((await library.PromptService.GetLineageAsync(copy.Id)).Parent);
+    }
 }

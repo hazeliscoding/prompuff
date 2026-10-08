@@ -34,6 +34,9 @@ public sealed class Prompt
     /// <summary>When the prompt moved to Recently deleted, or null while it's in the library.</summary>
     public DateTimeOffset? DeletedAt { get; set; }
 
+    /// <summary>The prompt this one was duplicated from. It goes back to null if the parent is removed for good.</summary>
+    public Guid? ParentPromptId { get; init; }
+
     public PromptContent Content => new(Title, Description, Body, Notes);
 
     public void SetContent(PromptContent content)

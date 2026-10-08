@@ -67,6 +67,13 @@ internal sealed class InMemoryPromptRepository : IPromptRepository
         Task.FromResult<IReadOnlyList<PromptVersion>>(
             _versions.Where(version => version.PromptId == promptId).OrderByDescending(version => version.VersionNumber).ToList());
 
+    public Task<IReadOnlyList<PromptLink>> GetCopiesAsync(Guid promptId, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<PromptLink>>(_prompts.Values
+            .Where(p => p.ParentPromptId == promptId)
+            .OrderBy(p => p.CreatedAt)
+            .Select(p => new PromptLink(p.Id, p.Title, p.DeletedAt is not null))
+            .ToList());
+
     public Task<int> GetLatestVersionNumberAsync(Guid promptId, CancellationToken cancellationToken = default) =>
         Task.FromResult(_versions.Where(version => version.PromptId == promptId).Select(version => version.VersionNumber).DefaultIfEmpty(0).Max());
 
@@ -96,6 +103,7 @@ internal sealed class InMemoryPromptRepository : IPromptRepository
             IsFavorite = source.IsFavorite,
             Rating = source.Rating,
             CollectionId = source.CollectionId,
+            ParentPromptId = source.ParentPromptId,
         };
         copy.SetContent(new PromptContent(source.Title, source.Description, source.Body, source.Notes));
         copy.SetTags(source.Tags);

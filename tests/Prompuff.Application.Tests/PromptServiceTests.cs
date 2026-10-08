@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging.Abstractions;
+using Prompuff.Application.DTOs;
 using Prompuff.Application.Services;
 using Prompuff.Domain.ValueObjects;
 
@@ -185,6 +186,24 @@ public class PromptServiceTests
 
         Assert.Equal("old body", copy.Body);
         Assert.Equal("Angular Upgrade Planner (v1 copy)", copy.Title);
+    }
+
+    [Fact]
+    public async Task Copies_remember_their_parent_and_the_parent_lists_them()
+    {
+        var prompt = await _service.CreateAsync(Content("body"));
+        await _service.SaveContentAsync(prompt.Id, Content("body v2"));
+
+        var copy = await _service.DuplicateAsync(prompt.Id);
+        var versionCopy = await _service.DuplicateVersionAsync(prompt.Id, 1);
+
+        Assert.Equal(prompt.Id, copy.ParentPromptId);
+        Assert.Equal(prompt.Id, versionCopy.ParentPromptId);
+        var lineage = await _service.GetLineageAsync(copy.Id);
+        Assert.Equal(new PromptLink(prompt.Id, "Angular Upgrade Planner", false), lineage.Parent);
+        Assert.Empty(lineage.Copies);
+        Assert.Equal([copy.Id, versionCopy.Id], (await _service.GetLineageAsync(prompt.Id)).Copies.Select(link => link.Id));
+        Assert.Null((await _service.GetLineageAsync(prompt.Id)).Parent);
     }
 
     [Fact]

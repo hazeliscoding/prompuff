@@ -112,6 +112,13 @@ public static class Migrations
                 PRIMARY KEY (PromptId, Name)
             );
             """),
+
+        // A copy keeps its lineage while the parent exists. Removing the parent for good clears the link, and the copy
+        // lives on as an independent prompt.
+        new(5, "Prompt lineage", """
+            ALTER TABLE Prompts ADD COLUMN ParentPromptId TEXT NULL REFERENCES Prompts (Id) ON DELETE SET NULL;
+            CREATE INDEX IX_Prompts_ParentPromptId ON Prompts (ParentPromptId);
+            """),
     ];
 
     public static int LatestVersion => All[^1].Version;

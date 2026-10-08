@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Prompuff.Application.DTOs;
 using Prompuff.Application.Interfaces;
 using Prompuff.Domain.Entities;
 using Prompuff.Domain.ValueObjects;
@@ -39,12 +40,13 @@ public sealed class PromptService(IPromptRepository prompts, TimeProvider time, 
         string? versionNote = null,
         DateTimeOffset? createdAt = null,
         DateTimeOffset? updatedAt = null,
+        Guid? parentPromptId = null,
         CancellationToken cancellationToken = default)
     {
         var now = time.GetUtcNow();
         var created = createdAt ?? now;
         var updated = updatedAt is { } value && value >= created ? value : created;
-        var prompt = new Prompt { Id = Guid.NewGuid(), CreatedAt = created, UpdatedAt = updated };
+        var prompt = new Prompt { Id = Guid.NewGuid(), CreatedAt = created, UpdatedAt = updated, ParentPromptId = parentPromptId };
         prompt.SetContent(content);
         ApplyMetadata(prompt, metadata ?? PromptMetadata.Empty);
 
@@ -149,7 +151,7 @@ public sealed class PromptService(IPromptRepository prompts, TimeProvider time, 
         var source = await RequireAsync(id, cancellationToken);
         var content = new PromptContent(source.Title + " (copy)", source.Description, source.Body, source.Notes);
         var metadata = PromptMetadata.From(source) with { IsFavorite = false };
-        return await CreateAsync(content, metadata, $"Duplicated from “{source.Title}”", cancellationToken: cancellationToken);
+        return await CreateAsync(content, metadata, $"Duplicated from “{source.Title}”", parentPromptId: source.Id, cancellationToken: cancellationToken);
     }
 
     public async Task<Prompt> DuplicateVersionAsync(Guid id, int versionNumber, CancellationToken cancellationToken = default)
@@ -160,7 +162,20 @@ public sealed class PromptService(IPromptRepository prompts, TimeProvider time, 
                       ?? throw new LibraryException($"Version {versionNumber} of this prompt no longer exists.");
         var content = new PromptContent($"{version.Title} (v{versionNumber} copy)", version.Description, version.Body, version.Notes);
         var metadata = PromptMetadata.From(source) with { IsFavorite = false };
-        return await CreateAsync(content, metadata, $"Duplicated from v{versionNumber} of “{source.Title}”", cancellationToken: cancellationToken);
+        return await CreateAsync(content, metadata, $"Duplicated from v{versionNumber} of “{source.Title}”", parentPromptId: source.Id, cancellationToken: cancellationToken);
+    }
+
+    /// <summary>Where the prompt was duplicated from, and the copies made from it.</summary>
+    public async Task<PromptLineage> GetLineageAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var prompt = await RequireAsync(id, cancellationToken);
+        PromptLink? parent = null;
+        if (prompt.ParentPromptId is { } parentId && await prompts.GetAsync(parentId, cancellationToken) is { } source)
+        {
+            parent = new PromptLink(source.Id, source.Title, source.DeletedAt is not null);
+        }
+
+        return new PromptLineage(parent, await prompts.GetCopiesAsync(id, cancellationToken));
     }
 
     /// <summary>Moves the prompt to Recently deleted, where it waits <see cref="DeletedRetention"/> before it's removed for good.</summary>

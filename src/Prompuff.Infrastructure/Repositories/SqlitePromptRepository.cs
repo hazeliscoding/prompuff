@@ -10,7 +10,7 @@ namespace Prompuff.Infrastructure.Repositories;
 public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRepository
 {
     private const string PromptColumns =
-        "Id, Title, Description, Body, Notes, IsFavorite, Rating, CollectionId, CreatedAt, UpdatedAt, LastOpenedAt, DeletedAt";
+        "Id, Title, Description, Body, Notes, IsFavorite, Rating, CollectionId, CreatedAt, UpdatedAt, LastOpenedAt, DeletedAt, ParentPromptId";
 
     private const string VersionColumns =
         "Id, PromptId, VersionNumber, Title, Description, Body, Notes, Note, SavedAt";
@@ -46,7 +46,7 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
             command.Transaction = transaction;
             command.CommandText = $"""
                 INSERT INTO Prompts ({PromptColumns})
-                VALUES ($id, $title, $description, $body, $notes, $favorite, $rating, $collection, $created, $updated, $opened, $deleted);
+                VALUES ($id, $title, $description, $body, $notes, $favorite, $rating, $collection, $created, $updated, $opened, $deleted, $parent);
                 """;
             AddPromptParameters(command, prompt);
             await command.ExecuteNonQueryAsync(cancellationToken);
@@ -168,6 +168,23 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
         return versions;
     }
 
+    public async Task<IReadOnlyList<PromptLink>> GetCopiesAsync(Guid promptId, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await database.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT Id, Title, DeletedAt FROM Prompts WHERE ParentPromptId = $id ORDER BY CreatedAt, Title;";
+        command.With("$id", SqlValues.Id(promptId));
+
+        var copies = new List<PromptLink>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            copies.Add(new PromptLink(reader.ReadId(0), reader.GetString(1), !reader.IsDBNull(2)));
+        }
+
+        return copies;
+    }
+
     public async Task<int> GetLatestVersionNumberAsync(Guid promptId, CancellationToken cancellationToken = default)
     {
         await using var connection = await database.OpenAsync(cancellationToken);
@@ -212,6 +229,7 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
             UpdatedAt = reader.ReadTime(9),
             LastOpenedAt = reader.ReadTimeOrNull(10),
             DeletedAt = reader.ReadTimeOrNull(11),
+            ParentPromptId = reader.ReadIdOrNull(12),
             IsFavorite = reader.GetInt64(5) != 0,
             Rating = reader.ReadIntOrNull(6),
             CollectionId = reader.ReadIdOrNull(7),
@@ -232,7 +250,8 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
             .With("$created", SqlValues.Time(prompt.CreatedAt))
             .With("$updated", SqlValues.Time(prompt.UpdatedAt))
             .With("$opened", SqlValues.TimeOrNull(prompt.LastOpenedAt))
-            .With("$deleted", SqlValues.TimeOrNull(prompt.DeletedAt));
+            .With("$deleted", SqlValues.TimeOrNull(prompt.DeletedAt))
+            .With("$parent", SqlValues.IdOrNull(prompt.ParentPromptId));
 
     private static async Task<IReadOnlyList<string>> ReadTagsAsync(SqliteConnection connection, Guid promptId, CancellationToken cancellationToken)
     {

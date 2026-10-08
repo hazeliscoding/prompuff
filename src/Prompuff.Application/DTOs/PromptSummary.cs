@@ -1,5 +1,15 @@
 namespace Prompuff.Application.DTOs;
 
+/// <summary>Another prompt mentioned by name, such as a parent or a copy.</summary>
+public sealed record PromptLink(Guid Id, string Title, bool IsDeleted);
+
+/// <param name="Parent">The prompt this one was duplicated from, while it still exists.</param>
+/// <param name="Copies">Prompts duplicated from this one.</param>
+public sealed record PromptLineage(PromptLink? Parent, IReadOnlyList<PromptLink> Copies)
+{
+    public static PromptLineage None { get; } = new(null, []);
+}
+
 public sealed record PromptSummary
 {
     public required Guid Id { get; init; }
