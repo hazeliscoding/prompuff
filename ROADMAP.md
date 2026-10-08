@@ -240,7 +240,8 @@ The design's Workflows view: prompts that run in order, with a person copying be
 - [x] Render and copy step by step, with progress through the steps.
 - [x] Export a workflow as one Markdown document, and import it back.
 - [x] Publish v0.6.0 (2026-10-08). Every smoke-tested build applied migration 6 and logged the hotkey as ready.
-- [x] v0.6.1: Settings › Export everything includes workflows, each as its own document under `workflows/` in the zip, and imports name the workflows they add.
+- [x] Publish v0.6.1 (2026-10-08): Settings › Export everything includes workflows, each as its own document under `workflows/` in the zip, and imports name the workflows they add.
+- [x] Publish v0.6.2 (2026-10-08): imports keep only where workflow files are, not their text, until the prompts are in, so the 5 MB cap per file bounds the whole import again.
 
 **Done when:** the design's "Angular upgrade, start to finish" workflow can be built, filled once and copied step by step.
 
