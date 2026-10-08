@@ -258,6 +258,77 @@
           </Grid>
         </StackPanel>
 
+        <!-- Integrations -->
+        <StackPanel Spacing="4" IsVisible="{Binding IsIntegrations}">
+          <TextBlock Classes="page-title" Text="Integrations" Margin="0,0,0,4" />
+          <TextBlock Classes="muted" TextWrapping="Wrap" LineHeight="19.5" Margin="0,0,0,8"
+                     Text="Use your library from a terminal or an AI tool. It all runs on this machine, and nothing here is on until you turn it on." />
+          <Border Classes="setting-row">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel Spacing="2">
+                <TextBlock Classes="strong" Text="Command-line tool" />
+                <TextBlock Classes="compact faint" TextWrapping="Wrap" Text="{Binding CliStatus}" />
+                <TextBlock Classes="compact" TextWrapping="Wrap" IsVisible="{Binding CliNeedsPathSetup}" Foreground="{DynamicResource AmberTextBrush}"
+                           Text="~/.local/bin isn't on your PATH yet. Add export PATH=&quot;$HOME/.local/bin:$PATH&quot; to your shell profile, then open a new terminal." />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" IsVisible="{Binding HasBundledCli}">
+                <Button Classes="sm" Command="{Binding InstallCommandLineToolCommand}" IsVisible="{Binding !IsCliInstalled}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <c:Icon Kind="Terminal" Size="12" />
+                    <TextBlock Text="Install" />
+                  </StackPanel>
+                </Button>
+                <Button Classes="ghost sm" Content="Remove" Command="{Binding RemoveCommandLineToolCommand}" IsVisible="{Binding IsCliInstalled}" />
+              </StackPanel>
+            </Grid>
+          </Border>
+          <Border Classes="setting-row">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel Spacing="2">
+                <TextBlock Classes="strong" Text="Let AI tools read my library (MCP)" />
+                <TextBlock Classes="compact faint" TextWrapping="Wrap"
+                           Text="Tools you connect below can search, read and fill in your prompts, and use your favorites as commands. They can't change or delete anything." />
+              </StackPanel>
+              <ToggleButton Grid.Column="1" Theme="{StaticResource Switch}" IsChecked="{Binding AllowMcp}" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+          <Border Classes="panel" Padding="16" Margin="0,12,0,0" IsVisible="{Binding HasBundledCli}">
+            <StackPanel Spacing="10">
+              <TextBlock Classes="label" Text="CONNECT AN AI TOOL" />
+              <Border Classes="segmented" HorizontalAlignment="Left">
+                <ItemsControl ItemsSource="{Binding McpClients}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Horizontal" Spacing="1" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:McpClientItem">
+                      <RadioButton Theme="{StaticResource SegmentButton}" GroupName="mcp-client" IsChecked="{Binding IsSelected}" Content="{Binding Name}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Border>
+              <TextBlock Classes="compact" TextWrapping="Wrap" Foreground="{DynamicResource Text2Brush}" Text="{Binding McpSetup.Steps}" />
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Border Classes="well" CornerRadius="4" Padding="10,7">
+                  <SelectableTextBlock Text="{Binding McpSetup.Snippet}" FontFamily="{StaticResource MonoFont}" FontSize="12" TextWrapping="Wrap" />
+                </Border>
+                <Button Grid.Column="1" Command="{Binding CopyMcpSetupCommand}" VerticalAlignment="Top">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <c:Icon Kind="Copy" Size="13" />
+                    <TextBlock Text="Copy" />
+                  </StackPanel>
+                </Button>
+              </Grid>
+              <TextBlock Classes="compact" TextWrapping="Wrap" IsVisible="{Binding McpNeedsInstall}" Foreground="{DynamicResource AmberTextBrush}"
+                         Text="Install the command-line tool first. AI tools start it to reach your library." />
+              <TextBlock Classes="compact faint" TextWrapping="Wrap"
+                         Text="The tool runs prompuff mcp, which answers only while the switch above is on." />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
         <!-- Updates -->
         <StackPanel Spacing="4" IsVisible="{Binding IsUpdates}">
           <TextBlock Classes="page-title" Text="Updates" Margin="0,0,0,8" />

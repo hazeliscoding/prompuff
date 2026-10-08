@@ -47,6 +47,8 @@ public sealed class App : Avalonia.Application
             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnMainWindowClose;
             desktop.Exit += (_, _) => (Services as IDisposable)?.Dispose();
             Dispatcher.UIThread.Post(() => _ = viewModel.InitializeAsync());
+            var installer = Services.GetRequiredService<ICommandLineInstaller>();
+            _ = Task.Run(installer.RefreshIfInstalled);
 
             if (Launch is { } launch)
             {
@@ -123,6 +125,7 @@ public sealed class App : Avalonia.Application
         services.AddSingleton<IFilePickerService, AvaloniaFilePickerService>();
         services.AddSingleton<IPlatformLauncher, AvaloniaLauncher>();
         services.AddSingleton<IGlobalHotkeyService>(_ => GlobalHotkeys.Create());
+        services.AddSingleton<ICommandLineInstaller, CommandLineInstaller>();
 
         services.AddSingleton<Navigator>();
         services.AddSingleton<LibraryNotifier>();

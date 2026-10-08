@@ -19,6 +19,7 @@ public enum SettingsSection
     QuickSave,
     Storage,
     ImportExport,
+    Integrations,
     Updates,
     Shortcuts,
     About,
@@ -38,6 +39,24 @@ public sealed partial class SettingsSectionItem(SettingsSection section, string 
 }
 
 public sealed record ShortcutRow(string Label, string Keys);
+
+/// <summary>One AI tool in the Integrations picker.</summary>
+public sealed partial class McpClientItem(McpClient client, string name, Action<McpClient> select) : ObservableObject
+{
+    public McpClient Client { get; } = client;
+    public string Name { get; } = name;
+
+    [ObservableProperty]
+    private bool _isSelected;
+
+    partial void OnIsSelectedChanged(bool value)
+    {
+        if (value)
+        {
+            select(Client);
+        }
+    }
+}
 
 public sealed partial class BackupRow(LibraryBackup backup, Func<BackupRow, Task> restore)
 {
@@ -75,6 +94,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly WorkflowService _workflows;
     private readonly IGlobalHotkeyService _hotkeys;
     private readonly IClipboardService _clipboard;
+    private readonly ICommandLineInstaller _installer;
     private readonly LibraryBackups _backups;
     private readonly DialogService _dialogs;
     private readonly ToastService _toasts;
@@ -96,6 +116,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         WorkflowService workflows,
         IGlobalHotkeyService hotkeys,
         IClipboardService clipboard,
+        ICommandLineInstaller installer,
         LibraryBackups backups,
         DialogService dialogs,
         ToastService toasts,
@@ -115,6 +136,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _workflows = workflows;
         _hotkeys = hotkeys;
         _clipboard = clipboard;
+        _installer = installer;
         hotkeys.Pressed += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(() => HotkeyPressed?.Invoke(this, EventArgs.Empty));
         _backups = backups;
         _dialogs = dialogs;
@@ -129,11 +151,17 @@ public sealed partial class SettingsViewModel : ObservableObject
             new(SettingsSection.QuickSave, "Quick save", "ClipboardPlus", Select),
             new(SettingsSection.Storage, "Storage", "HardDrive", Select),
             new(SettingsSection.ImportExport, "Import / export", "ArrowLeftRight", Select),
+            new(SettingsSection.Integrations, "Integrations", "Plug", Select),
             new(SettingsSection.Updates, "Updates", "RefreshCw", Select),
             new(SettingsSection.Shortcuts, "Keyboard shortcuts", "Keyboard", Select),
             new(SettingsSection.About, "About", "Cloud", Select),
         ];
         Shortcuts = Platform.Shortcuts.Reference.Select(row => new ShortcutRow(row.Label, row.Keys)).ToList();
+        _mcpSetup = McpClientSetup.For(McpClient.ClaudeCode, installer.CommandPath);
+        McpClients = McpClientSetup.Clients
+            .Select(client => new McpClientItem(client, McpClientSetup.For(client, string.Empty).Name, SelectMcpClient))
+            .ToList();
+        McpClients[0].IsSelected = true;
         Select(SettingsSection.Appearance);
     }
 
@@ -150,7 +178,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public string AboutVersion => $"v{CurrentVersion} · Avalonia 12 · .NET {Environment.Version.Major}";
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsAppearance), nameof(IsQuickSave), nameof(IsStorage), nameof(IsImportExport), nameof(IsUpdates), nameof(IsShortcuts), nameof(IsAbout))]
+    [NotifyPropertyChangedFor(nameof(IsAppearance), nameof(IsQuickSave), nameof(IsStorage), nameof(IsImportExport), nameof(IsIntegrations), nameof(IsUpdates), nameof(IsShortcuts), nameof(IsAbout))]
     private SettingsSection _section;
 
     [ObservableProperty]
@@ -197,6 +225,31 @@ public sealed partial class SettingsViewModel : ObservableObject
     public string QuickSaveCommand { get; } = BuildQuickSaveCommand();
 
     [ObservableProperty]
+    private bool _allowMcp;
+
+    /// <summary>False in a development build, which has no command-line tool beside it.</summary>
+    public bool HasBundledCli => _installer.BundledPath is not null;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(McpNeedsInstall))]
+    private bool _isCliInstalled;
+
+    [ObservableProperty]
+    private string _cliStatus = string.Empty;
+
+    /// <summary>Installed in ~/.local/bin, but that folder isn't on the PATH.</summary>
+    [ObservableProperty]
+    private bool _cliNeedsPathSetup;
+
+    /// <summary>On Linux and macOS, AI tools run the copy in ~/.local/bin, so it has to be installed first.</summary>
+    public bool McpNeedsInstall => !OperatingSystem.IsWindows() && !IsCliInstalled;
+
+    public IReadOnlyList<McpClientItem> McpClients { get; }
+
+    [ObservableProperty]
+    private McpClientSetup _mcpSetup;
+
+    [ObservableProperty]
     private string _storageSummary = string.Empty;
 
     [ObservableProperty]
@@ -226,6 +279,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public bool IsQuickSave => Section == SettingsSection.QuickSave;
     public bool IsStorage => Section == SettingsSection.Storage;
     public bool IsImportExport => Section == SettingsSection.ImportExport;
+    public bool IsIntegrations => Section == SettingsSection.Integrations;
     public bool IsUpdates => Section == SettingsSection.Updates;
     public bool IsShortcuts => Section == SettingsSection.Shortcuts;
     public bool IsAbout => Section == SettingsSection.About;
@@ -312,6 +366,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         Density = settings.Density;
         CheckForUpdatesAutomatically = settings.CheckForUpdatesAutomatically;
         KeepRunningInTray = settings.KeepRunningInTray;
+        AllowMcp = settings.AllowMcp;
         Hotkey = Platform.Hotkey.Parse(settings.QuickSaveHotkey);
         Appearance.ShowMascot = settings.ShowMascot;
         Appearance.Density = settings.Density;
@@ -381,6 +436,11 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public void Select(SettingsSection section)
     {
+        if (section == SettingsSection.Integrations)
+        {
+            RefreshCommandLineTool();
+        }
+
         Section = section;
         foreach (var item in Sections)
         {
@@ -726,6 +786,98 @@ public sealed partial class SettingsViewModel : ObservableObject
         // Inside an AppImage the process runs from a temporary mount; APPIMAGE is the file the user keeps.
         var path = Environment.GetEnvironmentVariable("APPIMAGE") is { Length: > 0 } appImage ? appImage : Environment.ProcessPath ?? "Prompuff";
         return (path.Contains(' ') ? $"\"{path}\"" : path) + " --quick-save";
+    }
+
+    partial void OnAllowMcpChanged(bool value)
+    {
+        Persist(settings => settings with { AllowMcp = value });
+        if (!_loading)
+        {
+            _logger.LogInformation("MCP access turned {State}", value ? "on" : "off");
+        }
+    }
+
+    /// <summary>Reads whether the command-line tool is installed, which can change outside Prompuff.</summary>
+    public void RefreshCommandLineTool()
+    {
+        IsCliInstalled = _installer.IsInstalled;
+        CliNeedsPathSetup = _installer.NeedsPathSetup;
+        CliStatus = (HasBundledCli, IsCliInstalled, OperatingSystem.IsWindows()) switch
+        {
+            (false, _, _) => "This development build doesn't include it. Installed copies of Prompuff do.",
+            (_, false, true) => "Adds prompuff to your PATH, so any terminal can search, render and save prompts.",
+            (_, false, false) => "Copies prompuff to ~/.local/bin, so any terminal can search, render and save prompts.",
+            (_, true, true) => "On your PATH. Open a new terminal and try prompuff help.",
+            (_, true, false) => "Installed in ~/.local/bin. Try prompuff help in a terminal.",
+        };
+        McpSetup = McpClientSetup.For(McpSetup.Client, _installer.CommandPath);
+    }
+
+    private void SelectMcpClient(McpClient client)
+    {
+        foreach (var item in McpClients ?? [])
+        {
+            item.IsSelected = item.Client == client;
+        }
+
+        McpSetup = McpClientSetup.For(client, _installer.CommandPath);
+    }
+
+    [RelayCommand]
+    private async Task InstallCommandLineTool()
+    {
+        try
+        {
+            _installer.Install();
+        }
+        catch (LibraryException exception)
+        {
+            await _dialogs.ShowErrorAsync("Couldn't install the command-line tool.", exception.Message);
+            return;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            _logger.LogWarning(exception, "Installing the command-line tool failed");
+            await _dialogs.ShowErrorAsync("Couldn't install the command-line tool.", "Prompuff couldn't write it. Your library is safe.", exception.ToString());
+            return;
+        }
+
+        RefreshCommandLineTool();
+        _toasts.Show("Installed.", OperatingSystem.IsWindows() ? "Open a new terminal and try prompuff help." : "Try prompuff help in a terminal.");
+    }
+
+    [RelayCommand]
+    private async Task RemoveCommandLineTool()
+    {
+        try
+        {
+            _installer.Remove();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            _logger.LogWarning(exception, "Removing the command-line tool failed");
+            await _dialogs.ShowErrorAsync("Couldn't remove the command-line tool.", "Prompuff couldn't change it. Your library is safe.", exception.ToString());
+            return;
+        }
+
+        RefreshCommandLineTool();
+        _toasts.Show("Removed.", "The prompuff command is gone. Install it again any time.");
+    }
+
+    /// <summary>Copies the selected tool's setup, and offers to turn MCP on if it's off, since the setup does nothing until then.</summary>
+    [RelayCommand]
+    private async Task CopyMcpSetup()
+    {
+        await _clipboard.SetTextAsync(McpSetup.Snippet);
+        if (!AllowMcp && await _dialogs.ConfirmAsync(
+                "Let AI tools read your library?",
+                $"The {McpSetup.Name} setup is copied. Prompuff only answers AI tools while this is on. They can search, read and fill in your prompts, but never change them.",
+                "Turn on"))
+        {
+            AllowMcp = true;
+        }
+
+        _toasts.Show("Copied.", AllowMcp ? $"Paste it into {McpSetup.Name}." : "Turn on MCP here when you're ready.");
     }
 
     partial void OnCheckForUpdatesAutomaticallyChanged(bool value) =>

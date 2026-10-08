@@ -12,7 +12,13 @@ internal static class Program
     public static int Main(string[] args)
     {
         // Velopack must run first: it handles install, update and uninstall hooks and may exit the process.
-        VelopackApp.Build().Run();
+        var velopack = VelopackApp.Build();
+        if (OperatingSystem.IsWindows())
+        {
+            velopack.OnBeforeUninstallFastCallback(_ => CommandLineInstaller.RemoveFromUserPathOnUninstall());
+        }
+
+        velopack.Run();
 
         // One Prompuff per library. A second launch, such as "Prompuff --quick-save" from a desktop shortcut, hands
         // its request to the copy that's already running and exits.

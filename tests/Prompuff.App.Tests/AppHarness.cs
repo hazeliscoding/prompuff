@@ -57,7 +57,8 @@ internal sealed class AppHarness : IAsyncDisposable
         double height = 800,
         IUpdateService? updates = null,
         IFilePickerService? files = null,
-        FakeGlobalHotkeyService? hotkeys = null)
+        FakeGlobalHotkeyService? hotkeys = null,
+        FakeCommandLineInstaller? installer = null)
     {
         folder ??= Path.Combine(Path.GetTempPath(), "prompuff-ui-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
@@ -71,6 +72,9 @@ internal sealed class AppHarness : IAsyncDisposable
         {
             // Tests never grab real system-wide keys.
             collection.AddSingleton<IGlobalHotkeyService>(hotkeys);
+
+            // Nor touch the real PATH.
+            collection.AddSingleton<ICommandLineInstaller>(installer ?? new FakeCommandLineInstaller());
 
             if (updates is not null)
             {
@@ -181,6 +185,26 @@ internal sealed class FakeGlobalHotkeyService : IGlobalHotkeyService
     public void Press() => Pressed?.Invoke(this, EventArgs.Empty);
 
     public void Dispose()
+    {
+    }
+}
+
+/// <summary>Stands in for putting the CLI on the PATH. Starts as an installed build whose CLI isn't installed yet.</summary>
+internal sealed class FakeCommandLineInstaller : ICommandLineInstaller
+{
+    public string? BundledPath { get; set; } = OperatingSystem.IsWindows()
+        ? @"C:\Users\Puff Lover\AppData\Local\Prompuff.Desktop\current\cli\prompuff.exe"
+        : "/opt/prompuff/cli/prompuff";
+
+    public string CommandPath => OperatingSystem.IsWindows() ? BundledPath ?? "prompuff" : "/home/puff/.local/bin/prompuff";
+    public bool IsInstalled { get; set; }
+    public bool NeedsPathSetup { get; set; }
+
+    public void Install() => IsInstalled = true;
+
+    public void Remove() => IsInstalled = false;
+
+    public void RefreshIfInstalled()
     {
     }
 }
