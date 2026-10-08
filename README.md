@@ -35,21 +35,34 @@ Your prompts stay on your machine. There is no account, no cloud and no telemetr
 
 | Platform | Package |
 |---|---|
-| Windows x64 (10 and 11) | `Prompuff-Setup.exe`, installed per user with automatic updates |
+| Windows x64 (10 and 11) | `Prompuff-Setup.exe`, signed, installed per user with automatic updates |
+| macOS on Apple Silicon | `Prompuff-macOS-arm64.pkg`, or `Prompuff-macOS-arm64.zip` to run the app without installing |
+| macOS on Intel | `Prompuff-macOS-x64.pkg` or `Prompuff-macOS-x64.zip` |
 | Linux x64 (X11, or Wayland through XWayland) | `Prompuff-linux-x64.AppImage` |
+| Linux ARM64 | `Prompuff-linux-arm64.AppImage` |
 
-Both are self-contained, so you don't need to install .NET. macOS (Intel and Apple Silicon) and Linux ARM64 come in v0.3.
+All of them are self-contained, so you don't need to install .NET, and all of them update themselves.
+
+On macOS, Prompuff is checked on GitHub's macOS runners rather than by hand, because the developer has no Mac. If something looks wrong, please [open an issue](https://github.com/hazeliscoding/prompuff/issues). The builds aren't notarized by Apple, so macOS blocks the first launch:
+
+1. Open Prompuff (or the `.pkg`) once and close the warning.
+2. Go to **System Settings › Privacy & Security**, scroll down to Security, and choose **Open Anyway**.
+3. Confirm once more. macOS remembers the choice after that.
+
+macOS 15 removed the old right-click › Open shortcut, so the steps above are the way through.
 
 On Linux:
 
 ```bash
-chmod +x Prompuff-linux-x64.AppImage
+chmod +x Prompuff-linux-x64.AppImage    # or Prompuff-linux-arm64.AppImage
 ./Prompuff-linux-x64.AppImage
 ```
 
 If your distribution doesn't ship FUSE 2, run it with `APPIMAGE_EXTRACT_AND_RUN=1` set.
 
 ## Keyboard shortcuts
+
+On macOS, use ⌘ Cmd wherever the table says Ctrl.
 
 | Keys | Action |
 |---|---|
