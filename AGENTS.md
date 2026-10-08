@@ -19,8 +19,9 @@ These are the working rules for agents in this repo. Prompuff is a local-first d
 
 - Windows and Linux are both first-class. Every feature must work on both, and on macOS once it lands in v0.3.
 - The owner has no Mac. Verify macOS through the CI runners (UI tests and the launch smoke test), and say plainly when something can only be checked by hand. Hands-on Linux checks run in WSLg.
-- All file locations come from `IAppDataPathProvider`. Never write next to the executable, inside the AppImage, or anywhere in the home directory outside the Prompuff data and config folders. The one exception is "Install command-line tool", which the user starts: it copies the CLI to `~/.local/bin` on Linux and macOS, and adds a user PATH entry on Windows.
+- All file locations come from `IAppDataPathProvider`. Never write next to the executable, inside the AppImage, or anywhere in the home directory outside the Prompuff data and config folders. The one exception is "Install command-line tool", which the user starts: on Linux and macOS it links `~/.local/bin/prompuff` to a copy in the data folder, and on Windows it adds a user PATH entry.
 - No registry, Win32 or other OS-specific API outside `Prompuff.App/Platform`, and there only behind an `OperatingSystem.Is…()` check.
+- The CLI keeps SQLite's native library beside it instead of bundling it. A bundled native library gets unpacked into `~/.net`, and `scripts/smoke-cli.sh` fails the build if that happens.
 - The Velopack pack ID stays `Prompuff.Desktop`. Velopack deletes `%LocalAppData%\{packId}` on uninstall, and the data folder is `%LocalAppData%\Prompuff`.
 
 ## Architecture

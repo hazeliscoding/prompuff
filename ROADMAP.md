@@ -105,6 +105,12 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Read-only MCP; the CLI can save.** MCP never changes the library (write tools stay under Later, behind a setting). The CLI's `quick-save` adds a prompt, as Quick save does.
 - **CLI conventions:** plain text by default and `--json` for scripts. A prompt can be named by ID or by title; a title that matches several prompts lists them and exits with code 2. `render` leaves unfilled `{{tokens}}` in place, as the app does, and lists them on stderr. Exit codes are 0 for success, 1 for errors and 2 for not found or ambiguous.
 - **Same library, same rules.** The CLI and the MCP server open the library through `IAppDataPathProvider` (so `PROMPUFF_DATA_DIR` works), migrate it with a backup like the app, refuse a library from a newer version, and never log titles, bodies or values. The app checks `PRAGMA data_version` every two seconds and refreshes when another process has changed the library.
+- **Found while building (2026-10-08):**
+  - The CLI is one trimmed file with SQLite's native library beside it, not inside it. .NET unpacks bundled native libraries into `~/.net` on Linux and macOS, outside Prompuff's folders.
+  - So on Linux and macOS, Install copies the `cli` folder into Prompuff's data folder and links `~/.local/bin/prompuff` to it, instead of copying one file into `~/.local/bin`. On macOS the copy drops the download's quarantine flag, or Terminal refuses to run it. That step can only be checked by hand on a Mac.
+  - Uninstalling on Windows takes the PATH entry back out, through Velopack's uninstall hook.
+  - The app ignores its own writes when it watches `data_version`: whenever it announces a change itself, it takes the current version as the new baseline.
+  - Client setups: `claude mcp add`, `codex mcp add` and `copilot mcp add` each take `-- <command> mcp`, and Claude Desktop takes a JSON `mcpServers` entry. Claude Code and Codex were checked by hand on Windows: each searched a library and rendered a prompt with variables through MCP. Copilot CLI follows GitHub's docs and hasn't been run by hand.
 
 ## v0.1: MVP (tagged 2026-10-07)
 
@@ -249,12 +255,14 @@ The design's Workflows view: prompts that run in order, with a person copying be
 
 Let scripts and coding agents use the vault without opening the app.
 
-- [ ] `prompuff` CLI: `search`, `list`, `get`, `render` with `--var name=value`, and `quick-save` from stdin.
-- [ ] Ship the CLI in every package, and add an "Install command-line tool" button to Settings that puts it on the user's PATH (`~/.local/bin` on Linux and macOS, a user PATH entry on Windows).
-- [ ] `prompuff mcp`: a read-only MCP server over stdio with search, get and render tools, every prompt as a resource, and favorites as MCP prompts with their variables as arguments.
-- [ ] Settings › Integrations: "Let AI tools read my library (MCP)", off by default; while it's off, `prompuff mcp` serves nothing.
-- [ ] "Copy MCP config" in Settings, with a ready-to-paste setup for each client: Claude Code, Claude Desktop, GitHub Copilot CLI and Codex. The README shows the same setups.
-- [ ] The app picks up changes the CLI makes without a restart, using SQLite's `data_version`.
+- [x] `prompuff` CLI: `search`, `list`, `get`, `render` with `--var name=value`, and `quick-save` from stdin.
+- [x] Ship the CLI in every package, and add an "Install command-line tool" button to Settings that puts it on the user's PATH (`~/.local/bin` on Linux and macOS, a user PATH entry on Windows).
+- [x] `prompuff mcp`: a read-only MCP server over stdio with search, get and render tools, every prompt as a resource, and favorites as MCP prompts with their variables as arguments.
+- [x] Settings › Integrations: "Let AI tools read my library (MCP)", off by default; while it's off, `prompuff mcp` serves nothing.
+- [x] "Copy MCP config" in Settings, with a ready-to-paste setup for each client: Claude Code, Claude Desktop, GitHub Copilot CLI and Codex. The README shows the same setups.
+- [x] The app picks up changes the CLI makes without a restart, using SQLite's `data_version`.
+- [x] CI and the release workflow smoke-test the packaged CLI on every platform: quick-save, render, and an MCP session before and after the switch.
+- [ ] Run the Copilot CLI setup by hand, which the owner's machine doesn't have yet.
 
 **Done when:** Claude Code, GitHub Copilot CLI and Codex can each search the vault and render a prompt with variables through MCP, and `prompuff render "Angular Upgrade Planner" --var repo_name=acme` prints the result on all three platforms.
 

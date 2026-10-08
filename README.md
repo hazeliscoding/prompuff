@@ -32,6 +32,7 @@ Your prompts stay on your machine. There is no account, no cloud and no telemetr
 - **Captures** from anywhere: copy a prompt in any app and press **Ctrl+Alt+P** (⌃⌥P on macOS). Quick save opens with your clipboard, Enter stashes it, and you're back where you were. The tray icon does the same, and Prompuff can keep running there when you close the window.
 - **Travels** as plain Markdown with a small metadata block. Export what you're looking at as one `.zip` for another machine or a teammate; importing it skips prompts you already have. Import a whole folder, such as an Obsidian vault, and Prompuff walks its subfolders and leaves `.obsidian` alone.
 - **Forgives**: deleted prompts wait 30 days in Recently deleted, and the library is backed up once a day.
+- **Works from a terminal and AI tools:** the `prompuff` command searches, renders and saves prompts, and its MCP server lets Claude Code, Claude Desktop, Copilot CLI or Codex use your library. You install the command from Settings › Integrations, and the MCP server shares nothing until you turn it on there.
 
 ## Supported platforms
 
@@ -86,6 +87,45 @@ In the library, the arrow keys, Home and End move between prompts, Enter opens o
 
 Wayland doesn't let apps own a global hotkey, so bind a shortcut in your desktop's settings instead. Settings › Quick save shows the exact command, which is the AppImage followed by `--quick-save`. Running Prompuff again always hands off to the copy that's already open.
 
+## Command line and AI tools
+
+**Install** in Settings › Integrations adds `prompuff`, a small command that uses the same library whether or not the app is open:
+
+```bash
+prompuff search angular                 # one prompt per line; #tag works too
+prompuff list --favorites               # or --collection Design, --tag review
+prompuff get "README Cleanup"           # the prompt's text
+prompuff render "Angular Upgrade Planner" --var repo_name=acme --var target_version=22
+git diff | prompuff quick-save --title "Review this diff" --tag review
+```
+
+Name a prompt by its title, a few words only it matches, or its ID. `render` leaves unfilled variables as `{{tokens}}` and lists them on stderr. Add `--json` for scripts. The exit code is 0 on success, 1 for an error, and 2 when no prompt matches or several do; the message lists them with their IDs. The app picks up changes within two seconds.
+
+On Windows, Install adds the command's folder to your user PATH, so open a new terminal afterwards. On Linux and macOS, it puts a copy in Prompuff's data folder, links `~/.local/bin/prompuff` to it, and refreshes the copy after each update. If your shell can't find `prompuff`, add `~/.local/bin` to your PATH.
+
+### MCP
+
+`prompuff mcp` is a read-only [MCP](https://modelcontextprotocol.io) server that talks to one AI tool over stdin and stdout. The tool can search, read and render your prompts, read any prompt as Markdown, and use your favorites as prompts with their variables as arguments: slash commands in Claude Code, and the + menu in Claude Desktop. It can't change or delete anything.
+
+It's off until you turn on **Let AI tools read my library (MCP)** in Settings › Integrations. While it's off, the server starts but shares nothing. That page also has each tool's setup with the full path filled in, ready to copy. With `prompuff` on your PATH, the setups are:
+
+| Tool | Setup |
+|---|---|
+| Claude Code | `claude mcp add --scope user prompuff -- prompuff mcp` |
+| Codex | `codex mcp add prompuff -- prompuff mcp` |
+| GitHub Copilot CLI | `copilot mcp add prompuff -- prompuff mcp` |
+| Claude Desktop | Settings › Developer › Edit Config, add the entry below to `mcpServers`, and restart Claude Desktop |
+
+```json
+{
+  "mcpServers": {
+    "prompuff": { "command": "/full/path/from/settings/prompuff", "args": ["mcp"] }
+  }
+}
+```
+
+Claude Desktop starts outside a terminal and may not see your PATH, so give it the full path that Settings shows.
+
 ## Development
 
 ### Requirements
@@ -124,7 +164,8 @@ PROMPUFF_SCREENSHOTS=./screenshots dotnet test tests/Prompuff.App.Tests
 | `src/Prompuff.Domain` | Entities and pure rules: prompts, versions, collections, tag normalization. No dependencies. |
 | `src/Prompuff.Application` | Interfaces and services: template rendering, versioning, collections, line diff. No UI or database code. |
 | `src/Prompuff.Infrastructure` | SQLite repositories and migrations, FTS5 search, backups, Markdown import and export, data paths, settings, file logging, Velopack updates. |
-| `src/Prompuff.App` | The Avalonia app: views, view models, controls, theme tokens, and platform services for the clipboard, file pickers and launcher. |
+| `src/Prompuff.App` | The Avalonia app: views, view models, controls, theme tokens, and platform services for the clipboard, file pickers, launcher, hotkeys and installing the command. |
+| `src/Prompuff.Cli` | The `prompuff` command and its MCP server. No Avalonia; published as one trimmed file with SQLite's library beside it. |
 | `tests/*` | xUnit tests for each layer, plus headless UI tests for the app. |
 
 ## Local storage
@@ -138,7 +179,9 @@ The library is one SQLite file, `prompuff.db`. Prompuff never writes next to its
 
 ## Packaging
 
-Both platforms publish self-contained and are packed with [Velopack](https://velopack.io). The pack ID is `Prompuff.Desktop`: Velopack installs to `%LocalAppData%\Prompuff.Desktop`, which keeps the app apart from the data folder.
+Every platform publishes self-contained and is packed with [Velopack](https://velopack.io). The pack ID is `Prompuff.Desktop`: Velopack installs to `%LocalAppData%\Prompuff.Desktop`, which keeps the app apart from the data folder.
+
+The `prompuff` command rides along in a `cli` folder beside the app. Publish it into the app's publish folder before packing, for example `dotnet publish src/Prompuff.Cli -c Release -r win-x64 -o artifacts/publish/win-x64/cli`.
 
 Windows (run on Windows):
 
@@ -179,6 +222,7 @@ Prompuff stores prompts locally and does not upload prompt content.
 
 - No account, telemetry, analytics or AI calls.
 - The only network request is the update check against this repository's GitHub Releases. It sends nothing about your library, and you can turn it off in Settings › Updates.
+- The `prompuff` command and its MCP server make no network requests. The MCP server answers only the AI tool that started it, and only while Settings allows it. Prompts it hands over are then up to that tool.
 - Logs record prompt IDs and counts, never titles, bodies, notes or variable values.
 
 ## License
