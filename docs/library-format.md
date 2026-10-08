@@ -1,6 +1,6 @@
 # Library format
 
-Prompuff keeps the whole library in one SQLite 3 database, `prompuff.db`. This page describes the file at schema version 6, which every release from v0.6.0 on writes, and how older files are brought up to date. It's for anyone reading the file with other tools, and for whoever changes it next.
+Prompuff keeps the whole library in one SQLite 3 database, `prompuff.db`. This page describes the file at schema version 7, which every release from v0.9.0 on writes, and how older files are brought up to date. It's for anyone reading the file with other tools, and for whoever changes it next.
 
 ## Where it lives
 
@@ -61,8 +61,9 @@ One row per prompt, holding its current content, which always matches its newest
 | `LastOpenedAt` | `TEXT NULL` | The last time it was opened, for Recent. |
 | `DeletedAt` | `TEXT NULL` | When it moved to Recently deleted. Added in schema 2. |
 | `ParentPromptId` | `TEXT NULL`, references `Prompts (Id) ON DELETE SET NULL` | The prompt it was duplicated from. Added in schema 5. |
+| `TagNames` | `TEXT NULL` | The prompt's tag names in order, joined by U+001F, so listing prompts needs no tag lookups. Triggers on `PromptTags` keep it current; don't write it yourself. Added in schema 7. |
 
-Indexes: `IX_Prompts_CollectionId`, `IX_Prompts_UpdatedAt`, `IX_Prompts_DeletedAt` and `IX_Prompts_ParentPromptId`, one column each.
+Indexes: `IX_Prompts_CollectionId`, `IX_Prompts_UpdatedAt` and `IX_Prompts_ParentPromptId`, one column each, and `IX_Prompts_Summary` on `(DeletedAt, Id, UpdatedAt, Title, Description, IsFavorite, Rating, CollectionId, CreatedAt, LastOpenedAt, TagNames)`, which holds everything a library card shows, so a list never reads the bodies. Schema 7 replaced `IX_Prompts_DeletedAt` with it.
 
 ### PromptVersions
 
@@ -87,7 +88,7 @@ Indexes: `IX_Prompts_CollectionId`, `IX_Prompts_UpdatedAt`, `IX_Prompts_DeletedA
 
 `Tags` has `Id TEXT PRIMARY KEY` and `Name TEXT NOT NULL UNIQUE COLLATE NOCASE`. Names are normalized before they're stored: trimmed, lowercased, without a leading `#`, with whitespace and commas inside turned into `-`, and at most 40 characters. A tag that no prompt uses is deleted. Prompts in Recently deleted still count.
 
-`PromptTags` links them: `PromptId` and `TagId`, each `TEXT NOT NULL` and `ON DELETE CASCADE`, with `PRIMARY KEY (PromptId, TagId)`, and `Position INTEGER NOT NULL DEFAULT 0`, the order the tags were added in, from 0. Index: `IX_PromptTags_TagId`.
+`PromptTags` links them: `PromptId` and `TagId`, each `TEXT NOT NULL` and `ON DELETE CASCADE`, with `PRIMARY KEY (PromptId, TagId)`, and `Position INTEGER NOT NULL DEFAULT 0`, the order the tags were added in, from 0. Index: `IX_PromptTags_TagId`. The triggers `PromptTags_NamesInsert` and `PromptTags_NamesDelete` keep `Prompts.TagNames` in step.
 
 ### RenderValues
 
@@ -115,8 +116,8 @@ CREATE VIRTUAL TABLE PromptSearch USING fts5(
 ```
 
 - `Tags` holds the prompt's tag names, separated by spaces. The `PromptSearch_data`, `_idx`, `_content`, `_docsize` and `_config` tables belong to FTS5.
-- Rows are keyed by `PromptId` rather than rowid, because `VACUUM` can renumber rowids.
-- Five triggers keep it current, so anything that writes to `Prompts` or `PromptTags` updates it: `Prompts_SearchInsert`, `Prompts_SearchUpdate` (on title, description, body or notes), `Prompts_SearchDelete`, `PromptTags_SearchInsert` and `PromptTags_SearchDelete`.
+- `PromptSearchRows` (added in schema 7) maps each prompt to its index row: `SearchRowId INTEGER PRIMARY KEY` and `PromptId TEXT NOT NULL UNIQUE`. The triggers and search reach a prompt's row by rowid through it, instead of scanning the index for a `PromptId`. FTS5 keeps its rowids in `INTEGER PRIMARY KEY` columns, which `VACUUM` leaves alone.
+- Five triggers keep the index current, so anything that writes to `Prompts` or `PromptTags` updates it: `Prompts_SearchInsert`, `Prompts_SearchUpdate` (only when the title, description, body or notes actually change), `Prompts_SearchDelete`, `PromptTags_SearchInsert` and `PromptTags_SearchDelete`.
 - The tokenizer ignores case and accents, so "cafe" finds "Café". Search makes each word a quoted prefix phrase and ranks with `bm25(PromptSearch, 0.0, 10.0, 4.0, 1.0, 2.0, 6.0)`, which favors the title, then tags, then the description. A `#tag` word must match a tag exactly, and a word with no letters or digits, such as an emoji, is matched as written with `LIKE`.
 
 ## Schema versions and migrations
@@ -140,8 +141,9 @@ The migrations are in `src/Prompuff.Infrastructure/Persistence/Migrations.cs`. A
 | 4 | Remembered values: `RenderValues` | v0.2.0 |
 | 5 | Lineage: `Prompts.ParentPromptId` | v0.4.0 |
 | 6 | Workflows: `Workflows`, `WorkflowSteps` and `WorkflowValues` | v0.6.0 |
+| 7 | Large libraries: `PromptSearchRows`, `Prompts.TagNames` and `IX_Prompts_Summary`, new search triggers, and a repair of any search rows that drifted from the prompts | v0.9.0 |
 
-So a library left by a release is at one of four schemas: 1 (v0.1.0 to v0.1.2), 4 (v0.2.0 to v0.3.0), 5 (v0.4.0 to v0.5.0) or 6 (v0.6.0 on).
+So a library left by a release is at one of five schemas: 1 (v0.1.0 to v0.1.2), 4 (v0.2.0 to v0.3.0), 5 (v0.4.0 to v0.5.0), 6 (v0.6.0 to v0.8.0) or 7 (v0.9.0 on).
 
 ## What creates a version
 
@@ -168,17 +170,17 @@ The 1.0 promise is format stability:
 
 ## Test fixtures
 
-`tests/Prompuff.Infrastructure.Tests/Fixtures/` holds one library for each released schema: `schema-1.db`, `schema-4.db`, `schema-5.db` and `schema-6.db`. Each was made by running the migrations up to that version and no further, then filling the file with raw SQL in that schema: prompts with Unicode titles and `{{variables}}`, several versions each, tags, collections, favorites and ratings, and, where the schema has them, a prompt in Recently deleted, remembered values, a duplicate with lineage, and workflows with steps and values. Each uses a rollback journal, so it's one file.
+`tests/Prompuff.Infrastructure.Tests/Fixtures/` holds one library for each released schema: `schema-1.db`, `schema-4.db`, `schema-5.db`, `schema-6.db` and `schema-7.db`. Each was made by running the migrations up to that version and no further, then filling the file with raw SQL in that schema: prompts with Unicode titles and `{{variables}}`, several versions each, tags, collections, favorites and ratings, and, where the schema has them, a prompt in Recently deleted, remembered values, a duplicate with lineage, and workflows with steps and values. Each uses a rollback journal, so it's one file.
 
 `LibraryFixtureTests` copies each fixture to a temporary folder, opens it with `SqliteDatabase.InitializeAsync` as the app does, and checks the schema version, the backup, and every piece of data through the real repositories and services, search included. It also checks that today's migrations up to N still build exactly the schema in `schema-N.db`, which catches an edited migration, and that a library from a newer version is refused.
 
 The normal test run only reads the fixtures. `SchemaFixtures.cs` says what each one holds, and writes them. When a new schema version ships:
 
 1. Add it to `SchemaFixtures.ReleasedVersions`, and add whatever its migration makes possible to `SchemaFixtures.Library`, only for that version and later.
-2. Write its fixture. In PowerShell, set `$env:PROMPUFF_WRITE_FIXTURES = "7"` instead, and remove it afterwards.
+2. Write its fixture. In PowerShell, set `$env:PROMPUFF_WRITE_FIXTURES = "8"` instead, and remove it afterwards.
 
    ```bash
-   PROMPUFF_WRITE_FIXTURES=7 dotnet test tests/Prompuff.Infrastructure.Tests --filter "FullyQualifiedName~Rewrite_fixtures"
+   PROMPUFF_WRITE_FIXTURES=8 dotnet test tests/Prompuff.Infrastructure.Tests --filter "FullyQualifiedName~Rewrite_fixtures"
    ```
 
 3. Commit the new `schema-7.db` with the migration.
