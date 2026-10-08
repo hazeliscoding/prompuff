@@ -8,6 +8,7 @@ using Prompuff.Application.DTOs;
 using Prompuff.Application.Interfaces;
 using Prompuff.Application.Services;
 using Prompuff.Application.Settings;
+using Prompuff.Domain.ValueObjects;
 
 namespace Prompuff.App.ViewModels;
 
@@ -17,6 +18,15 @@ public sealed record TagChipItem(string Name, string Tone)
 }
 
 public sealed record SortOption(string Label, PromptSort Sort);
+
+/// <summary>An entry in a menu built at runtime, such as a collection to move prompts to.</summary>
+public sealed partial class MenuActionViewModel(string label, Func<Task> run)
+{
+    public string Label { get; } = label;
+
+    [RelayCommand]
+    private Task Run() => run();
+}
 
 public sealed partial class PromptCardViewModel : ObservableObject
 {
@@ -69,6 +79,10 @@ public sealed partial class PromptCardViewModel : ObservableObject
     [ObservableProperty]
     private bool _isCurrent;
 
+    /// <summary>Picked for a bulk action: tag, move, export or delete.</summary>
+    [ObservableProperty]
+    private bool _isSelected;
+
     [RelayCommand]
     private Task Open() => _owner.OpenAsync(this);
 
@@ -103,6 +117,8 @@ public sealed partial class LibraryViewModel : ObservableObject
     private PromptQuery? _lastQuery;
     private string _typeAhead = string.Empty;
     private DateTimeOffset _lastTypedAt;
+    private readonly HashSet<Guid> _selectedIds = [];
+    private Guid? _anchorId;
 
     /// <summary>How long after the last key type-ahead starts a new word.</summary>
     public static readonly TimeSpan TypeAheadReset = TimeSpan.FromSeconds(1);
@@ -146,6 +162,12 @@ public sealed partial class LibraryViewModel : ObservableObject
     public AppearanceState Appearance { get; }
     public ObservableCollection<PromptCardViewModel> Items { get; } = [];
 
+    /// <summary>"Add tags…", then one "Remove" entry for each tag on the selected prompts.</summary>
+    public ObservableCollection<MenuActionViewModel> TagActions { get; } = [];
+
+    /// <summary>Every collection the selected prompts can move to, then "New collection…".</summary>
+    public ObservableCollection<MenuActionViewModel> MoveActions { get; } = [];
+
     public IReadOnlyList<SortOption> SortOptions { get; } =
     [
         new("Last edited", PromptSort.LastEdited),
@@ -184,6 +206,17 @@ public sealed partial class LibraryViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isLibraryEmpty;
+
+    /// <summary>Selection mode: clicking a card picks it instead of opening it, and the header offers bulk actions.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNotSelecting))]
+    private bool _isSelecting;
+
+    public bool IsNotSelecting => !IsSelecting;
+    public int SelectedCount => _selectedIds.Count;
+    public bool HasSelection => SelectedCount > 0;
+    public string SelectionLabel => HasSelection ? $"{Format.Count(SelectedCount, "prompt")} selected" : "Pick some prompts";
+    public bool CanSelect => Items.Count > 0;
 
     /// <summary>The card the arrow keys are on. It follows the prompt across refreshes, and focus follows it in the view.</summary>
     public PromptCardViewModel? CurrentItem { get; private set; }
@@ -268,6 +301,16 @@ public sealed partial class LibraryViewModel : ObservableObject
         CurrentItem = null;
         SetCurrent(current);
 
+        // The selection keeps only prompts still on screen, so a bulk action never touches one you can't see.
+        _selectedIds.IntersectWith(Items.Select(item => item.Id));
+        foreach (var item in Items)
+        {
+            item.IsSelected = _selectedIds.Contains(item.Id);
+        }
+
+        RebuildMoveActions(collections.Values);
+        OnSelectionChanged();
+
         Title = Filter.Kind switch
         {
             PromptFilterKind.Favorites => "Favorites",
@@ -296,6 +339,7 @@ public sealed partial class LibraryViewModel : ObservableObject
         };
 
         OnPropertyChanged(nameof(HasFilter));
+        OnPropertyChanged(nameof(CanSelect));
         OnPropertyChanged(nameof(CanSort));
         OnPropertyChanged(nameof(IsDeletedView));
         OnPropertyChanged(nameof(CanEmpty));
@@ -306,6 +350,12 @@ public sealed partial class LibraryViewModel : ObservableObject
     public Task OpenAsync(PromptCardViewModel card)
     {
         SetCurrent(card);
+        if (IsSelecting)
+        {
+            ToggleSelection(card);
+            return Task.CompletedTask;
+        }
+
         if (card.IsDeleted)
         {
             _toasts.Show("Restore it first to open it.", card.Title, isHappy: false);
@@ -341,8 +391,11 @@ public sealed partial class LibraryViewModel : ObservableObject
         }
     }
 
-    /// <summary>Moves the cursor by <paramref name="delta"/> cards, stopping at either end. With no cursor yet, starts at the first card.</summary>
-    public void MoveCurrent(int delta)
+    /// <summary>
+    /// Moves the cursor by <paramref name="delta"/> cards, stopping at either end. With no cursor yet, starts at the
+    /// first card. With <paramref name="extend"/> (Shift), the cards passed over join the selection.
+    /// </summary>
+    public void MoveCurrent(int delta, bool extend = false)
     {
         if (Items.Count == 0)
         {
@@ -350,15 +403,98 @@ public sealed partial class LibraryViewModel : ObservableObject
         }
 
         var index = CurrentItem is { } current ? Items.IndexOf(current) : -1;
-        SetCurrent(Items[index < 0 ? 0 : Math.Clamp(index + delta, 0, Items.Count - 1)], focus: true);
+        MoveCurrentTo(Items[index < 0 ? 0 : Math.Clamp(index + delta, 0, Items.Count - 1)], extend);
     }
 
-    public void MoveCurrentToEnd(bool last)
+    public void MoveCurrentToEnd(bool last, bool extend = false)
     {
         if (Items.Count > 0)
         {
-            SetCurrent(last ? Items[^1] : Items[0], focus: true);
+            MoveCurrentTo(last ? Items[^1] : Items[0], extend);
         }
+    }
+
+    private void MoveCurrentTo(PromptCardViewModel target, bool extend)
+    {
+        var from = CurrentItem;
+        SetCurrent(target, focus: true);
+        if (extend)
+        {
+            _anchorId ??= from?.Id ?? target.Id;
+            SelectRange(target);
+        }
+    }
+
+    /// <summary>Ctrl or Cmd and click, or a click in selection mode: picks or unpicks one card.</summary>
+    public void ToggleSelection(PromptCardViewModel card)
+    {
+        IsSelecting = true;
+        card.IsSelected = !card.IsSelected;
+        if (card.IsSelected)
+        {
+            _selectedIds.Add(card.Id);
+        }
+        else
+        {
+            _selectedIds.Remove(card.Id);
+        }
+
+        _anchorId = card.Id;
+        SetCurrent(card);
+        OnSelectionChanged();
+    }
+
+    /// <summary>Shift and click: picks every card from the last one picked to this one.</summary>
+    public void SelectRange(PromptCardViewModel card)
+    {
+        IsSelecting = true;
+        var end = Items.IndexOf(card);
+        var start = Items.FirstOrDefault(item => item.Id == _anchorId) is { } anchor ? Items.IndexOf(anchor) : end;
+        for (var i = Math.Min(start, end); i <= Math.Max(start, end); i++)
+        {
+            Items[i].IsSelected = true;
+            _selectedIds.Add(Items[i].Id);
+        }
+
+        _anchorId ??= card.Id;
+        SetCurrent(card);
+        OnSelectionChanged();
+    }
+
+    [RelayCommand]
+    public void SelectAll()
+    {
+        if (Items.Count == 0)
+        {
+            return;
+        }
+
+        IsSelecting = true;
+        foreach (var item in Items)
+        {
+            item.IsSelected = true;
+            _selectedIds.Add(item.Id);
+        }
+
+        OnSelectionChanged();
+    }
+
+    [RelayCommand]
+    private void StartSelecting() => IsSelecting = true;
+
+    /// <summary>Leaves selection mode and unpicks everything.</summary>
+    [RelayCommand]
+    public void ClearSelection()
+    {
+        foreach (var item in Items)
+        {
+            item.IsSelected = false;
+        }
+
+        _selectedIds.Clear();
+        _anchorId = null;
+        IsSelecting = false;
+        OnSelectionChanged();
     }
 
     /// <summary>
@@ -429,7 +565,10 @@ public sealed partial class LibraryViewModel : ObservableObject
         }
     }
 
-    public Task DeleteCurrentAsync() => CurrentItem is { IsDeleted: false } card ? DeleteAsync(card) : Task.CompletedTask;
+    public Task DeleteCurrentAsync() =>
+        HasSelection ? DeleteSelectedAsync()
+        : CurrentItem is { IsDeleted: false } card ? DeleteAsync(card)
+        : Task.CompletedTask;
 
     /// <summary>Moves the prompt to Recently deleted after asking, and keeps the cursor where the card was.</summary>
     public async Task DeleteAsync(PromptCardViewModel card)
@@ -518,6 +657,202 @@ public sealed partial class LibraryViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task DeleteSelectedAsync()
+    {
+        var ids = SelectedIds();
+        if (ids.Count == 0 || IsDeletedView)
+        {
+            return;
+        }
+
+        if (!await _dialogs.ConfirmAsync(
+                $"Delete {Format.Count(ids.Count, "prompt")}?",
+                ids.Count == 1
+                    ? "It moves to Recently deleted, and you can restore it from there for 30 days."
+                    : "They move to Recently deleted, and you can restore them from there for 30 days.",
+                "Delete",
+                isDanger: true))
+        {
+            return;
+        }
+
+        var done = await RunBulkAsync("Couldn't delete those prompts.", ids, id => _prompts.DeleteAsync(id));
+        if (done > 0)
+        {
+            ClearSelection();
+            _toasts.Show("Moved to Recently deleted.", Format.Count(done, "prompt"), isHappy: false);
+            await RefreshAsync();
+        }
+    }
+
+    [RelayCommand]
+    private async Task RestoreSelected()
+    {
+        var done = await RunBulkAsync("Couldn't restore those prompts.", SelectedIds(), id => _prompts.RestoreDeletedAsync(id));
+        if (done > 0)
+        {
+            ClearSelection();
+            _toasts.Show("Restored.", Format.Count(done, "prompt") + " back in your library.");
+            await RefreshAsync();
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExportSelected()
+    {
+        var ids = SelectedIds();
+        if (ids.Count == 0)
+        {
+            return;
+        }
+
+        var path = await _files.PickArchiveExportFileAsync(Format.ArchiveName(_transfer, "selection", _time.GetUtcNow()));
+        if (path is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var result = await _transfer.ExportArchiveAsync(ids, path);
+            _toasts.Show("Exported.", $"{Format.Count(result.ExportedCount, "prompt")} in {Path.GetFileName(path)}.");
+        }
+        catch (LibraryException exception)
+        {
+            await _dialogs.ShowErrorAsync("Couldn't export.", exception.Message, exception.InnerException?.Message);
+        }
+    }
+
+    private async Task AddTagsToSelectedAsync()
+    {
+        var ids = SelectedIds();
+        var text = await _dialogs.AskTextAsync(
+            $"Tag {Format.Count(ids.Count, "prompt")}",
+            "Add one or more tags, separated by commas.",
+            "Add tags",
+            placeholder: "review, angular");
+        var tags = TagName.NormalizeAll((text ?? string.Empty).Split(','));
+        if (ids.Count == 0 || tags.Count == 0)
+        {
+            return;
+        }
+
+        var done = await RunBulkAsync("Couldn't tag those prompts.", ids, id => _prompts.AddTagsAsync(id, tags));
+        if (done > 0)
+        {
+            _toasts.Show("Tagged.", $"{string.Join(", ", tags.Select(tag => "#" + tag))} on {Format.Count(done, "prompt")}.");
+            await RefreshAsync();
+        }
+    }
+
+    private async Task RemoveTagFromSelectedAsync(string tag)
+    {
+        var ids = Items.Where(item => item.IsSelected && item.Tags.Any(chip => chip.Name == tag)).Select(item => item.Id).ToList();
+        var done = await RunBulkAsync("Couldn't remove that tag.", ids, id => _prompts.RemoveTagAsync(id, tag));
+        if (done > 0)
+        {
+            _toasts.Show("Tag removed.", $"#{tag} from {Format.Count(done, "prompt")}.", isHappy: false);
+            await RefreshAsync();
+        }
+    }
+
+    private async Task MoveSelectedAsync(Guid? collectionId, string name)
+    {
+        var done = await RunBulkAsync("Couldn't move those prompts.", SelectedIds(), id => _prompts.SetCollectionAsync(id, collectionId));
+        if (done > 0)
+        {
+            ClearSelection();
+            _toasts.Show("Moved.", $"{Format.Count(done, "prompt")} to {name}.");
+            await RefreshAsync();
+        }
+    }
+
+    private async Task MoveSelectedToNewCollectionAsync()
+    {
+        var name = await _dialogs.AskTextAsync(
+            "New collection",
+            $"Give {(SelectedCount == 1 ? "this prompt" : $"these {SelectedCount} prompts")} a place to live.",
+            "Create and move",
+            placeholder: "Coding, Design, Writing…");
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        try
+        {
+            var collection = await _collections.CreateAsync(name);
+            await MoveSelectedAsync(collection.Id, collection.Name);
+        }
+        catch (LibraryException exception)
+        {
+            await _dialogs.ShowErrorAsync("Couldn't create that collection.", exception.Message);
+        }
+    }
+
+    private List<Guid> SelectedIds() => Items.Where(item => item.IsSelected).Select(item => item.Id).ToList();
+
+    /// <summary>Runs one change per prompt. If one fails, the ones before it stay done and the dialog says how many.</summary>
+    private async Task<int> RunBulkAsync(string failureTitle, IReadOnlyList<Guid> ids, Func<Guid, Task> change)
+    {
+        var done = 0;
+        try
+        {
+            foreach (var id in ids)
+            {
+                await change(id);
+                done++;
+            }
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "A bulk change stopped after {Done} of {Count} prompts", done, ids.Count);
+            await _dialogs.ShowErrorAsync(
+                failureTitle,
+                done == 0
+                    ? "Nothing changed, and your library is safe."
+                    : $"{Format.Count(done, "prompt")} changed before it stopped. The rest are as they were, and your library is safe.",
+                exception.Message);
+        }
+        finally
+        {
+            if (done > 0)
+            {
+                _notifier.Notify();
+            }
+        }
+
+        return done;
+    }
+
+    private void OnSelectionChanged()
+    {
+        OnPropertyChanged(nameof(SelectedCount));
+        OnPropertyChanged(nameof(HasSelection));
+        OnPropertyChanged(nameof(SelectionLabel));
+
+        TagActions.Clear();
+        TagActions.Add(new MenuActionViewModel("Add tags…", AddTagsToSelectedAsync));
+        var tags = Items.Where(item => item.IsSelected).SelectMany(item => item.Tags).Select(chip => chip.Name).Distinct().Order(StringComparer.Ordinal);
+        foreach (var tag in tags)
+        {
+            TagActions.Add(new MenuActionViewModel($"Remove #{tag}", () => RemoveTagFromSelectedAsync(tag)));
+        }
+    }
+
+    private void RebuildMoveActions(IEnumerable<CollectionSummary> collections)
+    {
+        MoveActions.Clear();
+        MoveActions.Add(new MenuActionViewModel("Uncategorized", () => MoveSelectedAsync(null, "Uncategorized")));
+        foreach (var collection in collections.OrderBy(collection => collection.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            MoveActions.Add(new MenuActionViewModel(collection.Name, () => MoveSelectedAsync(collection.Id, collection.Name)));
+        }
+
+        MoveActions.Add(new MenuActionViewModel("New collection…", MoveSelectedToNewCollectionAsync));
+    }
+
+    [RelayCommand]
     private async Task EmptyRecentlyDeleted()
     {
         if (!await _dialogs.ConfirmAsync(
@@ -553,6 +888,8 @@ public sealed partial class LibraryViewModel : ObservableObject
 
     [RelayCommand]
     private Task NewPrompt() => _navigator.NewPromptAsync(Filter.Kind == PromptFilterKind.Collection ? Filter.CollectionId : null);
+
+    partial void OnFilterChanged(LibraryFilter value) => ClearSelection();
 
     partial void OnSearchTextChanged(string value) => _pendingSearch = RefreshAfterTypingAsync();
 

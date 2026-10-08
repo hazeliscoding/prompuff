@@ -57,6 +57,8 @@ public static class Shortcuts
         ("Open the prompt", OperatingSystem.IsMacOS() ? "↩" : "Enter"),
         ("Delete the prompt", OperatingSystem.IsMacOS() ? "⌘⌫" : "Delete"),
         ("Jump to a title", "Type its first letters"),
+        ("Pick several prompts", OperatingSystem.IsMacOS() ? "⌘-click, ⇧-click, ⇧ with arrows, or ⌘A" : "Ctrl+click, Shift+click, Shift with arrows, or Ctrl+A"),
+        ("Stop picking", "Esc"),
     ];
 
     /// <summary>Shortcuts as shown in Settings: one row per action, then the library keys.</summary>

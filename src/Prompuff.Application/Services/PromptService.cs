@@ -140,6 +140,10 @@ public sealed class PromptService(IPromptRepository prompts, TimeProvider time, 
     public Task AddTagAsync(Guid id, string tag, CancellationToken cancellationToken = default) =>
         ModifyAsync(id, prompt => prompt.SetTags(prompt.Tags.Append(tag)), cancellationToken);
 
+    /// <summary>Adds tags after the ones the prompt already has. Tags it already has stay where they are.</summary>
+    public Task AddTagsAsync(Guid id, IEnumerable<string> tags, CancellationToken cancellationToken = default) =>
+        ModifyAsync(id, prompt => prompt.SetTags(prompt.Tags.Concat(tags)), cancellationToken);
+
     public Task RemoveTagAsync(Guid id, string tag, CancellationToken cancellationToken = default)
     {
         var normalized = TagName.Normalize(tag);

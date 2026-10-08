@@ -24,6 +24,21 @@
     <Style Selector="Button.row">
       <Setter Property="Height" Value="46" />
     </Style>
+    <Style Selector="Border.check">
+      <Setter Property="Width" Value="15" />
+      <Setter Property="Height" Value="15" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="BorderThickness" Value="1.5" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Border3Brush}" />
+      <Setter Property="Background" Value="{DynamicResource Bg1Brush}" />
+    </Style>
+    <Style Selector="Border.check.checked">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    <Style Selector="Border.check c|Icon">
+      <Setter Property="Foreground" Value="{DynamicResource TextInverseBrush}" />
+    </Style>
 
     <Style Selector="DockPanel.compact c|AdaptiveGrid">
       <Setter Property="MinItemWidth" Value="240" />
@@ -80,7 +95,73 @@
   <DockPanel Classes.compact="{Binding Appearance.IsCompact}" Classes.dense="{Binding Appearance.IsDense}">
     <!-- Header -->
     <Border DockPanel.Dock="Top" Height="56" Padding="20,0" Classes="hairline-bottom">
-      <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="12">
+      <Panel>
+      <!-- Selection mode: bulk actions for the picked prompts -->
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" IsVisible="{Binding IsSelecting}">
+        <StackPanel VerticalAlignment="Center" Spacing="1">
+          <TextBlock Classes="section-title" Text="{Binding SelectionLabel}" />
+          <TextBlock Classes="compact faint" Text="Click prompts to pick them. Shift picks a range, Esc stops." />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <Button Classes="ghost sm" Command="{Binding SelectAllCommand}" Content="Select all" />
+          <Button Classes="sm" IsEnabled="{Binding HasSelection}" IsVisible="{Binding !IsDeletedView}" ToolTip.Tip="Add or remove tags">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <c:Icon Kind="Tag" Size="12" />
+              <TextBlock Text="Tag" />
+              <c:Icon Kind="ChevronDown" Size="11" />
+            </StackPanel>
+            <Button.Flyout>
+              <MenuFlyout Placement="BottomEdgeAlignedRight" ItemsSource="{Binding TagActions}">
+                <MenuFlyout.ItemContainerTheme>
+                  <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:MenuActionViewModel">
+                    <Setter Property="Header" Value="{Binding Label}" />
+                    <Setter Property="Command" Value="{Binding RunCommand}" />
+                  </ControlTheme>
+                </MenuFlyout.ItemContainerTheme>
+              </MenuFlyout>
+            </Button.Flyout>
+          </Button>
+          <Button Classes="sm" IsEnabled="{Binding HasSelection}" IsVisible="{Binding !IsDeletedView}" ToolTip.Tip="Move to a collection">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <c:Icon Kind="Folder" Size="12" />
+              <TextBlock Text="Move to" />
+              <c:Icon Kind="ChevronDown" Size="11" />
+            </StackPanel>
+            <Button.Flyout>
+              <MenuFlyout Placement="BottomEdgeAlignedRight" ItemsSource="{Binding MoveActions}">
+                <MenuFlyout.ItemContainerTheme>
+                  <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:MenuActionViewModel">
+                    <Setter Property="Header" Value="{Binding Label}" />
+                    <Setter Property="Command" Value="{Binding RunCommand}" />
+                  </ControlTheme>
+                </MenuFlyout.ItemContainerTheme>
+              </MenuFlyout>
+            </Button.Flyout>
+          </Button>
+          <Button Classes="sm" IsEnabled="{Binding HasSelection}" IsVisible="{Binding !IsDeletedView}" Command="{Binding ExportSelectedCommand}"
+                  ToolTip.Tip="Save the picked prompts as one .zip">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <c:Icon Kind="Upload" Size="12" />
+              <TextBlock Text="Export" />
+            </StackPanel>
+          </Button>
+          <Button Classes="danger sm" IsEnabled="{Binding HasSelection}" IsVisible="{Binding !IsDeletedView}" Command="{Binding DeleteSelectedCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <c:Icon Kind="Trash2" Size="12" />
+              <TextBlock Text="Delete" />
+            </StackPanel>
+          </Button>
+          <Button Classes="sm" IsEnabled="{Binding HasSelection}" IsVisible="{Binding IsDeletedView}" Command="{Binding RestoreSelectedCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <c:Icon Kind="Undo2" Size="12" />
+              <TextBlock Text="Restore" />
+            </StackPanel>
+          </Button>
+          <Button Classes="primary sm" Command="{Binding ClearSelectionCommand}" Content="Done" Margin="6,0,0,0" />
+        </StackPanel>
+      </Grid>
+
+      <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" IsVisible="{Binding IsNotSelecting}">
         <StackPanel VerticalAlignment="Center" Spacing="1">
           <TextBlock Classes="section-title" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
           <TextBlock Classes="compact faint" Text="{Binding Subtitle}" />
@@ -91,20 +172,27 @@
             <TextBlock Text="Clear filter" />
           </StackPanel>
         </Button>
-        <Button Grid.Column="2" Classes="ghost sm" IsVisible="{Binding CanExport}" Command="{Binding ExportCommand}" VerticalAlignment="Center"
+        <Button Grid.Column="2" Classes="ghost sm" IsVisible="{Binding CanSelect}" Command="{Binding StartSelectingCommand}" VerticalAlignment="Center"
+                ToolTip.Tip="Pick several prompts to tag, move, export or delete">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <c:Icon Kind="Check" Size="12" />
+            <TextBlock Text="Select" />
+          </StackPanel>
+        </Button>
+        <Button Grid.Column="3" Classes="ghost sm" IsVisible="{Binding CanExport}" Command="{Binding ExportCommand}" VerticalAlignment="Center"
                 ToolTip.Tip="Save these prompts as one .zip to share">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <c:Icon Kind="Upload" Size="12" />
             <TextBlock Text="Export" />
           </StackPanel>
         </Button>
-        <Button Grid.Column="3" Classes="danger sm" VerticalAlignment="Center" IsVisible="{Binding CanEmpty}" Command="{Binding EmptyRecentlyDeletedCommand}">
+        <Button Grid.Column="4" Classes="danger sm" VerticalAlignment="Center" IsVisible="{Binding CanEmpty}" Command="{Binding EmptyRecentlyDeletedCommand}">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <c:Icon Kind="Trash2" Size="12" />
             <TextBlock Text="Empty" />
           </StackPanel>
         </Button>
-        <ComboBox Grid.Column="3" Width="160" VerticalAlignment="Center" IsVisible="{Binding CanSort}"
+        <ComboBox Grid.Column="4" Width="160" VerticalAlignment="Center" IsVisible="{Binding CanSort}"
                   ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSort}" ToolTip.Tip="Sort">
           <ComboBox.ItemTemplate>
             <DataTemplate x:DataType="vm:SortOption">
@@ -115,7 +203,7 @@
             </DataTemplate>
           </ComboBox.ItemTemplate>
         </ComboBox>
-        <Border Grid.Column="4" Classes="segmented" VerticalAlignment="Center">
+        <Border Grid.Column="5" Classes="segmented" VerticalAlignment="Center">
           <StackPanel Orientation="Horizontal" Spacing="1">
             <RadioButton Theme="{StaticResource SegmentButton}" GroupName="layout" IsChecked="{Binding IsCardsLayout}" ToolTip.Tip="Cards">
               <StackPanel Orientation="Horizontal" Spacing="5">
@@ -132,6 +220,7 @@
           </StackPanel>
         </Border>
       </Grid>
+      </Panel>
     </Border>
 
     <Panel>
@@ -167,10 +256,17 @@
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:PromptCardViewModel">
-              <Button Classes="card" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus">
+              <Button Classes="card" Classes.selected="{Binding IsSelected}" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus">
                 <StackPanel Classes="card-stack">
                   <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                    <c:ToneDot Tone="{Binding CollectionTone}" VerticalAlignment="Top" Margin="0,6,0,0" ToolTip.Tip="{Binding CollectionName}" />
+                    <Panel VerticalAlignment="Top" Margin="0,3,0,0">
+                      <c:ToneDot Tone="{Binding CollectionTone}" Margin="0,3,0,0" ToolTip.Tip="{Binding CollectionName}" VerticalAlignment="Top"
+                                 IsVisible="{Binding $parent[UserControl].((vm:LibraryViewModel)DataContext).IsNotSelecting}" />
+                      <Border Classes="check" Classes.checked="{Binding IsSelected}"
+                              IsVisible="{Binding $parent[UserControl].((vm:LibraryViewModel)DataContext).IsSelecting}">
+                        <c:Icon Kind="Check" Size="10" StrokeWidth="3" IsVisible="{Binding IsSelected}" />
+                      </Border>
+                    </Panel>
                     <TextBlock Grid.Column="1" Classes="card-title" Text="{Binding Title}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
                     <Button Grid.Column="2" Classes="ghost icon sm" Classes.active="{Binding IsFavorite}" Margin="0,-3,-4,0" VerticalAlignment="Top"
                             Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="Favorite" IsVisible="{Binding !IsDeleted}">
@@ -229,9 +325,14 @@
             <ItemsControl x:Name="RowsList" ItemsSource="{Binding Items}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:PromptCardViewModel">
-                  <Button Classes="row" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus">
+                  <Button Classes="row" Classes.selected="{Binding IsSelected}" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus">
                     <Grid ColumnDefinitions="28,2*,1.6*,120,100,36" ColumnSpacing="12">
-                      <c:ToneDot Tone="{Binding CollectionTone}" HorizontalAlignment="Center" ToolTip.Tip="{Binding CollectionName}" />
+                      <c:ToneDot Tone="{Binding CollectionTone}" HorizontalAlignment="Center" ToolTip.Tip="{Binding CollectionName}"
+                                 IsVisible="{Binding $parent[UserControl].((vm:LibraryViewModel)DataContext).IsNotSelecting}" />
+                      <Border Classes="check" Classes.checked="{Binding IsSelected}" HorizontalAlignment="Center"
+                              IsVisible="{Binding $parent[UserControl].((vm:LibraryViewModel)DataContext).IsSelecting}">
+                        <c:Icon Kind="Check" Size="10" StrokeWidth="3" IsVisible="{Binding IsSelected}" />
+                      </Border>
                       <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
                         <TextBlock Classes="strong" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
                         <TextBlock Classes="compact faint row-desc" Text="{Binding Description}" TextTrimming="CharacterEllipsis" IsVisible="{Binding HasDescription}" />

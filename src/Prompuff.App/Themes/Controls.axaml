@@ -148,6 +148,11 @@
         <Style Selector="^.card:pressed">
           <Setter Property="RenderTransform" Value="none" />
         </Style>
+        <!-- Picked for a bulk action; the focus styles below still win, so the cursor stays visible -->
+        <Style Selector="^.card.selected">
+          <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
+        </Style>
         <!-- Arrow keys move focus between cards, so the focused one wears the accent instead of the default adorner -->
         <Style Selector="^.card:focus-visible">
           <Setter Property="FocusAdorner" Value="{x:Null}" />
@@ -172,6 +177,9 @@
         </Style>
         <Style Selector="^.row:pressed">
           <Setter Property="RenderTransform" Value="none" />
+        </Style>
+        <Style Selector="^.row.selected">
+          <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}" />
         </Style>
         <Style Selector="^.row:focus-visible">
           <Setter Property="FocusAdorner" Value="{x:Null}" />

@@ -21,6 +21,7 @@ public partial class LibraryView : UserControl
     public LibraryView()
     {
         InitializeComponent();
+        AddHandler(PointerPressedEvent, OnCardPointerPressed, RoutingStrategies.Tunnel);
     }
 
     private LibraryViewModel? ViewModel => DataContext as LibraryViewModel;
@@ -96,25 +97,32 @@ public partial class LibraryView : UserControl
 
         var columns = library.IsCards && CardsList.ItemsPanelRoot is AdaptiveGrid grid ? grid.ColumnCount : 1;
         var command = Platform.Shortcuts.CommandModifier;
+        var extend = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
         switch (e.Key)
         {
             case Key.Down when modifiers == KeyModifiers.None:
-                library.MoveCurrent(columns);
+                library.MoveCurrent(columns, extend);
                 break;
             case Key.Up when modifiers == KeyModifiers.None:
-                library.MoveCurrent(-columns);
+                library.MoveCurrent(-columns, extend);
                 break;
             case Key.Right when modifiers == KeyModifiers.None && library.IsCards:
-                library.MoveCurrent(1);
+                library.MoveCurrent(1, extend);
                 break;
             case Key.Left when modifiers == KeyModifiers.None && library.IsCards:
-                library.MoveCurrent(-1);
+                library.MoveCurrent(-1, extend);
                 break;
             case Key.Home when modifiers == KeyModifiers.None:
-                library.MoveCurrentToEnd(last: false);
+                library.MoveCurrentToEnd(last: false, extend);
                 break;
             case Key.End when modifiers == KeyModifiers.None:
-                library.MoveCurrentToEnd(last: true);
+                library.MoveCurrentToEnd(last: true, extend);
+                break;
+            case Key.A when modifiers == command:
+                library.SelectAll();
+                break;
+            case Key.Escape when modifiers == KeyModifiers.None && library.IsSelecting:
+                library.ClearSelection();
                 break;
             case Key.Enter when modifiers == KeyModifiers.None && e.Source is not Button:
                 // A focused card is a button and opens itself.
@@ -185,6 +193,43 @@ public partial class LibraryView : UserControl
     };
 
     private static bool IsSearchBox(object? source) => source is TextBox { Name: "SearchBox" };
+
+    // Ctrl or Cmd and click picks one card, Shift and click picks a range, without opening anything.
+    private void OnCardPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        var command = Platform.Shortcuts.CommandModifier;
+        if (ViewModel is not { } library
+            || (e.KeyModifiers & (command | KeyModifiers.Shift)) == KeyModifiers.None
+            || !e.GetCurrentPoint(this).Properties.IsLeftButtonPressed
+            || CardAt(e.Source) is not { } card)
+        {
+            return;
+        }
+
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            library.SelectRange(card);
+        }
+        else
+        {
+            library.ToggleSelection(card);
+        }
+
+        e.Handled = true;
+    }
+
+    private static PromptCardViewModel? CardAt(object? source)
+    {
+        for (var visual = source as Visual; visual is not null; visual = visual.GetVisualParent())
+        {
+            if (visual is Button { DataContext: PromptCardViewModel card } button && (button.Classes.Contains("card") || button.Classes.Contains("row")))
+            {
+                return card;
+            }
+        }
+
+        return null;
+    }
 
     private void OnCardGotFocus(object? sender, FocusChangedEventArgs e)
     {
