@@ -101,10 +101,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public string PaletteShortcut => Shortcuts.Display(ShortcutAction.CommandPalette);
     public string QuickSaveShortcut => Shortcuts.Display(ShortcutAction.QuickSave);
 
-    public bool ExtendsIntoTitleBar { get; } = OperatingSystem.IsWindows();
+    public bool ExtendsIntoTitleBar { get; } = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS();
 
-    /// <summary>Space to leave for the caption buttons when the window draws its own title bar: three 45px buttons, 2px apart.</summary>
-    public Avalonia.Thickness TitleBarInset => ExtendsIntoTitleBar ? new Avalonia.Thickness(0, 0, 144, 0) : default;
+    /// <summary>
+    /// Space to leave for the window buttons when the window extends into the title bar: on Windows, three 45px caption
+    /// buttons 2px apart on the right; on macOS, the traffic lights on the left.
+    /// </summary>
+    public Avalonia.Thickness TitleBarInset { get; } =
+        OperatingSystem.IsWindows() ? new Avalonia.Thickness(0, 0, 144, 0)
+        : OperatingSystem.IsMacOS() ? new Avalonia.Thickness(78, 0, 0, 0)
+        : default;
 
     [ObservableProperty]
     private object _currentPage;
@@ -268,6 +274,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         await ShowSettingsAsync();
         Settings.Select(SettingsSection.Updates);
+    }
+
+    [RelayCommand]
+    private Task OpenSettings() => ShowSettingsAsync();
+
+    [RelayCommand]
+    private async Task OpenAbout()
+    {
+        await ShowSettingsAsync();
+        Settings.Select(SettingsSection.About);
     }
 
     partial void OnSearchTextChanged(string value)

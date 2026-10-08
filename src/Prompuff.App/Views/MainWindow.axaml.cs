@@ -34,7 +34,8 @@ public partial class MainWindow : Window
             ExtendClientAreaToDecorationsHint = true;
             ExtendClientAreaTitleBarHeightHint = 40;
 
-            if (this.TryFindResource("PrompuffWindowDecorations", out var theme) && theme is ControlTheme decorations)
+            // Windows gets Avalonia's drawn caption buttons, restyled; macOS keeps its native traffic lights.
+            if (OperatingSystem.IsWindows() && this.TryFindResource("PrompuffWindowDecorations", out var theme) && theme is ControlTheme decorations)
             {
                 WindowDecorationsTheme = decorations;
             }

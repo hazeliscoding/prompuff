@@ -34,6 +34,7 @@ public sealed class App : Avalonia.Application
             HookUnhandledErrors();
 
             var viewModel = Services.GetRequiredService<MainWindowViewModel>();
+            MacAppMenu.Install(this, viewModel);
             var window = new MainWindow(viewModel, Services.GetRequiredService<ISettingsStore>());
             Services.GetRequiredService<TopLevelAccessor>().TopLevel = window;
             desktop.MainWindow = window;

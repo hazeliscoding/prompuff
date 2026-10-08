@@ -198,6 +198,20 @@ public class MainWindowTests
     }
 
     [AvaloniaFact]
+    public async Task The_app_menu_commands_open_Settings_and_About()
+    {
+        await using var app = await AppHarness.StartAsync(importSamples: false);
+
+        await app.ViewModel.OpenAboutCommand.ExecuteAsync(null);
+        var settings = Assert.IsType<SettingsViewModel>(app.ViewModel.CurrentPage);
+        Assert.True(settings.IsAbout);
+
+        await app.ViewModel.GoToLibraryCommand.ExecuteAsync(null);
+        await app.ViewModel.OpenSettingsCommand.ExecuteAsync(null);
+        Assert.IsType<SettingsViewModel>(app.ViewModel.CurrentPage);
+    }
+
+    [AvaloniaFact]
     public async Task Deleting_a_collection_keeps_its_prompts()
     {
         await using var app = await AppHarness.StartAsync();
