@@ -148,6 +148,13 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Test hygiene:** tests clear only their own library's SQLite pool (`SqliteDatabase.ClearPool`); `ClearAllPools()` closed connections that tests running in parallel were opening. Write timings in the performance tests are compared with a 200-prompt library in the same run, because a CI runner's disk makes any write take ~50 ms.
 - **The user guide is `docs/user-guide.md`,** task by task and checked against the views. A change to behavior or a label updates it in the same change. `CONTRIBUTING.md` is the short version of AGENTS.md for people.
 
+## Decisions: 1.0 (2026-10-08)
+
+- **1.0 is the release candidate's code.** Nothing under `src/` changed after 0.9.0; 1.0 adds only the version number. The 1.0 promise went into Settings › About, the README and the user guide before the release candidate, so the candidate shipped it.
+- **The launch video** was made with `/brag` in Hyperframes: 21.5 seconds at 1080p, built from Prompuff's own tokens, fonts and copy. It shows Puff's "Talk is cheap. Show me the prompts.", Quick save from any app, `{{variables}}` filling in, `prompuff render` in a terminal with Claude Code, Codex and Copilot CLI over MCP, and a flick through the themes. The working files live in the gitignored `brag-output/`; the video and its poster are in `site/assets/video/`.
+- **The website** is `site/`, plain HTML and CSS with a little JavaScript, deployed by `.github/workflows/pages.yml` to hazeliscoding.github.io/prompuff. It loads nothing from another site: a Content-Security-Policy enforces it, and the workflow refuses to deploy a page that would. Fonts are the app's own TTFs, and downloads link to `releases/latest/download/<asset>`.
+- **Update check workflow:** `.github/workflows/update-check.yml`, run by hand after a release, starts the previous stable release on Windows, Ubuntu and macOS runners with a scratch library and checks that it finds the new one. It's the macOS part of checking an update, since there's no Mac to click through one; installing is checked by hand on Windows and in WSLg. Its first run found 0.9.0 from 0.8.0 on all three.
+
 ## v0.1: MVP (tagged 2026-10-07)
 
 ### M0: Foundation
@@ -332,9 +339,9 @@ Let scripts and coding agents use the vault without opening the app.
 
 - [ ] Tag 1.0 from the final release candidate, signed on Windows.
 - [ ] Update from 0.9 to 1.0 checked by hand on Windows and in WSLg, and on macOS CI runners.
-- [ ] README and the About page state the 1.0 promise: later versions open 1.0 libraries.
-- [ ] A short launch video of the 1.0 app, made with the `/brag` skill.
-- [ ] A landing page on GitHub Pages: what Prompuff is, the launch video, screenshots, downloads for every platform, and the privacy promise. Fonts, images and the video are served from the site itself.
+- [x] README and the About page state the 1.0 promise: later versions open 1.0 libraries.
+- [x] A short launch video of the 1.0 app, made with the `/brag` skill.
+- [x] A landing page on GitHub Pages: what Prompuff is, the launch video, screenshots, downloads for every platform, and the privacy promise. Fonts, images and the video are served from the site itself.
 
 **Done when:** 1.0 is published for Windows, Linux x64 and ARM64, and macOS, every earlier 0.x install updates to it with its library intact, and the landing page is live with the launch video.
 
