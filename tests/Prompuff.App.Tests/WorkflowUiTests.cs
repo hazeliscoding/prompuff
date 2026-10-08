@@ -194,6 +194,36 @@ public class WorkflowUiTests
     }
 
     [AvaloniaFact]
+    public async Task Export_everything_in_Settings_takes_workflows_along()
+    {
+        var files = new FakeFilePicker();
+        await using var app = await AppHarness.StartAsync(files: files);
+        var planner = app.ViewModel.Library.Items.Single(item => item.Title == "Angular Upgrade Planner");
+        await app.Get<WorkflowService>().CreateAsync("Just planning", steps: [(planner.Id, "The plan")]);
+        files.ExportPath = Path.Combine(app.Folder, "everything.zip");
+
+        await app.ViewModel.Sidebar.OpenSettingsCommand.ExecuteAsync(null);
+        await app.ViewModel.Settings.ExportAllCommand.ExecuteAsync(null);
+        Assert.EndsWith("6 prompts and 1 workflow from your library in everything.zip.", app.ViewModel.Toasts.Current?.Subtitle);
+        using (var archive = System.IO.Compression.ZipFile.OpenRead(files.ExportPath))
+        {
+            Assert.Contains(archive.Entries, entry => entry.FullName == "workflows/just-planning.md");
+        }
+
+        // Into an empty library: the prompts come first with their details, then the workflow that uses them.
+        var fresh = new FakeFilePicker { ImportPaths = [files.ExportPath] };
+        await using var other = await AppHarness.StartAsync(importSamples: false, files: fresh);
+        await other.ViewModel.Sidebar.OpenSettingsCommand.ExecuteAsync(null);
+        other.ViewModel.Settings.Select(SettingsSection.ImportExport);
+        await other.ViewModel.Settings.ImportCommand.ExecuteAsync(null);
+        await other.SettleAsync();
+        Assert.Equal("1 workflow and 6 prompts added to your library.", other.ViewModel.Toasts.Current?.Subtitle);
+        Assert.Equal(1, other.ViewModel.Sidebar.WorkflowCount);
+        Assert.Equal(3, other.ViewModel.Sidebar.Favorites.Count);
+        other.Screenshot("settings-import-export-workflows");
+    }
+
+    [AvaloniaFact]
     public async Task Deleting_a_workflow_keeps_its_prompts()
     {
         await using var app = await AppHarness.StartAsync();

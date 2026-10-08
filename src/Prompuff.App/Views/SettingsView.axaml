@@ -212,7 +212,7 @@
               <StackPanel Spacing="8">
                 <TextBlock Classes="strong" Text="Import" />
                 <TextBlock Classes="compact faint" TextWrapping="Wrap"
-                           Text="Pick .md files, a .zip export, or a whole folder such as an Obsidian vault. Prompts you already have are skipped, and anything that can't be read is reported." />
+                           Text="Pick .md files, a .zip export, or a whole folder such as an Obsidian vault. Workflows come in too. Prompts and workflows you already have are skipped, and anything that can't be read is reported." />
                 <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,6,0,0">
                   <Button Command="{Binding ImportCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -233,7 +233,7 @@
               <StackPanel Spacing="8">
                 <TextBlock Classes="strong" Text="Export" />
                 <TextBlock Classes="compact faint" TextWrapping="Wrap"
-                           Text="Saves prompts as one .zip of Markdown files, ready for another machine or a teammate." />
+                           Text="Saves prompts as one .zip of Markdown files, ready for another machine or a teammate. Everything includes your workflows too." />
                 <Button HorizontalAlignment="Left" Margin="0,6,0,0" Command="{Binding ExportAllCommand}">
                   <StackPanel Orientation="Horizontal" Spacing="6">
                     <c:Icon Kind="Upload" Size="13" />

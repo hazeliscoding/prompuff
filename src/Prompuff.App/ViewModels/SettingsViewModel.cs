@@ -72,6 +72,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly IFilePickerService _files;
     private readonly IPlatformLauncher _launcher;
     private readonly IUpdateService _updates;
+    private readonly WorkflowService _workflows;
     private readonly IGlobalHotkeyService _hotkeys;
     private readonly IClipboardService _clipboard;
     private readonly LibraryBackups _backups;
@@ -92,6 +93,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         IFilePickerService files,
         IPlatformLauncher launcher,
         IUpdateService updates,
+        WorkflowService workflows,
         IGlobalHotkeyService hotkeys,
         IClipboardService clipboard,
         LibraryBackups backups,
@@ -110,6 +112,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _files = files;
         _launcher = launcher;
         _updates = updates;
+        _workflows = workflows;
         _hotkeys = hotkeys;
         _clipboard = clipboard;
         hotkeys.Pressed += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(() => HotkeyPressed?.Invoke(this, EventArgs.Empty));
@@ -458,7 +461,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             if (result.SkippedFiles.Count > 0)
             {
                 await _dialogs.ShowInfoAsync(
-                    result.ImportedCount == 0 ? "Nothing new." : $"Imported {Format.Count(result.ImportedCount, "prompt")}.",
+                    AddedNothing(result) ? "Nothing new." : $"Imported {Added(result)}.",
                     ((result.ImportedCount == 0 && result.SkippedCount == 0 ? "That folder has no Markdown files." : string.Empty) + skipped + others).Trim(),
                     othersList);
             }
@@ -487,18 +490,30 @@ public sealed partial class SettingsViewModel : ObservableObject
 
         var failed = string.Join("\n", result.Failures.Select(failure => $"{Path.GetFileName(failure.FilePath)}: {failure.Reason}"));
         await _dialogs.ShowErrorAsync(
-            result.ImportedCount == 0 ? "Couldn't import that." : $"Imported {Format.Count(result.ImportedCount, "prompt")}, couldn't read {result.Failures.Count}.",
-            (result.ImportedCount == 0
+            AddedNothing(result) ? "Couldn't import that." : $"Imported {Added(result)}, couldn't read {result.Failures.Count}.",
+            (AddedNothing(result)
                 ? "Prompuff couldn't understand the file format. Your existing library hasn't been changed."
                 : "Some files couldn't be read. The rest are in your library, and nothing else changed.") + skipped + others,
             othersList is null ? failed : failed + "\n\n" + othersList);
     }
 
+    private static bool AddedNothing(ImportResult result) => result.ImportedCount == 0 && result.ImportedWorkflowIds.Count == 0;
+
+    /// <summary>"1 workflow and 2 prompts", "2 prompts" or "1 workflow".</summary>
+    private static string Added(ImportResult result) => (result.ImportedWorkflowIds.Count, result.ImportedCount) switch
+    {
+        (0, var prompts) => Format.Count(prompts, "prompt"),
+        (var workflows, 0) => Format.Count(workflows, "workflow"),
+        var (workflows, prompts) => $"{Format.Count(workflows, "workflow")} and {Format.Count(prompts, "prompt")}",
+    };
+
+    /// <summary>Everything: every prompt, plus every workflow as its own document under workflows/.</summary>
     [RelayCommand]
     private async Task ExportAll()
     {
         var prompts = await _search.SearchAsync(PromptQuery.All);
-        await ExportAsync(prompts.Select(prompt => prompt.Id).ToList(), "your library", "library");
+        var workflows = await _workflows.ListAsync();
+        await ExportAsync(prompts.Select(prompt => prompt.Id).ToList(), "your library", "library", workflows.Select(workflow => workflow.Id).ToList());
     }
 
     [RelayCommand]
@@ -734,9 +749,10 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     /// <param name="what">For the toast: "your library", or a collection name.</param>
     /// <param name="label">For the suggested file name.</param>
-    private async Task ExportAsync(IReadOnlyList<Guid> ids, string what, string label)
+    /// <param name="workflowIds">Workflows to include; collection exports leave them out.</param>
+    private async Task ExportAsync(IReadOnlyList<Guid> ids, string what, string label, IReadOnlyList<Guid>? workflowIds = null)
     {
-        if (ids.Count == 0)
+        if (ids.Count == 0 && (workflowIds?.Count ?? 0) == 0)
         {
             _toasts.Show("Nothing to export yet.", "Save a prompt first.", isHappy: false);
             return;
@@ -750,8 +766,11 @@ public sealed partial class SettingsViewModel : ObservableObject
 
         try
         {
-            var result = await _transfer.ExportArchiveAsync(ids, path);
-            _toasts.Show("Exported.", $"{Format.Count(result.ExportedCount, "prompt")} from {what} in {Path.GetFileName(path)}.");
+            var result = await _transfer.ExportArchiveAsync(ids, path, workflowIds);
+            var counts = result.WorkflowCount == 0
+                ? Format.Count(result.ExportedCount, "prompt")
+                : $"{Format.Count(result.ExportedCount, "prompt")} and {Format.Count(result.WorkflowCount, "workflow")}";
+            _toasts.Show("Exported.", $"{counts} from {what} in {Path.GetFileName(path)}.");
         }
         catch (LibraryException exception)
         {
