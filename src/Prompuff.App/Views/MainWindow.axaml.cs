@@ -43,6 +43,8 @@ public partial class MainWindow : Window
 
         RestorePlacement(settings.Load().Window);
         AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
+        AddHandler(KeyDownEvent, OnUnhandledKeyDown, RoutingStrategies.Bubble);
+        AddHandler(PointerPressedEvent, (_, _) => UsingKeyboard = false, RoutingStrategies.Tunnel, handledEventsToo: true);
         viewModel.FocusSearchRequested += (_, _) => FocusLater(SearchBox, selectAll: true);
         viewModel.Palette.PropertyChanged += (_, e) =>
         {
@@ -60,12 +62,34 @@ public partial class MainWindow : Window
         };
         viewModel.Dialogs.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName == nameof(DialogService.Current) && viewModel.Dialogs.Current is { HasInput: true })
+            if (e.PropertyName != nameof(DialogService.Current))
+            {
+                return;
+            }
+
+            if (viewModel.Dialogs.Current is not { } dialog)
+            {
+                RestoreFocusAfterDialog();
+                return;
+            }
+
+            // Focus moves into the dialog, so Enter confirms it rather than pressing the button behind the scrim.
+            _focusBeforeDialog ??= FocusManager?.GetFocusedElement() as InputElement;
+            if (dialog.HasInput)
             {
                 FocusLater(DialogInput, selectAll: true);
             }
+            else
+            {
+                Dispatcher.UIThread.Post(() => DialogConfirm.Focus(UsingKeyboard ? NavigationMethod.Tab : NavigationMethod.Unspecified), DispatcherPriority.Input);
+            }
         };
     }
+
+    /// <summary>True when the last input was a key rather than the pointer, so focus moves can show where they landed.</summary>
+    public static bool UsingKeyboard { get; private set; }
+
+    private InputElement? _focusBeforeDialog;
 
     private MainWindowViewModel? ViewModel => DataContext as MainWindowViewModel;
 
@@ -89,9 +113,29 @@ public partial class MainWindow : Window
     // Runs before text boxes see the key, so shortcuts work while typing.
     private void OnPreviewKeyDown(object? sender, KeyEventArgs e)
     {
+        UsingKeyboard = true;
         if (ViewModel is { } viewModel && Shortcuts.Match(e) is { } action && viewModel.TryHandleShortcut(action))
         {
             e.Handled = true;
+        }
+    }
+
+    // Esc that nothing else wanted, such as a dropdown closing itself, goes back from a prompt to the library.
+    private void OnUnhandledKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None && ViewModel is { } viewModel && viewModel.TryHandleShortcut(ShortcutAction.Back))
+        {
+            e.Handled = true;
+        }
+    }
+
+    private void RestoreFocusAfterDialog()
+    {
+        var previous = _focusBeforeDialog;
+        _focusBeforeDialog = null;
+        if (previous is { IsEffectivelyVisible: true, IsEffectivelyEnabled: true } && TopLevel.GetTopLevel(previous) == this)
+        {
+            Dispatcher.UIThread.Post(() => previous.Focus(UsingKeyboard ? NavigationMethod.Directional : NavigationMethod.Unspecified), DispatcherPriority.Input);
         }
     }
 

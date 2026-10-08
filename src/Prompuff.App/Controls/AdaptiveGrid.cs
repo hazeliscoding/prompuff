@@ -32,6 +32,9 @@ public sealed class AdaptiveGrid : Panel
         set => SetValue(SpacingProperty, value);
     }
 
+    /// <summary>How many columns the last layout used, so arrow keys can move up and down a row.</summary>
+    public int ColumnCount { get; private set; } = 1;
+
     protected override Size MeasureOverride(Size availableSize)
     {
         var width = double.IsFinite(availableSize.Width) ? availableSize.Width : MinItemWidth * 3 + Spacing * 2;
@@ -56,6 +59,7 @@ public sealed class AdaptiveGrid : Panel
     protected override Size ArrangeOverride(Size finalSize)
     {
         var (columns, itemWidth) = Columns(finalSize.Width);
+        ColumnCount = columns;
         var visible = Children.Where(child => child.IsVisible).ToList();
         var y = 0d;
         for (var start = 0; start < visible.Count; start += columns)

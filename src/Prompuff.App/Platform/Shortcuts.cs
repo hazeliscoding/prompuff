@@ -14,6 +14,7 @@ public enum ShortcutAction
     ToggleFavorite,
     ShowHistory,
     Close,
+    Back,
 }
 
 public sealed record Shortcut(ShortcutAction Action, string Label, Key Key, bool Command = true, bool Shift = false)
@@ -45,12 +46,24 @@ public static class Shortcuts
         new(ShortcutAction.ToggleFavorite, "Toggle favorite", Key.D),
         new(ShortcutAction.ShowHistory, "Open history", Key.H),
         new(ShortcutAction.Close, "Close a dialog or the palette", Key.Escape, Command: false),
+        new(ShortcutAction.Back, "Back to the library from a prompt", Key.Escape, Command: false),
     ];
 
-    /// <summary>Shortcuts as shown in Settings: one row per action.</summary>
+    /// <summary>Keys that work while the library has focus. They aren't in <see cref="All"/>, because the library view handles them.</summary>
+    public static IReadOnlyList<(string Label, string Keys)> LibraryKeys { get; } =
+    [
+        ("Move between prompts in the library", "Arrow keys, Home, End"),
+        ("Go from the search box to the results", "↓  or  Enter"),
+        ("Open the prompt", OperatingSystem.IsMacOS() ? "↩" : "Enter"),
+        ("Delete the prompt", OperatingSystem.IsMacOS() ? "⌘⌫" : "Delete"),
+        ("Jump to a title", "Type its first letters"),
+    ];
+
+    /// <summary>Shortcuts as shown in Settings: one row per action, then the library keys.</summary>
     public static IReadOnlyList<(string Label, string Keys)> Reference { get; } = All
         .GroupBy(shortcut => shortcut.Action)
         .Select(group => (group.First().Label, string.Join("  or  ", group.Select(shortcut => shortcut.Display))))
+        .Concat(LibraryKeys)
         .ToList();
 
     public static ShortcutAction? Match(KeyEventArgs e)

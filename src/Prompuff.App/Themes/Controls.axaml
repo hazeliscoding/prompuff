@@ -148,6 +148,12 @@
         <Style Selector="^.card:pressed">
           <Setter Property="RenderTransform" Value="none" />
         </Style>
+        <!-- Arrow keys move focus between cards, so the focused one wears the accent instead of the default adorner -->
+        <Style Selector="^.card:focus-visible">
+          <Setter Property="FocusAdorner" Value="{x:Null}" />
+          <Setter Property="Background" Value="{DynamicResource Bg3Brush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
 
         <!-- Rows in lists (library list mode, versions, palette results) -->
         <Style Selector="^.row">
@@ -166,6 +172,11 @@
         </Style>
         <Style Selector="^.row:pressed">
           <Setter Property="RenderTransform" Value="none" />
+        </Style>
+        <Style Selector="^.row:focus-visible">
+          <Setter Property="FocusAdorner" Value="{x:Null}" />
+          <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
         </Style>
 
         <!-- Version cards in the history timeline -->

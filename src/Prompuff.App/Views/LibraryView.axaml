@@ -86,7 +86,7 @@
 
       <!-- Cards -->
       <ScrollViewer IsVisible="{Binding IsCards}" HorizontalScrollBarVisibility="Disabled">
-        <ItemsControl ItemsSource="{Binding Items}" Margin="20,16,20,32">
+        <ItemsControl x:Name="CardsList" ItemsSource="{Binding Items}" Margin="20,16,20,32">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
               <c:AdaptiveGrid MinItemWidth="272" Spacing="12" />
@@ -94,7 +94,7 @@
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:PromptCardViewModel">
-              <Button Classes="card" Command="{Binding OpenCommand}">
+              <Button Classes="card" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus">
                 <StackPanel Spacing="10">
                   <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                     <c:ToneDot Tone="{Binding CollectionTone}" VerticalAlignment="Top" Margin="0,6,0,0" ToolTip.Tip="{Binding CollectionName}" />
@@ -153,10 +153,10 @@
               <TextBlock Grid.Column="3" Classes="label" Text="USEFULNESS" VerticalAlignment="Center" />
               <TextBlock Grid.Column="4" Classes="label" Text="{Binding EditedColumn}" VerticalAlignment="Center" />
             </Grid>
-            <ItemsControl ItemsSource="{Binding Items}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0">
+            <ItemsControl x:Name="RowsList" ItemsSource="{Binding Items}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:PromptCardViewModel">
-                  <Button Classes="row" Height="46" Command="{Binding OpenCommand}">
+                  <Button Classes="row" Height="46" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus">
                     <Grid ColumnDefinitions="28,2*,1.6*,120,100,36" ColumnSpacing="12">
                       <c:ToneDot Tone="{Binding CollectionTone}" HorizontalAlignment="Center" ToolTip.Tip="{Binding CollectionName}" />
                       <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">

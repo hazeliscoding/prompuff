@@ -65,6 +65,10 @@ public sealed partial class PromptCardViewModel : ObservableObject
     [ObservableProperty]
     private bool _isFavorite;
 
+    /// <summary>The card the arrow keys are on.</summary>
+    [ObservableProperty]
+    private bool _isCurrent;
+
     [RelayCommand]
     private Task Open() => _owner.OpenAsync(this);
 
@@ -92,8 +96,16 @@ public sealed partial class LibraryViewModel : ObservableObject
     private readonly TimeProvider _time;
     private readonly ILogger<LibraryViewModel> _logger;
     private CancellationTokenSource? _searchDelay;
+    private Task _pendingSearch = Task.CompletedTask;
     private int _refreshGeneration;
     private int _libraryTotal;
+    private Guid? _currentId;
+    private PromptQuery? _lastQuery;
+    private string _typeAhead = string.Empty;
+    private DateTimeOffset _lastTypedAt;
+
+    /// <summary>How long after the last key type-ahead starts a new word.</summary>
+    public static readonly TimeSpan TypeAheadReset = TimeSpan.FromSeconds(1);
 
     public LibraryViewModel(
         IPromptSearch search,
@@ -173,6 +185,15 @@ public sealed partial class LibraryViewModel : ObservableObject
     [ObservableProperty]
     private bool _isLibraryEmpty;
 
+    /// <summary>The card the arrow keys are on. It follows the prompt across refreshes, and focus follows it in the view.</summary>
+    public PromptCardViewModel? CurrentItem { get; private set; }
+
+    /// <summary>Raised when the view should move keyboard focus to <see cref="CurrentItem"/>.</summary>
+    public event EventHandler? FocusCurrentRequested;
+
+    /// <summary>True while letters typed in the library extend a type-ahead word instead of starting one.</summary>
+    public bool IsTypingAhead => _typeAhead.Length > 0 && _time.GetUtcNow() - _lastTypedAt < TypeAheadReset;
+
     public bool HasFilter => Filter.Kind != PromptFilterKind.All || !string.IsNullOrWhiteSpace(SearchText);
     public bool CanSort => Filter.Kind is not PromptFilterKind.Recent and not PromptFilterKind.Deleted;
     public bool IsDeletedView => Filter.Kind == PromptFilterKind.Deleted;
@@ -226,12 +247,26 @@ public sealed partial class LibraryViewModel : ObservableObject
         }
 
         var now = _time.GetUtcNow();
+        var sameView = query == _lastQuery;
+        var previousIndex = CurrentItem is { } previous ? Items.IndexOf(previous) : -1;
+        _lastQuery = query;
         Items.Clear();
         foreach (var summary in results)
         {
             var collectionName = summary.CollectionId is { } id && collections.TryGetValue(id, out var collection) ? collection.Name : null;
             Items.Add(new PromptCardViewModel(this, summary, collectionName, now));
         }
+
+        // The cursor stays on its prompt. If that prompt left this view, as after a delete, it moves to the card
+        // that took its place.
+        var current = Items.FirstOrDefault(item => item.Id == _currentId);
+        if (current is null && sameView && previousIndex >= 0 && Items.Count > 0)
+        {
+            current = Items[Math.Min(previousIndex, Items.Count - 1)];
+        }
+
+        CurrentItem = null;
+        SetCurrent(current);
 
         Title = Filter.Kind switch
         {
@@ -270,6 +305,7 @@ public sealed partial class LibraryViewModel : ObservableObject
 
     public Task OpenAsync(PromptCardViewModel card)
     {
+        SetCurrent(card);
         if (card.IsDeleted)
         {
             _toasts.Show("Restore it first to open it.", card.Title, isHappy: false);
@@ -277,6 +313,154 @@ public sealed partial class LibraryViewModel : ObservableObject
         }
 
         return _navigator.OpenPromptAsync(card.Id);
+    }
+
+    /// <summary>Puts the keyboard cursor on a card. With <paramref name="focus"/>, the view moves focus there too.</summary>
+    public void SetCurrent(PromptCardViewModel? card, bool focus = false)
+    {
+        if (CurrentItem != card)
+        {
+            if (CurrentItem is { } old)
+            {
+                old.IsCurrent = false;
+            }
+
+            CurrentItem = card;
+            if (card is not null)
+            {
+                card.IsCurrent = true;
+            }
+
+            OnPropertyChanged(nameof(CurrentItem));
+        }
+
+        _currentId = card?.Id ?? _currentId;
+        if (focus && card is not null)
+        {
+            FocusCurrentRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>Moves the cursor by <paramref name="delta"/> cards, stopping at either end. With no cursor yet, starts at the first card.</summary>
+    public void MoveCurrent(int delta)
+    {
+        if (Items.Count == 0)
+        {
+            return;
+        }
+
+        var index = CurrentItem is { } current ? Items.IndexOf(current) : -1;
+        SetCurrent(Items[index < 0 ? 0 : Math.Clamp(index + delta, 0, Items.Count - 1)], focus: true);
+    }
+
+    public void MoveCurrentToEnd(bool last)
+    {
+        if (Items.Count > 0)
+        {
+            SetCurrent(last ? Items[^1] : Items[0], focus: true);
+        }
+    }
+
+    /// <summary>
+    /// Type-ahead: moves the cursor to the next title starting with what was typed in the last second. Typing the
+    /// same letter again cycles through the titles that start with it. Returns false when nothing matches.
+    /// </summary>
+    public bool TypeAhead(string text)
+    {
+        var now = _time.GetUtcNow();
+        if (now - _lastTypedAt >= TypeAheadReset)
+        {
+            _typeAhead = string.Empty;
+        }
+
+        if (_typeAhead.Length == 0 && string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        _lastTypedAt = now;
+        _typeAhead += text;
+        if (Items.Count == 0)
+        {
+            return false;
+        }
+
+        var cycling = _typeAhead.Length > 1 && _typeAhead.All(ch => char.ToUpperInvariant(ch) == char.ToUpperInvariant(_typeAhead[0]));
+        var prefix = cycling ? _typeAhead[..1] : _typeAhead;
+        var index = CurrentItem is { } current ? Items.IndexOf(current) : -1;
+
+        // A new letter looks past the current card, so pressing it again moves on. A longer word may stay put.
+        var from = index < 0 ? 0 : index + (_typeAhead.Length == 1 || cycling ? 1 : 0);
+        for (var i = 0; i < Items.Count; i++)
+        {
+            var item = Items[(from + i) % Items.Count];
+            if (item.Title.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                SetCurrent(item, focus: true);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>Puts focus on the cards, starting at the first one when there's no cursor yet.</summary>
+    public void FocusCards()
+    {
+        if (CurrentItem is null)
+        {
+            MoveCurrent(0);
+        }
+        else
+        {
+            SetCurrent(CurrentItem, focus: true);
+        }
+    }
+
+    public Task OpenCurrentAsync() => CurrentItem is { } card ? OpenAsync(card) : Task.CompletedTask;
+
+    /// <summary>Enter in the search box: opens the best match once the search has caught up with the typing.</summary>
+    public async Task OpenTopResultAsync()
+    {
+        await _pendingSearch;
+        if (Items.FirstOrDefault() is { } first)
+        {
+            await OpenAsync(first);
+        }
+    }
+
+    public Task DeleteCurrentAsync() => CurrentItem is { IsDeleted: false } card ? DeleteAsync(card) : Task.CompletedTask;
+
+    /// <summary>Moves the prompt to Recently deleted after asking, and keeps the cursor where the card was.</summary>
+    public async Task DeleteAsync(PromptCardViewModel card)
+    {
+        if (!await _dialogs.ConfirmAsync(
+                $"Delete “{card.Title}”?",
+                "It moves to Recently deleted, and you can restore it from there for 30 days.",
+                "Delete prompt",
+                isDanger: true))
+        {
+            return;
+        }
+
+        try
+        {
+            await _prompts.DeleteAsync(card.Id);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Couldn't delete prompt {PromptId}", card.Id);
+            await _dialogs.ShowErrorAsync("Couldn't delete that prompt.", "It's still in your library, and nothing else changed.", exception.Message);
+            return;
+        }
+
+        _notifier.Notify();
+        _toasts.Show("Moved to Recently deleted.", card.Title, isHappy: false);
+        await RefreshAsync();
+        if (CurrentItem is not null)
+        {
+            FocusCurrentRequested?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     public async Task RestoreAsync(PromptCardViewModel card)
@@ -370,7 +554,7 @@ public sealed partial class LibraryViewModel : ObservableObject
     [RelayCommand]
     private Task NewPrompt() => _navigator.NewPromptAsync(Filter.Kind == PromptFilterKind.Collection ? Filter.CollectionId : null);
 
-    partial void OnSearchTextChanged(string value) => _ = RefreshAfterTypingAsync();
+    partial void OnSearchTextChanged(string value) => _pendingSearch = RefreshAfterTypingAsync();
 
     partial void OnSelectedSortChanged(SortOption value)
     {

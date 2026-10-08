@@ -168,6 +168,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _ when Palette.IsOpen || QuickSave.IsOpen => false,
             ShortcutAction.NewPrompt or ShortcutAction.FocusSearch => true,
             ShortcutAction.ShowHistory => Editor is { IsNew: false },
+            ShortcutAction.Back => CurrentPage is PromptEditorViewModel or SettingsViewModel,
             _ => Editor is not null,
         };
 
@@ -239,6 +240,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 return true;
             case ShortcutAction.ShowHistory when Editor is { IsNew: false } editor:
                 editor.Tab = EditorTab.History;
+                return true;
+            case ShortcutAction.Back when CurrentPage is PromptEditorViewModel or SettingsViewModel:
+                await ShowLibraryAsync(null);
                 return true;
             default:
                 return false;
