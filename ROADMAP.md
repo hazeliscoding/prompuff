@@ -301,6 +301,7 @@ Let scripts and coding agents use the vault without opening the app.
 - [x] Each palette's license and authors are credited in `licenses/Themes.md`.
 - [x] The headless UI tests capture the library, the editor and a dialog in every theme.
 - [x] Publish v0.8.0-beta.1 and v0.8.0-beta.2 as pre-releases (2026-10-08).
+- [x] Publish v0.8.0 (2026-10-08).
 
 **Done when:** a beta install updates from the beta channel, every release carries a `SHA256SUMS` file, and switching themes restyles the whole window, dialogs included, without a restart.
 
