@@ -68,6 +68,15 @@ public sealed partial class VersionItemViewModel(PromptVersion version, bool isC
     private void Select() => select(this);
 }
 
+/// <summary>A copy of the open prompt, listed under "copies" so it can be opened.</summary>
+public sealed partial class CopyItemViewModel(PromptLink link, Func<PromptLink, Task> open)
+{
+    public string Title { get; } = link.Title;
+
+    [RelayCommand]
+    private Task Open() => open(link);
+}
+
 public sealed record DiffLineViewModel(string Number, string Mark, string Text, DiffLineKind Kind)
 {
     public bool IsAdded => Kind == DiffLineKind.Added;
@@ -215,6 +224,17 @@ public sealed partial class PromptEditorViewModel : ObservableObject
     public ObservableCollection<VersionItemViewModel> Versions { get; } = [];
     public ObservableCollection<DiffLineViewModel> DiffLines { get; } = [];
     public ObservableCollection<string> ChangeSummaries { get; } = [];
+    public ObservableCollection<CopyItemViewModel> Copies { get; } = [];
+
+    /// <summary>The prompt this one was duplicated from, while it still exists.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasParent), nameof(ParentTooltip))]
+    private PromptLink? _parent;
+
+    public bool HasParent => Parent is not null;
+    public string ParentTooltip => Parent is { IsDeleted: true } ? "It's in Recently deleted" : "Open the original";
+    public bool HasCopies => Copies.Count > 0;
+    public string CopiesLabel => Format.Count(Copies.Count, "copy", "copies");
 
     public PromptContent CurrentContent => new(Title, Description, Body, Notes);
     public bool IsDirty => CurrentContent != _saved;
@@ -273,6 +293,7 @@ public sealed partial class PromptEditorViewModel : ObservableObject
         await LoadCollectionsAsync();
         Apply(prompt, await _valuesCache.GetAsync(id));
         await LoadVersionsAsync();
+        await LoadLineageAsync();
         await _prompts.MarkOpenedAsync(id);
     }
 
@@ -584,6 +605,9 @@ public sealed partial class PromptEditorViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private Task OpenParent() => Parent is { } parent ? OpenLinkedAsync(parent) : Task.CompletedTask;
+
+    [RelayCommand]
     private void ShowChanges() => IsFullTextMode = false;
 
     [RelayCommand]
@@ -681,6 +705,36 @@ public sealed partial class PromptEditorViewModel : ObservableObject
         _loading = false;
         RefreshVariables();
         OnPropertyChanged(nameof(IsDirty));
+    }
+
+    private async Task LoadLineageAsync()
+    {
+        if (Id is not { } id)
+        {
+            return;
+        }
+
+        var lineage = await _prompts.GetLineageAsync(id);
+        Parent = lineage.Parent;
+        Copies.Clear();
+        foreach (var copy in lineage.Copies.Where(copy => !copy.IsDeleted))
+        {
+            Copies.Add(new CopyItemViewModel(copy, OpenLinkedAsync));
+        }
+
+        OnPropertyChanged(nameof(HasCopies));
+        OnPropertyChanged(nameof(CopiesLabel));
+    }
+
+    private Task OpenLinkedAsync(PromptLink link)
+    {
+        if (link.IsDeleted)
+        {
+            _toasts.Show("It's in Recently deleted.", "Restore it first to open it.", isHappy: false);
+            return Task.CompletedTask;
+        }
+
+        return _navigator.OpenPromptAsync(link.Id);
     }
 
     private async Task LoadVersionsAsync()

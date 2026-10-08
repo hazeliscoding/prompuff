@@ -17,6 +17,33 @@
           <Border Classes="badge" IsVisible="{Binding IsDirty}" BorderBrush="{DynamicResource AmberBorderBrush}" Margin="4,0,0,0">
             <TextBlock Text="UNSAVED" Foreground="{DynamicResource AmberTextBrush}" />
           </Border>
+
+          <!-- Lineage: where this prompt was duplicated from, and the copies made from it -->
+          <StackPanel Orientation="Horizontal" Spacing="5" Margin="8,0,0,0" IsVisible="{Binding HasParent}">
+            <c:Icon Kind="GitFork" Size="11" Foreground="{DynamicResource Text3Brush}" VerticalAlignment="Center" />
+            <TextBlock Classes="compact faint" Text="Duplicated from" />
+            <Button Classes="bare" Command="{Binding OpenParentCommand}" ToolTip.Tip="{Binding ParentTooltip}">
+              <TextBlock Classes="compact" Text="{Binding Parent.Title, FallbackValue=''}" Foreground="{DynamicResource AccentTextBrush}"
+                         MaxWidth="260" TextTrimming="CharacterEllipsis" />
+            </Button>
+          </StackPanel>
+          <Button Classes="bare" Margin="8,0,0,0" IsVisible="{Binding HasCopies}" ToolTip.Tip="Prompts duplicated from this one">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <c:Icon Kind="CopyPlus" Size="11" Foreground="{DynamicResource Text3Brush}" VerticalAlignment="Center" />
+              <TextBlock Classes="compact" Text="{Binding CopiesLabel}" Foreground="{DynamicResource AccentTextBrush}" />
+              <c:Icon Kind="ChevronDown" Size="11" Foreground="{DynamicResource Text3Brush}" VerticalAlignment="Center" />
+            </StackPanel>
+            <Button.Flyout>
+              <MenuFlyout Placement="BottomEdgeAlignedLeft" ItemsSource="{Binding Copies}">
+                <MenuFlyout.ItemContainerTheme>
+                  <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:CopyItemViewModel">
+                    <Setter Property="Header" Value="{Binding Title}" />
+                    <Setter Property="Command" Value="{Binding OpenCommand}" />
+                  </ControlTheme>
+                </MenuFlyout.ItemContainerTheme>
+              </MenuFlyout>
+            </Button.Flyout>
+          </Button>
         </StackPanel>
 
         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
