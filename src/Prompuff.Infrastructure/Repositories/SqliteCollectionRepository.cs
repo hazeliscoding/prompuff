@@ -12,10 +12,12 @@ public sealed class SqliteCollectionRepository(SqliteDatabase database) : IColle
     {
         await using var connection = await database.OpenAsync(cancellationToken);
         await using var command = connection.CreateCommand();
+        // Counting in one pass over the summary index is far cheaper than looking up each collection's prompts.
         command.CommandText = """
-            SELECT c.Id, c.Name, COUNT(p.Id)
-            FROM Collections c LEFT JOIN Prompts p ON p.CollectionId = c.Id AND p.DeletedAt IS NULL
-            GROUP BY c.Id, c.Name
+            SELECT c.Id, c.Name, COALESCE(n.Prompts, 0)
+            FROM Collections c
+            LEFT JOIN (SELECT CollectionId, COUNT(*) AS Prompts FROM Prompts
+                       WHERE DeletedAt IS NULL AND CollectionId IS NOT NULL GROUP BY CollectionId) n ON n.CollectionId = c.Id
             ORDER BY c.Name COLLATE NOCASE;
             """;
         var result = new List<CollectionSummary>();

@@ -109,6 +109,106 @@ public class SqliteDatabaseTests
     }
 
     [Fact]
+    public async Task A_v0_8_library_upgrades_to_index_lookups_by_row_and_stored_tag_names()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "prompuff-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        var path = Path.Combine(folder, "prompuff.db");
+        var planner = Guid.NewGuid();
+        var notes = Guid.NewGuid();
+
+        // A library as v0.8 left it: schema 6, its search triggers filling the index as prompts and tags arrive.
+        await using (var v08 = new SqliteConnection($"Data Source={path};Pooling=False;Foreign Keys=True"))
+        {
+            await v08.OpenAsync();
+            await using var command = v08.CreateCommand();
+            command.CommandText = string.Concat(Migrations.All.Where(migration => migration.Version <= 6).Select(migration => migration.Sql)) + $"""
+                PRAGMA user_version = 6;
+                INSERT INTO Prompts (Id, Title, Body, CreatedAt, UpdatedAt) VALUES
+                    ('{planner}', 'Angular planner', 'Upgrade the workspace.', '2026-10-08T09:00:00.0000000Z', '2026-10-08T09:00:00.0000000Z'),
+                    ('{notes}', 'Meeting notes', 'Summarize the call.', '2026-10-08T09:00:00.0000000Z', '2026-10-08T09:00:00.0000000Z');
+                INSERT INTO Tags (Id, Name) VALUES ('t1', 'zeta'), ('t2', 'alpha'), ('t3', 'writing');
+                INSERT INTO PromptTags (PromptId, TagId, Position) VALUES ('{planner}', 't1', 0), ('{planner}', 't2', 1), ('{notes}', 't3', 0);
+
+                -- An index that drifted: a row for a prompt that's gone, and a prompt with no row.
+                INSERT INTO PromptSearch (PromptId, Title, Body) VALUES ('{Guid.NewGuid()}', 'Ghost', 'Phantom words.');
+                DELETE FROM PromptSearch WHERE PromptId = '{notes}';
+                """;
+            await command.ExecuteNonQueryAsync();
+        }
+
+        var database = new SqliteDatabase(path, Path.Combine(folder, "backups"), NullLogger<SqliteDatabase>.Instance);
+        await database.InitializeAsync();
+        var search = new Repositories.SqlitePromptSearch(database);
+        var prompts = new Repositories.SqlitePromptRepository(database);
+
+        // Tags keep their order, and the index maps each prompt to its own row, mended where it had drifted.
+        var all = await search.SearchAsync(Application.DTOs.PromptQuery.All);
+        Assert.Equal(["zeta", "alpha"], all.Single(summary => summary.Id == planner).Tags);
+        Assert.Equal([planner], (await search.SearchAsync(new Application.DTOs.PromptQuery { Text = "#alpha workspace" })).Select(summary => summary.Id));
+        Assert.Equal([notes], (await search.SearchAsync(new Application.DTOs.PromptQuery { Text = "summarize writing" })).Select(summary => summary.Id));
+        Assert.Empty(await search.SearchAsync(new Application.DTOs.PromptQuery { Text = "phantom" }));
+        await using (var connection = await database.OpenAsync())
+        {
+            Assert.Equal(0L, await Scalar(connection, """
+                SELECT COUNT(*) FROM PromptSearchRows r LEFT JOIN PromptSearch s ON s.rowid = r.SearchRowId
+                WHERE s.PromptId IS NOT r.PromptId;
+                """));
+            Assert.Equal(2L, await Scalar(connection, "SELECT COUNT(*) FROM PromptSearchRows;"));
+            Assert.Equal(1L, await Scalar(connection, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'IX_Prompts_Summary';"));
+            Assert.Equal(0L, await Scalar(connection, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'IX_Prompts_DeletedAt';"));
+        }
+
+        // The triggers carry on from the upgraded rows: edits, tags, new prompts and removals.
+        var prompt = (await prompts.GetAsync(planner))!;
+        prompt.SetContent(new PromptContent(prompt.Title, null, "Migrate the monorepo.", null));
+        prompt.SetTags(["alpha", "migration"]);
+        await prompts.UpdateAsync(prompt, []);
+        Assert.Empty(await search.SearchAsync(new Application.DTOs.PromptQuery { Text = "workspace" }));
+        Assert.Equal([planner], (await search.SearchAsync(new Application.DTOs.PromptQuery { Text = "monorepo #migration" })).Select(summary => summary.Id));
+        Assert.Equal(["alpha", "migration"], (await search.SearchAsync(Application.DTOs.PromptQuery.All)).Single(summary => summary.Id == planner).Tags);
+
+        await prompts.DeleteAsync(notes);
+        Assert.Empty(await search.SearchAsync(new Application.DTOs.PromptQuery { Text = "summarize" }));
+        await using (var connection = await database.OpenAsync())
+        {
+            Assert.Equal(1L, await Scalar(connection, "SELECT COUNT(*) FROM PromptSearch;"));
+            Assert.Equal(1L, await Scalar(connection, "SELECT COUNT(*) FROM PromptSearchRows;"));
+        }
+
+        SqliteConnection.ClearAllPools();
+        Directory.Delete(folder, recursive: true);
+    }
+
+    [Theory]
+    [InlineData("2026-10-08T09:41:12.1234567Z")]
+    [InlineData("2024-02-29T23:59:59.9999999Z")]
+    [InlineData("0001-01-01T00:00:00.0000000Z")]
+    public void Stored_times_read_back_exactly(string stored)
+    {
+        var time = SqlValues.ParseTime(stored);
+
+        Assert.Equal(TimeSpan.Zero, time.Offset);
+        Assert.Equal(stored, SqlValues.Time(time));
+        Assert.Equal(DateTimeOffset.Parse(stored, System.Globalization.CultureInfo.InvariantCulture), time);
+    }
+
+    [Theory]
+    [InlineData("2026-10-08T09:41:12Z", "2026-10-08T09:41:12.0000000Z")]
+    [InlineData("2026-10-08 11:41:12+02:00", "2026-10-08T09:41:12.0000000Z")]
+    [InlineData("2026-02-30T09:41:12.1234567Z", null)]
+    public void Other_time_shapes_go_through_the_general_parser(string stored, string? expected)
+    {
+        if (expected is null)
+        {
+            Assert.Throws<FormatException>(() => SqlValues.ParseTime(stored));
+            return;
+        }
+
+        Assert.Equal(expected, SqlValues.Time(SqlValues.ParseTime(stored)));
+    }
+
+    [Fact]
     public async Task Foreign_keys_are_enforced()
     {
         await using var library = await TestLibrary.CreateAsync();

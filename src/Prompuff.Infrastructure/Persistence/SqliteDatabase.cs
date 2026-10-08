@@ -31,9 +31,24 @@ public sealed class SqliteDatabase
     public async Task<SqliteConnection> OpenAsync(CancellationToken cancellationToken = default)
     {
         var connection = new SqliteConnection(_connectionString);
-        await connection.OpenAsync(cancellationToken);
-        return connection;
+        try
+        {
+            await connection.OpenAsync(cancellationToken);
+
+            // SQLite sorts in its page cache and spills to a temporary file past it. The default 2 MB is too small to
+            // sort a list of 10,000 prompts, and spilling doubled the time it took. The cache only grows as pages are read.
+            await ExecuteAsync(connection, $"PRAGMA cache_size = -{CacheSizeKiB};", cancellationToken);
+            return connection;
+        }
+        catch
+        {
+            // A file that isn't a library fails here; let go of it so it can be moved or deleted.
+            await connection.DisposeAsync();
+            throw;
+        }
     }
+
+    private const int CacheSizeKiB = 16 * 1024;
 
     /// <summary>
     /// Creates the database if needed and applies pending migrations, each in its own transaction.

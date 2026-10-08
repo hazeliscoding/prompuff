@@ -15,6 +15,9 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
     private const string VersionColumns =
         "Id, PromptId, VersionNumber, Title, Description, Body, Notes, Note, SavedAt";
 
+    /// <summary>Joins the names in <c>Prompts.TagNames</c>, which triggers keep in step with <c>PromptTags</c>.</summary>
+    private const char TagSeparator = '\u001F';
+
     public async Task<Prompt?> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
         await using var connection = await database.OpenAsync(cancellationToken);
@@ -211,11 +214,14 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
     {
         await using var connection = await database.OpenAsync(cancellationToken);
         await using var command = connection.CreateCommand();
+        // Every version belongs to a prompt, so the versions of live prompts are all of them less those in Recently
+        // deleted. Counting it that way reads an index and a few lookups instead of looking up every prompt.
         command.CommandText = """
             SELECT COALESCE(SUM(CASE WHEN DeletedAt IS NULL THEN 1 ELSE 0 END), 0),
                    COALESCE(SUM(CASE WHEN DeletedAt IS NULL THEN IsFavorite ELSE 0 END), 0),
                    COALESCE(SUM(CASE WHEN DeletedAt IS NULL AND CollectionId IS NULL THEN 1 ELSE 0 END), 0),
-                   (SELECT COUNT(*) FROM PromptVersions v JOIN Prompts p ON p.Id = v.PromptId WHERE p.DeletedAt IS NULL),
+                   (SELECT COUNT(*) FROM PromptVersions)
+                     - (SELECT COUNT(*) FROM Prompts d CROSS JOIN PromptVersions v ON v.PromptId = d.Id WHERE d.DeletedAt IS NOT NULL),
                    COALESCE(SUM(CASE WHEN DeletedAt IS NOT NULL THEN 1 ELSE 0 END), 0)
             FROM Prompts;
             """;
@@ -277,6 +283,20 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
 
     private static async Task WriteTagsAsync(SqliteConnection connection, SqliteTransaction transaction, Prompt prompt, CancellationToken cancellationToken)
     {
+        // Most saves, such as a favorite or a rating, leave the tags as they were. Rewriting them anyway would remove and
+        // re-add every tag, and the triggers would update the search index for each.
+        await using (var stored = connection.CreateCommand())
+        {
+            stored.Transaction = transaction;
+            stored.CommandText = "SELECT TagNames FROM Prompts WHERE Id = $id;";
+            stored.With("$id", SqlValues.Id(prompt.Id));
+            var names = await stored.ExecuteScalarAsync(cancellationToken) as string ?? string.Empty;
+            if (names == string.Join(TagSeparator, prompt.Tags))
+            {
+                return;
+            }
+        }
+
         await using (var clear = connection.CreateCommand())
         {
             clear.Transaction = transaction;
@@ -323,5 +343,5 @@ public sealed class SqlitePromptRepository(SqliteDatabase database) : IPromptRep
     }
 
     private static Task DeleteOrphanTagsAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken) =>
-        SqliteDatabase.ExecuteAsync(connection, "DELETE FROM Tags WHERE Id NOT IN (SELECT TagId FROM PromptTags);", cancellationToken, transaction);
+        SqliteDatabase.ExecuteAsync(connection, "DELETE FROM Tags WHERE NOT EXISTS (SELECT 1 FROM PromptTags pt WHERE pt.TagId = Tags.Id);", cancellationToken, transaction);
 }

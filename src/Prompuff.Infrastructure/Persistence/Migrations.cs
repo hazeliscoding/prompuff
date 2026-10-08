@@ -149,6 +149,89 @@ public static class Migrations
                 PRIMARY KEY (WorkflowId, Name)
             );
             """),
+
+        // Large libraries. The search triggers found a prompt's index row by PromptId, which FTS5 can't index, so every
+        // save, favorite and tag change scanned the whole index (over 100 ms a favorite with 10,000 prompts). PromptSearchRows
+        // maps each prompt to its index row so the triggers, and search, go by rowid; FTS5 keeps rowids in INTEGER PRIMARY
+        // KEY columns, which VACUUM leaves alone. An update that changes no indexed text no longer touches the index.
+        // Listing prompts read their tags one prompt at a time and pulled whole rows, bodies included, off disk: TagNames
+        // keeps each prompt's tags in order, joined by U+001F, and IX_Prompts_Summary holds everything a library card
+        // shows, so a list never reads the bodies. It replaces IX_Prompts_DeletedAt, which it starts with.
+        new(7, "Large libraries", """
+            CREATE TABLE PromptSearchRows (
+                SearchRowId  INTEGER PRIMARY KEY,
+                PromptId     TEXT NOT NULL UNIQUE
+            );
+
+            -- Each prompt keeps its first index row; extra rows, and rows for prompts that are gone, are dropped. A prompt
+            -- missing from the index gets a row.
+            INSERT OR IGNORE INTO PromptSearchRows (SearchRowId, PromptId)
+            SELECT rowid, PromptId FROM PromptSearch WHERE PromptId IN (SELECT Id FROM Prompts) ORDER BY rowid;
+            DELETE FROM PromptSearch WHERE rowid NOT IN (SELECT SearchRowId FROM PromptSearchRows);
+            INSERT INTO PromptSearch (PromptId, Title, Description, Body, Notes, Tags)
+            SELECT p.Id, p.Title, p.Description, p.Body, p.Notes,
+                   (SELECT group_concat(t.Name, ' ') FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId WHERE pt.PromptId = p.Id)
+            FROM Prompts p WHERE p.Id NOT IN (SELECT PromptId FROM PromptSearchRows);
+            INSERT INTO PromptSearchRows (SearchRowId, PromptId)
+            SELECT rowid, PromptId FROM PromptSearch WHERE rowid NOT IN (SELECT SearchRowId FROM PromptSearchRows);
+
+            DROP TRIGGER Prompts_SearchInsert;
+            DROP TRIGGER Prompts_SearchUpdate;
+            DROP TRIGGER Prompts_SearchDelete;
+            DROP TRIGGER PromptTags_SearchInsert;
+            DROP TRIGGER PromptTags_SearchDelete;
+
+            CREATE TRIGGER Prompts_SearchInsert AFTER INSERT ON Prompts BEGIN
+                INSERT INTO PromptSearch (PromptId, Title, Description, Body, Notes)
+                VALUES (new.Id, new.Title, new.Description, new.Body, new.Notes);
+                INSERT OR REPLACE INTO PromptSearchRows (SearchRowId, PromptId) VALUES (last_insert_rowid(), new.Id);
+            END;
+
+            CREATE TRIGGER Prompts_SearchUpdate AFTER UPDATE OF Title, Description, Body, Notes ON Prompts
+            WHEN old.Title IS NOT new.Title OR old.Description IS NOT new.Description
+                 OR old.Body IS NOT new.Body OR old.Notes IS NOT new.Notes
+            BEGIN
+                UPDATE PromptSearch SET Title = new.Title, Description = new.Description, Body = new.Body, Notes = new.Notes
+                WHERE rowid = (SELECT SearchRowId FROM PromptSearchRows WHERE PromptId = new.Id);
+            END;
+
+            CREATE TRIGGER Prompts_SearchDelete AFTER DELETE ON Prompts BEGIN
+                DELETE FROM PromptSearch WHERE rowid = (SELECT SearchRowId FROM PromptSearchRows WHERE PromptId = old.Id);
+                DELETE FROM PromptSearchRows WHERE PromptId = old.Id;
+            END;
+
+            CREATE TRIGGER PromptTags_SearchInsert AFTER INSERT ON PromptTags BEGIN
+                UPDATE PromptSearch
+                SET Tags = (SELECT group_concat(t.Name, ' ') FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId WHERE pt.PromptId = new.PromptId)
+                WHERE rowid = (SELECT SearchRowId FROM PromptSearchRows WHERE PromptId = new.PromptId);
+            END;
+
+            CREATE TRIGGER PromptTags_SearchDelete AFTER DELETE ON PromptTags BEGIN
+                UPDATE PromptSearch
+                SET Tags = (SELECT group_concat(t.Name, ' ') FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId WHERE pt.PromptId = old.PromptId)
+                WHERE rowid = (SELECT SearchRowId FROM PromptSearchRows WHERE PromptId = old.PromptId);
+            END;
+
+            ALTER TABLE Prompts ADD COLUMN TagNames TEXT NULL;
+            UPDATE Prompts SET TagNames = (SELECT group_concat(Name, char(31)) FROM (
+                SELECT t.Name FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId WHERE pt.PromptId = Prompts.Id ORDER BY pt.Position, t.Name));
+
+            CREATE TRIGGER PromptTags_NamesInsert AFTER INSERT ON PromptTags BEGIN
+                UPDATE Prompts SET TagNames = (SELECT group_concat(Name, char(31)) FROM (
+                    SELECT t.Name FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId WHERE pt.PromptId = new.PromptId ORDER BY pt.Position, t.Name))
+                WHERE Id = new.PromptId;
+            END;
+
+            CREATE TRIGGER PromptTags_NamesDelete AFTER DELETE ON PromptTags BEGIN
+                UPDATE Prompts SET TagNames = (SELECT group_concat(Name, char(31)) FROM (
+                    SELECT t.Name FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId WHERE pt.PromptId = old.PromptId ORDER BY pt.Position, t.Name))
+                WHERE Id = old.PromptId;
+            END;
+
+            DROP INDEX IX_Prompts_DeletedAt;
+            CREATE INDEX IX_Prompts_Summary ON Prompts (
+                DeletedAt, Id, UpdatedAt, Title, Description, IsFavorite, Rating, CollectionId, CreatedAt, LastOpenedAt, TagNames);
+            """),
     ];
 
     public static int LatestVersion => All[^1].Version;

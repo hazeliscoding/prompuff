@@ -13,6 +13,10 @@ namespace Prompuff.Infrastructure.Repositories;
 /// A word starting with <c>#</c> must match a tag exactly. A word with no letters or digits, such as <c>-&gt;</c>,
 /// gives the index nothing to look up, so it is matched literally with LIKE.
 /// </summary>
+/// <remarks>
+/// Every column read comes from <c>IX_Prompts_Summary</c>, tags included, so listing even a large library reads no
+/// bodies and runs no query per prompt. Index matches reach their prompts through <c>PromptSearchRows</c> by rowid.
+/// </remarks>
 public sealed class SqlitePromptSearch(SqliteDatabase database) : IPromptSearch
 {
     private const char TagSeparator = '\u001F';
@@ -20,22 +24,32 @@ public sealed class SqlitePromptSearch(SqliteDatabase database) : IPromptSearch
     public async Task<IReadOnlyList<PromptSummary>> SearchAsync(PromptQuery query, CancellationToken cancellationToken = default)
     {
         await using var connection = await database.OpenAsync(cancellationToken);
-        await using var command = connection.CreateCommand();
+        await using var command = CreateCommand(connection, query);
 
+        var results = new List<PromptSummary>();
+        var tagLists = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            results.Add(Read(reader, tagLists));
+        }
+
+        return results;
+    }
+
+    /// <summary>Builds the statement for <paramref name="query"/>. Tests read its plan to keep large libraries fast.</summary>
+    internal static SqliteCommand CreateCommand(SqliteConnection connection, PromptQuery query)
+    {
+        var command = connection.CreateCommand();
         var terms = SplitTerms(query.Text);
         var words = terms.Where(term => !IsTagTerm(term) && term.Any(char.IsLetterOrDigit)).ToList();
 
-        var sql = new StringBuilder($"""
-            SELECT p.Id, p.Title, p.Description, p.IsFavorite, p.Rating, p.CollectionId, p.CreatedAt, p.UpdatedAt, p.LastOpenedAt, p.DeletedAt,
-                   (SELECT group_concat(Name, char(31)) FROM (
-                        SELECT t.Name FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId
-                        WHERE pt.PromptId = p.Id ORDER BY pt.Position, t.Name)) AS TagNames
-            FROM Prompts p
+        var sql = new StringBuilder("""
+            SELECT p.Id, p.Title, p.Description, p.IsFavorite, p.Rating, p.CollectionId, p.CreatedAt, p.UpdatedAt, p.LastOpenedAt, p.DeletedAt, p.TagNames
             """);
-        if (words.Count > 0)
-        {
-            sql.Append(" JOIN PromptSearch ON PromptSearch.PromptId = p.Id");
-        }
+        sql.Append(words.Count > 0
+            ? " FROM PromptSearch JOIN PromptSearchRows r ON r.SearchRowId = PromptSearch.rowid JOIN Prompts p ON p.Id = r.PromptId"
+            : " FROM Prompts p");
 
         sql.Append(query.Filter == PromptFilterKind.Deleted ? " WHERE p.DeletedAt IS NOT NULL" : " WHERE p.DeletedAt IS NULL");
         if (words.Count > 0)
@@ -58,7 +72,7 @@ public sealed class SqlitePromptSearch(SqliteDatabase database) : IPromptSearch
                 sql.Append(" AND p.CollectionId IS NULL");
                 break;
             case PromptFilterKind.Tag when TagName.Normalize(query.Tag) is { } tag:
-                sql.Append(" AND EXISTS (SELECT 1 FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId WHERE pt.PromptId = p.Id AND t.Name = $filterTag)");
+                sql.Append(" AND p.Id IN (SELECT pt.PromptId FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId WHERE t.Name = $filterTag)");
                 command.With("$filterTag", tag);
                 break;
         }
@@ -68,7 +82,7 @@ public sealed class SqlitePromptSearch(SqliteDatabase database) : IPromptSearch
             var term = terms[i];
             if (IsTagTerm(term))
             {
-                sql.Append($" AND EXISTS (SELECT 1 FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId WHERE pt.PromptId = p.Id AND t.Name = $tag{i})");
+                sql.Append($" AND p.Id IN (SELECT pt.PromptId FROM PromptTags pt JOIN Tags t ON t.Id = pt.TagId WHERE t.Name = $tag{i})");
                 command.With($"$tag{i}", TagName.Normalize(term)!);
             }
             else if (!words.Contains(term))
@@ -108,18 +122,10 @@ public sealed class SqlitePromptSearch(SqliteDatabase database) : IPromptSearch
         }
 
         command.CommandText = sql.Append(';').ToString();
-
-        var results = new List<PromptSummary>();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            results.Add(Read(reader));
-        }
-
-        return results;
+        return command;
     }
 
-    private static PromptSummary Read(SqliteDataReader reader) => new()
+    private static PromptSummary Read(SqliteDataReader reader, Dictionary<string, IReadOnlyList<string>> tagLists) => new()
     {
         Id = reader.ReadId(0),
         Title = reader.GetString(1),
@@ -131,8 +137,20 @@ public sealed class SqlitePromptSearch(SqliteDatabase database) : IPromptSearch
         UpdatedAt = reader.ReadTime(7),
         LastOpenedAt = reader.ReadTimeOrNull(8),
         DeletedAt = reader.ReadTimeOrNull(9),
-        Tags = reader.ReadTextOrNull(10)?.Split(TagSeparator, StringSplitOptions.RemoveEmptyEntries) ?? [],
+        Tags = reader.ReadTextOrNull(10) is { } names ? TagList(names, tagLists) : [],
     };
+
+    /// <summary>Prompts with the same tags share one list, which keeps a search of thousands of prompts small.</summary>
+    private static IReadOnlyList<string> TagList(string names, Dictionary<string, IReadOnlyList<string>> tagLists)
+    {
+        if (!tagLists.TryGetValue(names, out var tags))
+        {
+            tags = names.Split(TagSeparator, StringSplitOptions.RemoveEmptyEntries);
+            tagLists[names] = tags;
+        }
+
+        return tags;
+    }
 
     private static bool IsTagTerm(string term) => term.StartsWith('#') && TagName.Normalize(term) is not null;
 

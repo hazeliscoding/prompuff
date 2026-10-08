@@ -228,4 +228,28 @@ public class SqlitePromptSearchTests
         Assert.True(angular.IsFavorite);
         Assert.Equal(5, angular.Rating);
     }
+
+    [Fact]
+    public async Task Summaries_follow_tag_changes_in_order()
+    {
+        await using var library = await TestLibrary.CreateAsync();
+        var prompt = await library.PromptService.CreateAsync(new PromptContent("Planner", null, "body", null), new PromptMetadata(false, null, null, ["zeta", "alpha"]));
+        async Task<IReadOnlyList<string>> Tags() => (await library.Search.SearchAsync(PromptQuery.All)).Single().Tags;
+
+        Assert.Equal(["zeta", "alpha"], await Tags());
+        await library.PromptService.AddTagsAsync(prompt.Id, ["mid"]);
+        Assert.Equal(["zeta", "alpha", "mid"], await Tags());
+        await library.PromptService.RemoveTagAsync(prompt.Id, "zeta");
+        Assert.Equal(["alpha", "mid"], await Tags());
+
+        // A save that leaves the tags alone keeps them, and the index with them.
+        await library.PromptService.SetFavoriteAsync(prompt.Id, true);
+        Assert.Equal(["alpha", "mid"], await Tags());
+        Assert.Single(await library.Search.SearchAsync(new PromptQuery { Text = "#mid" }));
+        Assert.Single(await library.Search.SearchAsync(new PromptQuery { Text = "mid" }));
+
+        await library.PromptService.SetTagsAsync(prompt.Id, []);
+        Assert.Empty(await Tags());
+        Assert.Empty(await library.Search.SearchAsync(new PromptQuery { Text = "mid" }));
+    }
 }

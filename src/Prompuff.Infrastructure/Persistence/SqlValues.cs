@@ -24,8 +24,49 @@ internal static class SqlValues
     public static Guid? ReadIdOrNull(this SqliteDataReader reader, int ordinal) =>
         reader.IsDBNull(ordinal) ? null : Guid.Parse(reader.GetString(ordinal));
 
-    public static DateTimeOffset ReadTime(this SqliteDataReader reader, int ordinal) =>
-        DateTimeOffset.Parse(reader.GetString(ordinal), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+    public static DateTimeOffset ReadTime(this SqliteDataReader reader, int ordinal) => ParseTime(reader.GetString(ordinal));
+
+    /// <summary>
+    /// Reads a stored time. Times written by <see cref="Time"/> are read field by field, which is many times faster than
+    /// the general parser and adds up across a large library. Any other shape still goes through the general parser.
+    /// </summary>
+    public static DateTimeOffset ParseTime(string text) =>
+        TryParseStoredTime(text, out var time)
+            ? time
+            : DateTimeOffset.Parse(text, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+
+    // yyyy-MM-ddTHH:mm:ss.fffffffZ
+    private static bool TryParseStoredTime(ReadOnlySpan<char> text, out DateTimeOffset time)
+    {
+        time = default;
+        if (text.Length != 28 || text[4] != '-' || text[7] != '-' || text[10] != 'T' || text[13] != ':' || text[16] != ':' || text[19] != '.' || text[27] != 'Z'
+            || !Digits(text[..4], out var year) || !Digits(text.Slice(5, 2), out var month) || !Digits(text.Slice(8, 2), out var day)
+            || !Digits(text.Slice(11, 2), out var hour) || !Digits(text.Slice(14, 2), out var minute) || !Digits(text.Slice(17, 2), out var second)
+            || !Digits(text.Slice(20, 7), out var fraction)
+            || year < 1 || month is < 1 or > 12 || day < 1 || day > DateTime.DaysInMonth(year, month) || hour > 23 || minute > 59 || second > 59)
+        {
+            return false;
+        }
+
+        time = new DateTimeOffset(new DateTime(year, month, day, hour, minute, second, DateTimeKind.Utc).Ticks + fraction, TimeSpan.Zero);
+        return true;
+    }
+
+    private static bool Digits(ReadOnlySpan<char> text, out int value)
+    {
+        value = 0;
+        foreach (var ch in text)
+        {
+            if (ch is < '0' or > '9')
+            {
+                return false;
+            }
+
+            value = value * 10 + (ch - '0');
+        }
+
+        return true;
+    }
 
     public static DateTimeOffset? ReadTimeOrNull(this SqliteDataReader reader, int ordinal) =>
         reader.IsDBNull(ordinal) ? null : reader.ReadTime(ordinal);
