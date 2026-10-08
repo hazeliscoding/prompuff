@@ -146,7 +146,7 @@ Trust Prompuff with more than a few prompts: nothing is lost by accident, search
 
 Ship the remaining platforms early, so every later feature is built for all of them.
 
-- [ ] macOS in the CI matrix: build plus the headless UI tests on a macOS runner.
+- [x] macOS in the CI matrix: build plus the headless UI tests on a macOS runner.
 - [ ] Release jobs for `osx-arm64` and `osx-x64`, one Velopack channel each, producing a `.pkg` and a zipped `.app` with an ad-hoc signature, which Apple Silicon needs to run them.
 - [ ] macOS conventions: Cmd shortcuts (already in the shortcut table), a native app menu with About, Settings and Quit, and a title bar that keeps the traffic-light buttons.
 - [ ] macOS smoke test on the runner: launch the app, take a screenshot, and check that `prompuff.db` lands in `~/Library/Application Support/Prompuff`.
