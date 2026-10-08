@@ -70,6 +70,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Library keys:** arrows, Home and End move a cursor that focus follows, and the cursor stays on its prompt across refreshes. After a delete it moves to the card that took the deleted one's place. Up and Down move a whole row of cards. Type-ahead matches the start of a title, resets after a second, and cycles when the same letter is typed again.
 - **Esc goes back** from a prompt or Settings to the library, but only when nothing else used the key, so closing a dropdown or a dialog never leaves the page.
 - **Density** is a setting in Settings › Appearance and changes only the library. Cozy is the old look. Compact trims padding and shows one line of description. Dense drops descriptions and card footers but keeps four columns at the default width, because five cut titles short.
+- **Lineage** is `Prompts.ParentPromptId` (migration 5), set by Duplicate and by duplicating an old version. It's a foreign key with `ON DELETE SET NULL`: a parent in Recently deleted still shows as "Duplicated from" but must be restored to open, and removing it for good leaves the copy as an independent prompt. Copies in Recently deleted aren't listed. Lineage doesn't travel in Markdown, because imports are always independent copies.
 - **Dialogs take focus** when they open, so Enter confirms the dialog instead of pressing the button behind it, and focus returns where it was when they close.
 
 ## v0.1: MVP (tagged 2026-10-07)
@@ -178,7 +179,7 @@ Make daily use fast, and keep track of where prompts came from.
 
 - [x] Library keyboard navigation: arrow keys move through cards and rows, Enter opens, Delete deletes after confirming, and typing jumps to a title.
 - [x] Density modes from the design (Cozy, Compact, Dense).
-- [ ] Prompt lineage: Duplicate records `ParentPromptId`, and the detail view shows "Duplicated from" and a list of copies.
+- [x] Prompt lineage: Duplicate records `ParentPromptId`, and the detail view shows "Duplicated from" and a list of copies.
 - [ ] Multi-select in the library to tag, move, export or delete several prompts.
 - [ ] Folder import that walks subfolders, skips `.obsidian` and other dot folders, and reports skipped files.
 
