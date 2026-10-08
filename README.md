@@ -77,7 +77,7 @@ On macOS, use ⌘ Cmd wherever the table says Ctrl.
 | Ctrl+H | Version history |
 | Esc | Close a dialog or the palette, or go back from a prompt to the library |
 
-In the library, the arrow keys, Home and End move between prompts, Enter opens one, and Delete (⌘⌫ on macOS) deletes it after asking. Typing the first letters of a title jumps to it. From the search box, ↓ moves to the results and Enter opens the best match.
+In the library, the arrow keys, Home and End move between prompts, Enter opens one, and Delete (⌘⌫ on macOS) deletes it after asking. Typing the first letters of a title jumps to it. From the search box, ↓ moves to the results and Enter opens the best match. To work on several prompts at once, choose Select, or Ctrl+click (⌘-click), Shift+click or press Ctrl+A (⌘A); then tag, move, export or delete them together.
 
 ## Development
 
