@@ -7,6 +7,17 @@
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
+  <!-- dotnet publish -r <rid>: one trimmed, self-contained prompuff with SQLite's native library beside it. The library
+       isn't bundled, because .NET would unpack it into ~/.net, outside Prompuff's folders. -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+    <AllowedReferenceRelatedFileExtensions>-</AllowedReferenceRelatedFileExtensions>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Prompuff.Infrastructure\Prompuff.Infrastructure.csproj" />
   </ItemGroup>
