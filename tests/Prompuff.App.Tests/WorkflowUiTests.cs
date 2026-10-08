@@ -119,6 +119,7 @@ public class WorkflowUiTests
         await app.SettleAsync();
         Assert.Equal(8, app.ViewModel.Sidebar.All.Count);
         Assert.Equal(1, app.ViewModel.Sidebar.WorkflowCount);
+        Assert.Equal("1 workflow and 2 prompts added to your library.", app.ViewModel.Toasts.Current?.Subtitle);
 
         await app.ViewModel.Sidebar.OpenWorkflowsCommand.ExecuteAsync(null);
         await app.SettleAsync();
@@ -167,6 +168,29 @@ public class WorkflowUiTests
         Assert.Equal([items[1].Id, items[0].Id], page.Steps.Select(step => step.PromptId));
         Assert.Equal("Typed a moment ago", page.Steps[1].Note);
         Assert.Equal("Typed a moment ago", (await app.Get<WorkflowService>().GetAsync(workflow.Id))!.Steps[1].Note);
+    }
+
+    [AvaloniaFact]
+    public async Task The_sample_workflow_renders_in_the_light_theme()
+    {
+        var files = new FakeFilePicker { ImportPaths = [SampleWorkflow] };
+        await using var app = await AppHarness.StartAsync(theme: Application.Settings.ThemePreference.Light, files: files);
+        await app.ViewModel.Settings.ImportCommand.ExecuteAsync(null);
+        await app.ViewModel.Sidebar.OpenWorkflowsCommand.ExecuteAsync(null);
+        await app.SettleAsync();
+        var list = Assert.IsType<WorkflowsViewModel>(app.ViewModel.CurrentPage);
+        app.Screenshot("workflows-list-light");
+
+        await list.Items.Single().OpenCommand.ExecuteAsync(null);
+        await app.SettleAsync();
+        var workflow = Assert.IsType<WorkflowViewModel>(app.ViewModel.CurrentPage);
+        app.Screenshot("workflow-steps-light");
+        workflow.Tab = WorkflowTab.Run;
+        workflow.Variables[0].Value = "acme-web";
+        await workflow.CopyStepCommand.ExecuteAsync(null);
+        await app.SettleAsync();
+        app.Screenshot("workflow-run-light");
+        Assert.Equal(2, workflow.CurrentStep?.Number);
     }
 
     [AvaloniaFact]
