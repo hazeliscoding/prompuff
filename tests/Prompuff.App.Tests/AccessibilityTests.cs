@@ -54,6 +54,9 @@ public class AccessibilityTests
         var failures = new List<string>();
 
         failures.AddRange(Unnamed(app, "library cards"));
+
+        // A card is read by its prompt's title, with the description as help, rather than everything printed on it.
+        Assert.Contains("library cards: Button: UI Mockup Generator", Names);
         app.ViewModel.Library.IsListLayout = true;
         await app.SettleAsync();
         failures.AddRange(Unnamed(app, "library list"));

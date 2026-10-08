@@ -251,7 +251,7 @@
         <c:CardGrid x:Name="CardsList" Cards="{Binding Items}" Margin="20,16,20,32">
           <c:CardGrid.CardTemplate>
             <DataTemplate x:DataType="vm:PromptCardViewModel">
-              <Button Classes="card" Classes.selected="{Binding IsSelected}" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus">
+              <Button Classes="card" Classes.selected="{Binding IsSelected}" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus" AutomationProperties.Name="{Binding Title}" AutomationProperties.HelpText="{Binding Description}">
                 <StackPanel Classes="card-stack">
                   <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                     <Panel VerticalAlignment="Top" Margin="0,3,0,0">
@@ -314,7 +314,7 @@
               </ItemsControl.ItemsPanel>
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:PromptCardViewModel">
-                  <Button Classes="row" Classes.selected="{Binding IsSelected}" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus">
+                  <Button Classes="row" Classes.selected="{Binding IsSelected}" Command="{Binding OpenCommand}" GotFocus="OnCardGotFocus" AutomationProperties.Name="{Binding Title}" AutomationProperties.HelpText="{Binding Description}">
                     <Grid ColumnDefinitions="28,2*,1.6*,120,100,36" ColumnSpacing="12">
                       <c:ToneDot Tone="{Binding CollectionTone}" HorizontalAlignment="Center" ToolTip.Tip="{Binding CollectionName}"
                                  IsVisible="{Binding $parent[UserControl].((vm:LibraryViewModel)DataContext).IsNotSelecting}" />
