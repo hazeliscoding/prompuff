@@ -47,7 +47,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **macOS is CI-verified only.** The owner has no Mac, so macOS builds are packaged, UI-tested and launch-tested on GitHub's macOS runners. Hands-on testing comes from users' issue reports, and the README says so plainly.
 - **Hands-on Linux checks run in WSLg** (Ubuntu-24.04 under WSL), which also covers the XWayland path. AppImages there need `APPIMAGE_EXTRACT_AND_RUN=1`, because the distribution has no FUSE 2.
 - **macOS comes early (v0.3)**, so the hotkey, tray, CLI and MCP work after it is built for all three platforms from the start.
-- **1.0 installers are signed.** Windows uses Azure Trusted Signing (about $10 a month). macOS uses a Developer ID and notarization from CI with an App Store Connect API key (Apple Developer account, $99 a year). Signing switches on only when the secrets exist, so forks and dry runs still build unsigned.
+- **1.0 installers are signed.** Windows uses Azure Trusted Signing (about $10 a month). macOS uses a Developer ID and notarization from CI with an App Store Connect API key (Apple Developer account, $99 a year). Signing switches on only when the secrets exist, so forks and dry runs still build unsigned. (Changed in v0.3: there's no Apple Developer account, so only Windows is signed; see the v0.3 decisions.)
 - **Capture at 1.0** is a system-wide Quick save hotkey and a tray icon. Wayland doesn't let apps grab global keys, so Wayland users bind a desktop shortcut to `prompuff quick-save` instead. The browser extension comes after 1.0.
 - **Integrations at 1.0:** a `prompuff` CLI and a local MCP server over stdio, so Claude Code and similar tools can search and render prompts. Both read the same SQLite library, and neither opens a network connection.
 - **The 1.0 promise is format stability.** Every later version opens a 1.0 library, the Markdown format stays compatible, and every schema migration is tested from every released version.
@@ -55,8 +55,9 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 ## Decisions: v0.3 (2026-10-07)
 
 - **macOS title bar:** the window extends into the title bar like it does on Windows. The native traffic-light buttons sit at the top left of Prompuff's header, which leaves room for them, and the CI screenshot checks the layout.
-- **Bundle ID** is `io.github.hazeliscoding.prompuff`. macOS ties settings, permissions and notarization to it, so it doesn't change.
-- **Windows signing moves up from v0.8.** The release workflow signs with Azure Artifact Signing (formerly Trusted Signing) through `vpk pack --azureTrustedSignFile`. GitHub Actions signs in to Azure with OIDC (`azure/login`), so no Azure secret is stored, and signing switches on only when the Azure variables exist.
+- **Bundle ID** is `io.github.hazeliscoding.prompuff`. macOS ties settings and permissions to it, so it doesn't change.
+- **Windows signing moves up from v0.8.** The release workflow signs with Azure Artifact Signing (formerly Trusted Signing) through `vpk pack --azureTrustedSignFile`. GitHub Actions signs in to Azure with OIDC (`azure/login`), so no Azure secret is stored, and signing switches on only when the Azure variables exist. The app registration `prompuff-release-signing` trusts only jobs in the repo's `release` environment, which only `v*` tags can use, and it can only sign with the `EZMoneyCert` profile.
+- **No Apple Developer account,** now or planned. macOS builds are ad-hoc signed and never notarized, through 1.0. Gatekeeper blocks them on first launch, so the README explains Open Anyway, and Mac signing leaves the roadmap.
 
 ## v0.1: MVP (tagged 2026-10-07)
 
@@ -146,13 +147,13 @@ Trust Prompuff with more than a few prompts: nothing is lost by accident, search
 Ship the remaining platforms early, so every later feature is built for all of them.
 
 - [ ] macOS in the CI matrix: build plus the headless UI tests on a macOS runner.
-- [ ] Release jobs for `osx-arm64` and `osx-x64`, one Velopack channel each, producing a `.pkg` and a zipped `.app` with an ad-hoc signature so Apple Silicon runs them before notarization lands.
+- [ ] Release jobs for `osx-arm64` and `osx-x64`, one Velopack channel each, producing a `.pkg` and a zipped `.app` with an ad-hoc signature, which Apple Silicon needs to run them.
 - [ ] macOS conventions: Cmd shortcuts (already in the shortcut table), a native app menu with About, Settings and Quit, and a title bar that keeps the traffic-light buttons.
 - [ ] macOS smoke test on the runner: launch the app, take a screenshot, and check that `prompuff.db` lands in `~/Library/Application Support/Prompuff`.
 - [ ] `linux-arm64` AppImage, built and smoke-tested under Xvfb on GitHub's ARM runner.
 - [ ] Windows signing with Azure Artifact Signing in the release workflow, checked on the runner with `signtool verify /pa`.
 - [ ] Signing switches on only when the Azure variables exist; forks and manual runs still build unsigned.
-- [ ] README: list macOS as CI-verified, and explain System Settings › Privacy & Security › Open Anyway until builds are notarized. macOS 15 removed the right-click › Open shortcut.
+- [ ] README: list macOS as CI-verified, and explain System Settings › Privacy & Security › Open Anyway, since the builds aren't notarized. macOS 15 removed the right-click › Open shortcut.
 
 **Done when:** one tag produces Windows, Linux x64, Linux ARM64 and both macOS packages, each one launches and creates its library on a CI runner, and `Prompuff-Setup.exe` is signed and installs without a SmartScreen warning.
 
@@ -202,14 +203,12 @@ Let scripts and coding agents use the vault without opening the app.
 
 **Done when:** Claude Code can search the vault and render a prompt with variables through MCP, and `prompuff render "Angular Upgrade Planner" --var repo_name=acme` prints the result on all three platforms.
 
-## v0.8: Signed, with a beta channel
+## v0.8: Beta channel
 
-- [ ] macOS Developer ID signing and notarization from CI, checked on the runner with `spctl --assess`.
-- [ ] macOS signing switches on only when the Apple secrets exist; forks and manual runs still build unsigned.
 - [ ] A `SHA256SUMS` file with every release.
 - [ ] A Beta channel: `-beta` tags publish pre-releases to `*-beta` Velopack channels, and the Beta option in Settings › Updates works.
 
-**Done when:** the macOS package passes Gatekeeper on the runner, and a beta install updates from the beta channel.
+**Done when:** a beta install updates from the beta channel, and every release carries a `SHA256SUMS` file.
 
 ## v0.9: Release candidate
 
@@ -224,7 +223,7 @@ Let scripts and coding agents use the vault without opening the app.
 
 ## v1.0
 
-- [ ] Tag 1.0 from the final release candidate, signed on Windows and macOS.
+- [ ] Tag 1.0 from the final release candidate, signed on Windows.
 - [ ] Update from 0.9 to 1.0 checked by hand on Windows and in WSLg, and on macOS CI runners.
 - [ ] README and the About page state the 1.0 promise: later versions open 1.0 libraries.
 
