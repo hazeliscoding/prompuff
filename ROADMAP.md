@@ -52,6 +52,12 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Integrations at 1.0:** a `prompuff` CLI and a local MCP server over stdio, so Claude Code and similar tools can search and render prompts. Both read the same SQLite library, and neither opens a network connection.
 - **The 1.0 promise is format stability.** Every later version opens a 1.0 library, the Markdown format stays compatible, and every schema migration is tested from every released version.
 
+## Decisions: v0.3 (2026-10-07)
+
+- **macOS title bar:** the window extends into the title bar like it does on Windows. The native traffic-light buttons sit at the top left of Prompuff's header, which leaves room for them, and the CI screenshot checks the layout.
+- **Bundle ID** is `io.github.hazeliscoding.prompuff`. macOS ties settings, permissions and notarization to it, so it doesn't change.
+- **Windows signing moves up from v0.8.** The release workflow signs with Azure Artifact Signing (formerly Trusted Signing) through `vpk pack --azureTrustedSignFile`. GitHub Actions signs in to Azure with OIDC (`azure/login`), so no Azure secret is stored, and signing switches on only when the Azure variables exist.
+
 ## v0.1: MVP (tagged 2026-10-07)
 
 ### M0: Foundation
@@ -144,9 +150,11 @@ Ship the remaining platforms early, so every later feature is built for all of t
 - [ ] macOS conventions: Cmd shortcuts (already in the shortcut table), a native app menu with About, Settings and Quit, and a title bar that keeps the traffic-light buttons.
 - [ ] macOS smoke test on the runner: launch the app, take a screenshot, and check that `prompuff.db` lands in `~/Library/Application Support/Prompuff`.
 - [ ] `linux-arm64` AppImage, built and smoke-tested under Xvfb on GitHub's ARM runner.
-- [ ] README: list macOS as CI-verified, and explain right-click › Open until builds are notarized.
+- [ ] Windows signing with Azure Artifact Signing in the release workflow, checked on the runner with `signtool verify /pa`.
+- [ ] Signing switches on only when the Azure variables exist; forks and manual runs still build unsigned.
+- [ ] README: list macOS as CI-verified, and explain System Settings › Privacy & Security › Open Anyway until builds are notarized. macOS 15 removed the right-click › Open shortcut.
 
-**Done when:** one tag produces Windows, Linux x64, Linux ARM64 and both macOS packages, and each one launches and creates its library on a CI runner.
+**Done when:** one tag produces Windows, Linux x64, Linux ARM64 and both macOS packages, each one launches and creates its library on a CI runner, and `Prompuff-Setup.exe` is signed and installs without a SmartScreen warning.
 
 ## v0.4: Keyboard-first and lineage
 
@@ -196,13 +204,12 @@ Let scripts and coding agents use the vault without opening the app.
 
 ## v0.8: Signed, with a beta channel
 
-- [ ] Windows signing with Azure Trusted Signing in the release workflow.
 - [ ] macOS Developer ID signing and notarization from CI, checked on the runner with `spctl --assess`.
-- [ ] Signing switches on only when the secrets exist; forks and manual runs still build unsigned.
+- [ ] macOS signing switches on only when the Apple secrets exist; forks and manual runs still build unsigned.
 - [ ] A `SHA256SUMS` file with every release.
 - [ ] A Beta channel: `-beta` tags publish pre-releases to `*-beta` Velopack channels, and the Beta option in Settings › Updates works.
 
-**Done when:** `Prompuff-Setup.exe` installs without a SmartScreen warning, the macOS package passes Gatekeeper on the runner, and a beta install updates from the beta channel.
+**Done when:** the macOS package passes Gatekeeper on the runner, and a beta install updates from the beta channel.
 
 ## v0.9: Release candidate
 
