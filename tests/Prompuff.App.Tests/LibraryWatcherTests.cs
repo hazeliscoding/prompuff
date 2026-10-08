@@ -1,12 +1,42 @@
 using Avalonia.Headless.XUnit;
+using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
 using Prompuff.App.ViewModels;
 using Prompuff.Application.Services;
 using Prompuff.Domain.ValueObjects;
+using Prompuff.Infrastructure.Persistence;
+using Prompuff.Infrastructure.Storage;
 
 namespace Prompuff.App.Tests;
 
 public class LibraryWatcherTests
 {
+    [Fact]
+    public async Task Quitting_closes_the_watchers_connection()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "prompuff-ui-tests", Guid.NewGuid().ToString("N"));
+        var paths = new AppDataPathProvider(new PlatformEnvironment(
+            PlatformEnvironment.Current.Platform,
+            PlatformEnvironment.Current.HomeDirectory,
+            name => name == AppDataPathProvider.OverrideVariable ? folder : null));
+        var services = App.ConfigureServices(paths);
+        await services.GetRequiredService<SqliteDatabase>().InitializeAsync();
+        await services.GetRequiredService<LibraryChangeMonitor>().CheckAsync();
+
+        // The app disposes its services synchronously when the window closes.
+        services.Dispose();
+
+        SqliteConnection.ClearAllPools();
+        try
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+        catch (IOException)
+        {
+            // The log file stays open until the process ends; temp folders are cleaned up by the OS eventually.
+        }
+    }
+
     [AvaloniaFact]
     public async Task A_prompt_saved_outside_the_app_shows_up_without_a_restart()
     {

@@ -7,7 +7,7 @@ namespace Prompuff.Infrastructure.Persistence;
 /// SQLite's <c>data_version</c> moves whenever another connection commits, so this keeps one connection of its own
 /// open and compares. Writes by this process count too; <see cref="ResetAsync"/> takes them as seen.
 /// </summary>
-public sealed class LibraryChangeMonitor(SqliteDatabase database) : IAsyncDisposable
+public sealed class LibraryChangeMonitor(SqliteDatabase database) : IDisposable, IAsyncDisposable
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
     private SqliteConnection? _connection;
@@ -39,6 +39,21 @@ public sealed class LibraryChangeMonitor(SqliteDatabase database) : IAsyncDispos
         await using var command = _connection.CreateCommand();
         command.CommandText = "PRAGMA data_version";
         return (long)(await command.ExecuteScalarAsync(cancellationToken))!;
+    }
+
+    /// <summary>The app disposes its services synchronously on exit, which needs this as well as <see cref="DisposeAsync"/>.</summary>
+    public void Dispose()
+    {
+        _gate.Wait();
+        try
+        {
+            _connection?.Dispose();
+            _connection = null;
+        }
+        finally
+        {
+            _gate.Release();
+        }
     }
 
     public async ValueTask DisposeAsync()
