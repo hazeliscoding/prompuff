@@ -80,6 +80,11 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 
 - **One copy per library.** The first copy holds an exclusive lock on `prompuff.lock` in the data folder (a sharing lock on Windows, `flock` elsewhere), which the operating system releases if it crashes. Later launches send `activate` or `quick-save` to it over a local pipe (a named pipe on Windows, a Unix socket elsewhere) that only the same user can open, then exit. The pipe name is a hash of the data folder, so a development run with `PROMPUFF_DATA_DIR` never talks to the real one. This is local IPC, not network code.
 - **`--quick-save` and `quick-save`** both open Quick save, so a desktop shortcut can run the app executable or AppImage with either.
+- **Tray:** always shown while Prompuff runs, with Quick save, Open and Quit; clicking it opens the window. Keeping Prompuff in the tray when the window closes is off by default. Quit, ⌘Q and shutting down always quit. Linux shows the icon through StatusNotifierItem, so desktops without a tray host (stock GNOME) don't show it; launching Prompuff again brings the window back. The macOS menu bar icon is a template image drawn at startup from Puff's outline.
+- **Hotkey:** Ctrl+Alt+P by default (⌃⌥P on macOS, where ⌥⌘P belongs to Finder), on unless turned off. A hotkey needs Ctrl, Alt or Meta plus a letter, digit, F1–F12 or Space, which every backend can register. Windows uses `RegisterHotKey` with no window on a dedicated message-loop thread; X11 uses `XGrabKey` on its own display connection, repeated for Caps Lock and Num Lock, with an error handler chained in front of Avalonia's so a taken combination reports BadAccess instead of exiting; macOS uses Carbon's `RegisterEventHotKey`, which needs no Accessibility permission. Settings records a new combination from the keyboard and says when another app owns one.
+- **After a hotkey Quick save**, the window goes back to the tray or the taskbar if it was there, so you land back in the app you came from.
+- **Wayland** can't give an app a global hotkey, so Settings shows the desktop-shortcut steps for GNOME and KDE and the exact command (the AppImage path from `APPIMAGE`, plus `--quick-save`). Once v0.7 puts `prompuff` on the PATH, the command can become `prompuff quick-save`.
+- **Verification:** the Windows hotkey was checked by hand on Windows 11. X11 is tested in CI under Xvfb (grab, BadAccess for a second client, a press through XTest), and the release smoke test copies text, presses the hotkey and Enter, and checks a prompt was stashed. macOS is checked on the runner by the app logging that Carbon registered the hotkey; pressing it there needs Accessibility rights the runner doesn't have.
 
 ## v0.1: MVP (tagged 2026-10-07)
 
@@ -199,9 +204,9 @@ Make daily use fast, and keep track of where prompts came from.
 Stash a good prompt from any app in a few seconds.
 
 - [x] Single instance: launching Prompuff again, or running `Prompuff --quick-save`, hands off to the running copy.
-- [ ] Tray icon with Quick save, Open and Quit, and an option to keep running in the tray when the window closes.
-- [ ] A configurable system-wide Quick save hotkey behind `IGlobalHotkeyService`, implemented for Windows, X11 and macOS.
-- [ ] Wayland: Settings explains how to bind a desktop shortcut to `prompuff quick-save`.
+- [x] Tray icon with Quick save, Open and Quit, and an option to keep running in the tray when the window closes.
+- [x] A configurable system-wide Quick save hotkey behind `IGlobalHotkeyService`, implemented for Windows, X11 and macOS.
+- [x] Wayland: Settings explains how to bind a desktop shortcut to `prompuff quick-save`.
 
 **Done when:** you can copy text in a browser, press the hotkey, and find the prompt stashed in under five seconds on Windows, on Linux under X11, and on macOS (CI-verified).
 

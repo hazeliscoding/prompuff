@@ -28,7 +28,7 @@ Your prompts stay on your machine. There is no account, no cloud and no telemetr
 - **Versions** every saved change to the title, description, body or notes. The History tab shows a line diff, and Restore brings an old version back as a new one.
 - **Keeps up with the keyboard:** arrow keys, type-to-jump and Enter in the library, and Select to tag, move, export or delete many prompts at once. Duplicates remember where they came from.
 - **Finds** prompts fast: ranked search across titles, descriptions, bodies, notes and tags that ignores case and accents ("cafe" finds "Café"), or type `#tag`. Filter by Favorites, Recent, a collection or a tag.
-- **Captures** quickly: Quick save (Ctrl+Shift+S) starts from whatever is on your clipboard.
+- **Captures** from anywhere: copy a prompt in any app and press **Ctrl+Alt+P** (⌃⌥P on macOS). Quick save opens with your clipboard, Enter stashes it, and you're back where you were. The tray icon does the same, and Prompuff can keep running there when you close the window.
 - **Travels** as plain Markdown with a small metadata block. Export what you're looking at as one `.zip` for another machine or a teammate; importing it skips prompts you already have. Import a whole folder, such as an Obsidian vault, and Prompuff walks its subfolders and leaves `.obsidian` alone.
 - **Forgives**: deleted prompts wait 30 days in Recently deleted, and the library is backed up once a day.
 
@@ -74,11 +74,16 @@ On macOS, use ⌘ Cmd wherever the table says Ctrl.
 | Ctrl+Enter | Open Render, then copy the rendered prompt |
 | Ctrl+Shift+C | Copy the template with its variables |
 | Ctrl+Shift+S | Quick save from the clipboard |
+| Ctrl+Alt+P, from any app | Quick save from the clipboard (change it in Settings › Quick save) |
 | Ctrl+D | Toggle favorite |
 | Ctrl+H | Version history |
 | Esc | Close a dialog or the palette, or go back from a prompt to the library |
 
 In the library, the arrow keys, Home and End move between prompts, Enter opens one, and Delete (⌘⌫ on macOS) deletes it after asking. Typing the first letters of a title jumps to it. From the search box, ↓ moves to the results and Enter opens the best match. To work on several prompts at once, choose Select, or Ctrl+click (⌘-click), Shift+click or press Ctrl+A (⌘A); then tag, move, export or delete them together.
+
+### Quick save from a desktop shortcut
+
+Wayland doesn't let apps own a global hotkey, so bind a shortcut in your desktop's settings instead. Settings › Quick save shows the exact command, which is the AppImage followed by `--quick-save`. Running Prompuff again always hands off to the copy that's already open.
 
 ## Development
 
