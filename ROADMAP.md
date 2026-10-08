@@ -181,7 +181,7 @@ Ship the remaining platforms early, so every later feature is built for all of t
 
 **Done when:** one tag produces Windows, Linux x64, Linux ARM64 and both macOS packages, each one launches and creates its library on a CI runner, and `Prompuff-Setup.exe` is signed, so SmartScreen names the publisher.
 
-## v0.4: Keyboard-first and lineage
+## v0.4: Keyboard-first and lineage (tagged 2026-10-08)
 
 Make daily use fast, and keep track of where prompts came from.
 
@@ -190,6 +190,7 @@ Make daily use fast, and keep track of where prompts came from.
 - [x] Prompt lineage: Duplicate records `ParentPromptId`, and the detail view shows "Duplicated from" and a list of copies.
 - [x] Multi-select in the library to tag, move, export or delete several prompts.
 - [x] Folder import that walks subfolders, skips `.obsidian` and other dot folders, and reports skipped files.
+- [x] Publish v0.4.0 (2026-10-08).
 
 **Done when:** you can find, open, edit, render and copy a prompt without the mouse, and a duplicate links back to its parent.
 
