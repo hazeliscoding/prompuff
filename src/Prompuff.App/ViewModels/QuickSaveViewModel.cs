@@ -150,7 +150,7 @@ public sealed partial class QuickSaveViewModel : ObservableObject
 
         FromClipboard = clipboardText.Length > 0;
         Text = clipboardText;
-        Title = SuggestTitle(clipboardText);
+        Title = PromptContent.SuggestTitle(clipboardText);
         Why = string.Empty;
         NewTag = string.Empty;
         Error = null;
@@ -221,7 +221,7 @@ public sealed partial class QuickSaveViewModel : ObservableObject
         try
         {
             var prompt = await _prompts.CreateAsync(
-                new PromptContent(string.IsNullOrWhiteSpace(Title) ? SuggestTitle(Text) : Title, null, Text, Why),
+                new PromptContent(string.IsNullOrWhiteSpace(Title) ? PromptContent.SuggestTitle(Text) : Title, null, Text, Why),
                 new PromptMetadata(false, Intent == QuickSaveIntent.WorkedWell ? 4 : null, SelectedCollection?.Id, tags),
                 "Quick save");
             IsOpen = false;
@@ -238,17 +238,4 @@ public sealed partial class QuickSaveViewModel : ObservableObject
     partial void OnTextChanged(string value) => Error = null;
 
     /// <summary>The first meaningful line, trimmed to a title-sized length.</summary>
-    internal static string SuggestTitle(string text)
-    {
-        var line = text.Split('\n').Select(candidate => candidate.Trim().TrimStart('#', '-', '*', '>').Trim())
-            .FirstOrDefault(candidate => candidate.Length > 0) ?? string.Empty;
-        if (line.Length <= 60)
-        {
-            return line;
-        }
-
-        var cut = line[..60];
-        var space = cut.LastIndexOf(' ');
-        return (space > 30 ? cut[..space] : cut).TrimEnd(',', '.', ':', ';') + "…";
-    }
 }
