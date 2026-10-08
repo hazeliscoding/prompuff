@@ -142,7 +142,7 @@ Trust Prompuff with more than a few prompts: nothing is lost by accident, search
 
 **Done when:** an installed 0.1 updates to 0.2 on Windows and Linux with every prompt and version intact, a deleted prompt comes back, searching "cafe" finds "Café", and a `.zip` exported on one machine imports on another with duplicates skipped.
 
-## v0.3: macOS and Linux ARM64
+## v0.3: macOS and Linux ARM64 (tagged 2026-10-08)
 
 Ship the remaining platforms early, so every later feature is built for all of them.
 
@@ -153,7 +153,7 @@ Ship the remaining platforms early, so every later feature is built for all of t
 - [x] `linux-arm64` AppImage, built and smoke-tested under Xvfb on GitHub's ARM runner.
 - [ ] Windows signing with Azure Artifact Signing in the release workflow, checked on the runner with `signtool verify /pa`.
 - [ ] Signing switches on only when the Azure variables exist; forks and manual runs still build unsigned.
-- [ ] README: list macOS as CI-verified, and explain System Settings › Privacy & Security › Open Anyway, since the builds aren't notarized. macOS 15 removed the right-click › Open shortcut.
+- [x] README: list macOS as CI-verified, and explain System Settings › Privacy & Security › Open Anyway, since the builds aren't notarized. macOS 15 removed the right-click › Open shortcut.
 
 **Done when:** one tag produces Windows, Linux x64, Linux ARM64 and both macOS packages, each one launches and creates its library on a CI runner, and `Prompuff-Setup.exe` is signed and installs without a SmartScreen warning.
 
