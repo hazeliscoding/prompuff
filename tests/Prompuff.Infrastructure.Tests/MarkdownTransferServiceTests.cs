@@ -171,6 +171,52 @@ public class MarkdownTransferServiceTests
         Assert.Empty(await library.Search.SearchAsync(PromptQuery.All));
     }
 
+    [Fact]
+    public async Task A_folder_imports_its_subfolders_and_skips_dot_folders()
+    {
+        await using var library = await TestLibrary.CreateAsync();
+        var vault = Path.Combine(library.Folder, "vault");
+        void Write(string relative, string text)
+        {
+            var path = Path.Combine(vault, relative);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, text);
+        }
+
+        Write("Top.md", "Top body");
+        Write(Path.Combine("Coding", "Review.md"), "---\ntitle: Code review\ntags: [review]\n---\n\n# Prompt\n\nReview {{diff}}.");
+        Write(Path.Combine("Coding", "Deeper", "Plan.markdown"), "Plan body");
+        Write(Path.Combine("Coding", "diagram.png"), "not text");
+        Write("notes.pdf", "not text");
+        Write(Path.Combine(".obsidian", "workspace.md"), "Obsidian state");
+        Write(Path.Combine(".git", "HEAD.md"), "Git state");
+        Write(".DS_Store", "clutter");
+
+        var result = await library.Transfer.ImportFolderAsync(vault);
+
+        Assert.Empty(result.Failures);
+        Assert.Equal(3, result.ImportedCount);
+        Assert.Equal([Path.Combine("Coding", "diagram.png"), "notes.pdf"], result.SkippedFiles);
+        var titles = (await library.Search.SearchAsync(new PromptQuery { Sort = PromptSort.Title })).Select(p => p.Title);
+        Assert.Equal(["Code review", "Plan", "Top"], titles);
+
+        // A second import finds nothing new.
+        var again = await library.Transfer.ImportFolderAsync(vault);
+        Assert.Equal(0, again.ImportedCount);
+        Assert.Equal(3, again.SkippedCount);
+    }
+
+    [Fact]
+    public async Task A_missing_folder_is_reported()
+    {
+        await using var library = await TestLibrary.CreateAsync();
+        var missing = Path.Combine(library.Folder, "gone");
+
+        var result = await library.Transfer.ImportFolderAsync(missing);
+
+        Assert.Equal(missing, Assert.Single(result.Failures).FilePath);
+    }
+
     [Theory]
     [InlineData("Angular Upgrade Planner", "angular-upgrade-planner.md")]
     [InlineData("  README: cleanup!! ", "readme-cleanup.md")]

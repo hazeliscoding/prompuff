@@ -20,6 +20,7 @@ public sealed class MarkdownTransferService(
 {
     private const long MaxImportBytes = 5 * 1024 * 1024;
     private const int MaxArchiveEntries = 10_000;
+    private const int MaxFolderDepth = 32;
     private const string TooLarge = "The file is too large to be a prompt (over 5 MB).";
     private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
     private static readonly HashSet<string> MarkdownExtensions = new([".md", ".markdown", ".txt"], StringComparer.OrdinalIgnoreCase);
@@ -107,38 +108,121 @@ public sealed class MarkdownTransferService(
         var import = new ImportProgress();
         foreach (var path in filePaths)
         {
+            await ImportFileAsync(path, import, cancellationToken);
+        }
+
+        return Finish(import);
+    }
+
+    public async Task<ImportResult> ImportFolderAsync(string folderPath, CancellationToken cancellationToken = default)
+    {
+        var import = new ImportProgress();
+        var root = new DirectoryInfo(folderPath);
+        if (!root.Exists)
+        {
+            import.Failures.Add(new ImportFailure(folderPath, "The folder doesn't exist anymore."));
+            return Finish(import);
+        }
+
+        var files = new List<string>();
+        var pending = new Stack<(DirectoryInfo Folder, int Depth)>([(root, 0)]);
+        while (pending.Count > 0)
+        {
+            var (folder, depth) = pending.Pop();
+            List<FileSystemInfo> entries;
             try
             {
-                var info = new FileInfo(path);
-                if (!info.Exists)
+                entries = folder.EnumerateFileSystemInfos().ToList();
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+            {
+                logger.LogWarning(exception, "Folder import couldn't open a subfolder");
+                import.Failures.Add(new ImportFailure(folder.FullName, "Prompuff couldn't open this folder.", exception.Message));
+                continue;
+            }
+
+            foreach (var entry in entries)
+            {
+                // Dot folders hold app state (.obsidian, .git, .trash), and dot files are system clutter (.DS_Store).
+                if (entry.Name.StartsWith('.') || entry.Name == "__MACOSX")
                 {
-                    import.Failures.Add(new ImportFailure(path, "The file doesn't exist anymore."));
+                    continue;
                 }
-                else if (string.Equals(info.Extension, ".zip", StringComparison.OrdinalIgnoreCase))
+
+                if (entry is DirectoryInfo subfolder)
                 {
-                    await ImportArchiveAsync(path, import, cancellationToken);
+                    // Links can point back up the tree, so they aren't followed.
+                    if (subfolder.LinkTarget is null && depth < MaxFolderDepth)
+                    {
+                        pending.Push((subfolder, depth + 1));
+                    }
+
+                    continue;
                 }
-                else if (info.Length > MaxImportBytes)
+
+                if (files.Count + import.OtherFiles.Count >= MaxArchiveEntries)
                 {
-                    import.Failures.Add(new ImportFailure(path, TooLarge));
+                    import.Failures.Add(new ImportFailure(folderPath, $"The folder holds more than {MaxArchiveEntries:N0} files, which is more than Prompuff imports at once."));
+                    return Finish(import);
+                }
+
+                if (MarkdownExtensions.Contains(entry.Extension))
+                {
+                    files.Add(entry.FullName);
                 }
                 else
                 {
-                    var text = await File.ReadAllTextAsync(path, cancellationToken);
-                    await ImportTextAsync(path, text, Path.GetFileNameWithoutExtension(path), import, cancellationToken);
+                    import.OtherFiles.Add(Path.GetRelativePath(root.FullName, entry.FullName));
                 }
-            }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or DecoderFallbackException or InvalidDataException)
-            {
-                logger.LogWarning(exception, "Import couldn't read a file");
-                import.Failures.Add(new ImportFailure(path, "Prompuff couldn't read the file.", exception.Message));
             }
         }
 
+        // Path order, so a folder imports the same way every time.
+        foreach (var path in files.Order(StringComparer.OrdinalIgnoreCase))
+        {
+            await ImportFileAsync(path, import, cancellationToken);
+        }
+
+        import.OtherFiles.Sort(StringComparer.OrdinalIgnoreCase);
+        return Finish(import);
+    }
+
+    private async Task ImportFileAsync(string path, ImportProgress import, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var info = new FileInfo(path);
+            if (!info.Exists)
+            {
+                import.Failures.Add(new ImportFailure(path, "The file doesn't exist anymore."));
+            }
+            else if (string.Equals(info.Extension, ".zip", StringComparison.OrdinalIgnoreCase))
+            {
+                await ImportArchiveAsync(path, import, cancellationToken);
+            }
+            else if (info.Length > MaxImportBytes)
+            {
+                import.Failures.Add(new ImportFailure(path, TooLarge));
+            }
+            else
+            {
+                var text = await File.ReadAllTextAsync(path, cancellationToken);
+                await ImportTextAsync(path, text, Path.GetFileNameWithoutExtension(path), import, cancellationToken);
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or DecoderFallbackException or InvalidDataException)
+        {
+            logger.LogWarning(exception, "Import couldn't read a file");
+            import.Failures.Add(new ImportFailure(path, "Prompuff couldn't read the file.", exception.Message));
+        }
+    }
+
+    private ImportResult Finish(ImportProgress import)
+    {
         logger.LogInformation(
-            "Imported {Imported} prompts, skipped {Skipped} already in the library, {Failed} files failed",
-            import.Imported.Count, import.Skipped, import.Failures.Count);
-        return new ImportResult(import.Imported, import.Failures, import.Skipped);
+            "Imported {Imported} prompts, skipped {Skipped} already in the library and {Other} other files, {Failed} files failed",
+            import.Imported.Count, import.Skipped, import.OtherFiles.Count, import.Failures.Count);
+        return new ImportResult(import.Imported, import.Failures, import.Skipped, import.OtherFiles);
     }
 
     /// <summary>
@@ -289,6 +373,7 @@ public sealed class MarkdownTransferService(
     {
         public List<Guid> Imported { get; } = [];
         public List<ImportFailure> Failures { get; } = [];
+        public List<string> OtherFiles { get; } = [];
         public int Skipped { get; set; }
     }
 }

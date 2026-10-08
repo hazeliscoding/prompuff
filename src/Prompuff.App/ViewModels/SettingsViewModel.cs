@@ -386,15 +386,50 @@ public sealed partial class SettingsViewModel : ObservableObject
             return;
         }
 
-        var result = await _transfer.ImportFilesAsync(files);
+        await ReportImportAsync(await _transfer.ImportFilesAsync(files));
+    }
+
+    /// <summary>Imports every Markdown file in a folder and its subfolders, such as an Obsidian vault.</summary>
+    [RelayCommand]
+    private async Task ImportFolder()
+    {
+        var folder = await _files.PickFolderToImportAsync();
+        if (folder is null)
+        {
+            return;
+        }
+
+        await ReportImportAsync(await _transfer.ImportFolderAsync(folder));
+    }
+
+    private async Task ReportImportAsync(ImportResult result)
+    {
         _notifier.Notify();
         await RefreshAsync();
         var skipped = result.SkippedCount == 0 ? string.Empty : $" Skipped {Format.Count(result.SkippedCount, "prompt")} you already have.";
+        var others = result.SkippedFiles.Count switch
+        {
+            0 => string.Empty,
+            1 => " Passed over 1 file that isn't Markdown.",
+            var count => $" Passed over {count} files that aren't Markdown.",
+        };
+        var othersList = result.SkippedFiles.Count == 0 ? null : "Not Markdown, so not imported:\n" + string.Join("\n", result.SkippedFiles);
         if (result.Failures.Count == 0)
         {
-            if (result.ImportedCount == 0 && result.SkippedCount > 0)
+            if (result.SkippedFiles.Count > 0)
+            {
+                await _dialogs.ShowInfoAsync(
+                    result.ImportedCount == 0 ? "Nothing new." : $"Imported {Format.Count(result.ImportedCount, "prompt")}.",
+                    ((result.ImportedCount == 0 && result.SkippedCount == 0 ? "That folder has no Markdown files." : string.Empty) + skipped + others).Trim(),
+                    othersList);
+            }
+            else if (result.ImportedCount == 0 && result.SkippedCount > 0)
             {
                 _toasts.Show("Nothing new.", result.SkippedCount == 1 ? "You already have that prompt." : $"You already have all {result.SkippedCount} of those prompts.", isHappy: false);
+            }
+            else if (result.ImportedCount == 0)
+            {
+                _toasts.Show("Nothing to import.", "That folder has no Markdown files.", isHappy: false);
             }
             else
             {
@@ -409,8 +444,8 @@ public sealed partial class SettingsViewModel : ObservableObject
             result.ImportedCount == 0 ? "Couldn't import that." : $"Imported {Format.Count(result.ImportedCount, "prompt")}, couldn't read {result.Failures.Count}.",
             (result.ImportedCount == 0
                 ? "Prompuff couldn't understand the file format. Your existing library hasn't been changed."
-                : "Some files couldn't be read. The rest are in your library, and nothing else changed.") + skipped,
-            failed);
+                : "Some files couldn't be read. The rest are in your library, and nothing else changed.") + skipped + others,
+            othersList is null ? failed : failed + "\n\n" + othersList);
     }
 
     [RelayCommand]

@@ -403,6 +403,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 Settings.Select(SettingsSection.ImportExport);
                 await Settings.ImportCommand.ExecuteAsync(null);
                 break;
+            case "import-folder":
+                await ShowSettingsAsync();
+                Settings.Select(SettingsSection.ImportExport);
+                await Settings.ImportFolderCommand.ExecuteAsync(null);
+                break;
             case "settings":
                 await ShowSettingsAsync();
                 break;

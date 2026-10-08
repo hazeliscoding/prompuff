@@ -159,6 +159,7 @@ public enum DialogKind
     Confirm,
     Input,
     Error,
+    Info,
 }
 
 public sealed partial class DialogViewModel : ObservableObject
@@ -237,6 +238,10 @@ public sealed partial class DialogService : ObservableObject
 
     public Task ShowErrorAsync(string title, string message, string? details = null) =>
         ShowAsync(new DialogViewModel(DialogKind.Error, title, message, "OK", null) { Details = details });
+
+    /// <summary>A result worth reading, such as an import that skipped files, without the warning sign of an error.</summary>
+    public Task ShowInfoAsync(string title, string message, string? details = null) =>
+        ShowAsync(new DialogViewModel(DialogKind.Info, title, message, "OK", null) { Details = details });
 
     /// <summary>Closes the open dialog as if Cancel was pressed. Returns false when none is open.</summary>
     public bool CancelCurrent()

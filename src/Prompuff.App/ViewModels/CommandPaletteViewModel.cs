@@ -117,6 +117,7 @@ public sealed partial class CommandPaletteViewModel(
             ("Go to recent", "Clock", "recent", null),
             ("New collection", "FolderPlus", "new-collection", null),
             ("Import Markdown", "Download", "import", null),
+            ("Import a folder", "FolderOpen", "import-folder", null),
             ("Open settings", "Settings", "settings", null),
         };
         foreach (var action in actions.Where(action => query.Length == 0 || Matches(action.Label, query)))

@@ -51,6 +51,45 @@ public class SharingTests
     }
 }
 
+public class FolderImportTests
+{
+    [AvaloniaFact]
+    public async Task Importing_a_folder_reports_the_files_it_passed_over()
+    {
+        var files = new FakeFilePicker();
+        await using var app = await AppHarness.StartAsync(importSamples: false, files: files);
+        var vault = Path.Combine(app.Folder, "vault");
+        Directory.CreateDirectory(Path.Combine(vault, "Coding"));
+        Directory.CreateDirectory(Path.Combine(vault, ".obsidian"));
+        await File.WriteAllTextAsync(Path.Combine(vault, "Standup.md"), "Summarize {{notes}} as three bullets.");
+        await File.WriteAllTextAsync(Path.Combine(vault, "Coding", "Review.md"), "Review {{diff}} for behavior changes.");
+        await File.WriteAllTextAsync(Path.Combine(vault, "Coding", "diagram.png"), "png");
+        await File.WriteAllTextAsync(Path.Combine(vault, ".obsidian", "app.md"), "state");
+        files.ImportFolder = vault;
+
+        await app.ViewModel.Sidebar.OpenSettingsCommand.ExecuteAsync(null);
+        var settings = Assert.IsType<SettingsViewModel>(app.ViewModel.CurrentPage);
+        settings.Select(SettingsSection.ImportExport);
+        var importing = settings.ImportFolderCommand.ExecuteAsync(null);
+        await app.SettleAsync();
+
+        var dialog = app.ViewModel.Dialogs.Current;
+        Assert.NotNull(dialog);
+        Assert.Equal("Imported 2 prompts.", dialog.Title);
+        Assert.Equal("Passed over 1 file that isn't Markdown.", dialog.Message);
+        Assert.Contains("diagram.png", dialog.Details);
+        Assert.False(dialog.IsError);
+        dialog.ToggleDetailsCommand.Execute(null);
+        app.Screenshot("dialog-import-folder");
+        dialog.ConfirmCommand.Execute(null);
+        await importing;
+        await app.SettleAsync();
+
+        Assert.Equal(2, app.ViewModel.Sidebar.All.Count);
+        app.Screenshot("settings-import-export");
+    }
+}
+
 /// <summary>Answers file dialogs with set paths, since the headless platform has no dialogs.</summary>
 internal sealed class FakeFilePicker : IFilePickerService
 {
@@ -59,6 +98,10 @@ internal sealed class FakeFilePicker : IFilePickerService
     public string? SuggestedName { get; private set; }
 
     public Task<IReadOnlyList<string>> PickFilesToImportAsync() => Task.FromResult(ImportPaths);
+
+    public string? ImportFolder { get; set; }
+
+    public Task<string?> PickFolderToImportAsync() => Task.FromResult(ImportFolder);
 
     public Task<string?> PickExportFileAsync(string suggestedFileName)
     {

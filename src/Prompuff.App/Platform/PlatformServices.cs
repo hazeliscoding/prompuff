@@ -71,6 +71,16 @@ public sealed class AvaloniaFilePickerService(TopLevelAccessor accessor) : IFile
         return files.Select(file => file.TryGetLocalPath()).OfType<string>().ToList();
     }
 
+    public async Task<string?> PickFolderToImportAsync()
+    {
+        var folders = await accessor.Require().StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Import a folder of prompts",
+            AllowMultiple = false,
+        });
+        return folders.Count == 0 ? null : folders[0].TryGetLocalPath();
+    }
+
     public async Task<string?> PickExportFileAsync(string suggestedFileName)
     {
         var file = await accessor.Require().StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
