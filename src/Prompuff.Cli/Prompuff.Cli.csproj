@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- Installed on the PATH as "prompuff"; it never sits in the same folder as the app's Prompuff.exe. -->
+    <AssemblyName>prompuff</AssemblyName>
+    <RootNamespace>Prompuff.Cli</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Prompuff.Infrastructure\Prompuff.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Prompuff.Cli.Tests" />
+  </ItemGroup>
+</Project>

@@ -2,12 +2,14 @@
   <Folder Name="/src/">
     <Project Path="src/Prompuff.App/Prompuff.App.csproj" />
     <Project Path="src/Prompuff.Application/Prompuff.Application.csproj" />
+    <Project Path="src/Prompuff.Cli/Prompuff.Cli.csproj" />
     <Project Path="src/Prompuff.Domain/Prompuff.Domain.csproj" />
     <Project Path="src/Prompuff.Infrastructure/Prompuff.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Prompuff.App.Tests/Prompuff.App.Tests.csproj" />
     <Project Path="tests/Prompuff.Application.Tests/Prompuff.Application.Tests.csproj" />
+    <Project Path="tests/Prompuff.Cli.Tests/Prompuff.Cli.Tests.csproj" />
     <Project Path="tests/Prompuff.Domain.Tests/Prompuff.Domain.Tests.csproj" />
     <Project Path="tests/Prompuff.Infrastructure.Tests/Prompuff.Infrastructure.Tests.csproj" />
   </Folder>
