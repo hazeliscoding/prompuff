@@ -462,6 +462,13 @@ public sealed partial class SettingsViewModel : ObservableObject
                     ((result.ImportedCount == 0 && result.SkippedCount == 0 ? "That folder has no Markdown files." : string.Empty) + skipped + others).Trim(),
                     othersList);
             }
+            else if (result.ImportedWorkflowIds.Count > 0)
+            {
+                var workflows = Format.Count(result.ImportedWorkflowIds.Count, "workflow");
+                _toasts.Show("Imported.", result.ImportedCount == 0
+                    ? $"{workflows} added, using prompts you already have."
+                    : $"{workflows} and {Format.Count(result.ImportedCount, "prompt")} added to your library.");
+            }
             else if (result.ImportedCount == 0 && result.SkippedCount > 0)
             {
                 _toasts.Show("Nothing new.", result.SkippedCount == 1 ? "You already have that prompt." : $"You already have all {result.SkippedCount} of those prompts.", isHappy: false);
