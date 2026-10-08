@@ -112,6 +112,11 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
   - The app ignores its own writes when it watches `data_version`: whenever it announces a change itself, it takes the current version as the new baseline.
   - Client setups: `claude mcp add`, `codex mcp add` and `copilot mcp add` each take `-- <command> mcp`, and Claude Desktop takes a JSON `mcpServers` entry. Claude Code and Codex were checked by hand on Windows: each searched a library and rendered a prompt with variables through MCP. Copilot CLI follows GitHub's docs, and the owner checked it by hand after the release.
 
+## Decisions: v0.8 and 1.0 (2026-10-08)
+
+- **Themes join v0.8.** They land before v0.9, so v0.9's contrast check covers every theme, not only Prompuff Dark and Light.
+- **1.0 launches with a video and a landing page.** The video is made with the `/brag` skill. The landing page is a static site on GitHub Pages and keeps the app's promise: no analytics or trackers, and nothing loaded from other sites.
+
 ## v0.1: MVP (tagged 2026-10-07)
 
 ### M0: Foundation
@@ -267,17 +272,21 @@ Let scripts and coding agents use the vault without opening the app.
 
 **Done when:** Claude Code, GitHub Copilot CLI and Codex can each search the vault and render a prompt with variables through MCP, and `prompuff render "Angular Upgrade Planner" --var repo_name=acme` prints the result on all three platforms.
 
-## v0.8: Beta channel
+## v0.8: Beta channel and themes
 
 - [ ] A `SHA256SUMS` file with every release.
 - [ ] A Beta channel: `-beta` tags publish pre-releases to `*-beta` Velopack channels, and the Beta option in Settings › Updates works.
+- [ ] Themes in Settings › Appearance. Prompuff Dark and Light stay the defaults, joined by palettes developers know from their editors: Darcula, Gruvbox Dark and Light, Dracula, Nord, One Dark, Tokyo Night, Solarized Dark and Light, and Catppuccin Mocha and Latte.
+- [ ] Pick a dark theme and a light theme, and System switches between them with the OS. Each theme fills the same tokens in `Tokens.axaml` (backgrounds, text, borders, accent and status colors), so views don't change.
+- [ ] Each palette's license and authors are credited in `licenses/`.
+- [ ] The headless UI tests capture the library, the editor and a dialog in every theme.
 
-**Done when:** a beta install updates from the beta channel, and every release carries a `SHA256SUMS` file.
+**Done when:** a beta install updates from the beta channel, every release carries a `SHA256SUMS` file, and switching themes restyles the whole window, dialogs included, without a restart.
 
 ## v0.9: Release candidate
 
 - [ ] The library and Markdown formats are documented in `docs/`, with a fixture database from every released schema version and a test that opens each one.
-- [ ] Accessibility: every icon-only button has an accessible name, focus is visible and in order, and a CI script checks WCAG AA contrast for the theme tokens.
+- [ ] Accessibility: every icon-only button has an accessible name, focus is visible and in order, and a CI script checks WCAG AA contrast for every theme's tokens.
 - [ ] Performance: 10,000 generated prompts load, scroll and search without lag, with search under 100 ms.
 - [ ] Settings › About › "Copy diagnostic info" gathers versions, paths and recent log lines for bug reports, still with no telemetry.
 - [ ] A user guide and `CONTRIBUTING.md`.
@@ -291,8 +300,10 @@ Let scripts and coding agents use the vault without opening the app.
 - [ ] Tag 1.0 from the final release candidate, signed on Windows.
 - [ ] Update from 0.9 to 1.0 checked by hand on Windows and in WSLg, and on macOS CI runners.
 - [ ] README and the About page state the 1.0 promise: later versions open 1.0 libraries.
+- [ ] A short launch video of the 1.0 app, made with the `/brag` skill.
+- [ ] A landing page on GitHub Pages: what Prompuff is, the launch video, screenshots, downloads for every platform, and the privacy promise. Fonts, images and the video are served from the site itself.
 
-**Done when:** 1.0 is published for Windows, Linux x64 and ARM64, and macOS, and every earlier 0.x install updates to it with its library intact.
+**Done when:** 1.0 is published for Windows, Linux x64 and ARM64, and macOS, every earlier 0.x install updates to it with its library intact, and the landing page is live with the launch video.
 
 ## Later
 
