@@ -1,5 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
+using Prompuff.App.Platform;
+using Prompuff.Infrastructure.Storage;
 using Velopack;
 
 namespace Prompuff.App;
@@ -12,6 +14,17 @@ internal static class Program
         // Velopack must run first: it handles install, update and uninstall hooks and may exit the process.
         VelopackApp.Build().Run();
 
+        // One Prompuff per library. A second launch, such as "Prompuff --quick-save" from a desktop shortcut, hands
+        // its request to the copy that's already running and exits.
+        var request = LaunchArguments.Parse(args);
+        using var instance = SingleInstance.Claim(new AppDataPathProvider().GetAppDataDirectory());
+        if (!instance.IsPrimary)
+        {
+            return instance.HandOff(request, TimeSpan.FromSeconds(5)) ? 0 : 1;
+        }
+
+        instance.Listen();
+        App.Launch = new LaunchContext(instance, request);
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 

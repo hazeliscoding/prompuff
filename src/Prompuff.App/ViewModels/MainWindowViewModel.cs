@@ -40,6 +40,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IAppDataPathProvider _paths;
     private readonly LibraryNotifier _notifier;
     private readonly ILogger<MainWindowViewModel> _logger;
+    private readonly TaskCompletionSource _initialized = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private bool _refreshQueued;
     private bool _ready;
 
@@ -125,22 +126,45 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public async Task InitializeAsync()
     {
-        Settings.LoadSettings();
         try
         {
-            await _database.InitializeAsync();
+            Settings.LoadSettings();
+            try
+            {
+                await _database.InitializeAsync();
+            }
+            catch (LibraryException exception)
+            {
+                CurrentPage = new StartupErrorViewModel(exception.Message, exception.InnerException?.ToString(), _paths.GetAppDataDirectory(), _launcher);
+                return;
+            }
+
+            _ready = true;
+            _backups.StartDailySchedule();
+            await PurgeExpiredAsync();
+            await RefreshAllAsync();
+            _ = Settings.CheckOnStartupAsync();
         }
-        catch (LibraryException exception)
+        finally
         {
-            CurrentPage = new StartupErrorViewModel(exception.Message, exception.InnerException?.ToString(), _paths.GetAppDataDirectory(), _launcher);
+            _initialized.TrySetResult();
+        }
+    }
+
+    /// <summary>
+    /// Quick save asked for from outside the window: a second launch with <c>--quick-save</c>, the tray or the global
+    /// hotkey. Waits for the library to open, and leaves an open dialog alone, since it needs an answer first.
+    /// </summary>
+    public async Task QuickSaveFromOutsideAsync()
+    {
+        await _initialized.Task;
+        if (!_ready || Dialogs.Current is not null)
+        {
             return;
         }
 
-        _ready = true;
-        _backups.StartDailySchedule();
-        await PurgeExpiredAsync();
-        await RefreshAllAsync();
-        _ = Settings.CheckOnStartupAsync();
+        Palette.IsOpen = false;
+        await QuickSave.OpenAsync(CurrentCollectionId());
     }
 
     /// <summary>Removes prompts that have waited in Recently deleted longer than 30 days.</summary>

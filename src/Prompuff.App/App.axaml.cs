@@ -14,11 +14,17 @@ using Prompuff.Infrastructure.Storage;
 
 namespace Prompuff.App;
 
+/// <summary>How this copy was started, and the lock that makes it the one copy for its library.</summary>
+internal sealed record LaunchContext(SingleInstance Instance, LaunchRequest Request);
+
 public sealed class App : Avalonia.Application
 {
     private ILogger<App>? _logger;
 
     public IServiceProvider? Services { get; private set; }
+
+    /// <summary>Set by <see cref="Program"/> before the app starts. Null in the designer and in tests.</summary>
+    internal static LaunchContext? Launch { get; set; }
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -41,6 +47,17 @@ public sealed class App : Avalonia.Application
             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnMainWindowClose;
             desktop.Exit += (_, _) => (Services as IDisposable)?.Dispose();
             Dispatcher.UIThread.Post(() => _ = viewModel.InitializeAsync());
+
+            if (Launch is { } launch)
+            {
+                if (launch.Request == LaunchRequest.QuickSave)
+                {
+                    Dispatcher.UIThread.Post(() => _ = viewModel.QuickSaveFromOutsideAsync());
+                }
+
+                // Later launches arrive on a background thread.
+                launch.Instance.SetHandler(request => Dispatcher.UIThread.Post(() => _ = HandleLaunchAsync(window, viewModel, request)));
+            }
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -92,7 +109,17 @@ public sealed class App : Avalonia.Application
         return services.BuildServiceProvider();
     }
 
-    private void HookUnhandledErrors()
+    private async Task HandleLaunchAsync(MainWindow window, MainWindowViewModel viewModel, LaunchRequest request)
+    {
+        _logger?.LogInformation("Another launch asked to {Request}", request);
+        WindowActivation.BringForward(window);
+        if (request == LaunchRequest.QuickSave)
+        {
+            await viewModel.QuickSaveFromOutsideAsync();
+        }
+    }
+
+        private void HookUnhandledErrors()
     {
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
             _logger?.LogCritical(e.ExceptionObject as Exception, "Unhandled exception");
