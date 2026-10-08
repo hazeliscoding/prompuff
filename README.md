@@ -44,7 +44,9 @@ Your prompts stay on your machine. There is no account, no cloud and no telemetr
 | Linux x64 (X11, or Wayland through XWayland) | `Prompuff-linux-x64.AppImage` |
 | Linux ARM64 | `Prompuff-linux-arm64.AppImage` |
 
-All of them are self-contained, so you don't need to install .NET, and all of them update themselves.
+All of them are self-contained, so you don't need to install .NET, and all of them update themselves. Every release also has a `SHA256SUMS` file. To check a download, run `sha256sum --check --ignore-missing SHA256SUMS` on Linux, `shasum -a 256 --check --ignore-missing SHA256SUMS` on macOS, or `Get-FileHash Prompuff-Setup.exe` in PowerShell and compare the result.
+
+Settings › Updates has a **Beta** channel for trying new versions early. Betas are GitHub pre-releases, and a copy set to Beta also gets every stable release. Updates never move to an older version, so switching back to Stable keeps the beta until a newer stable release comes out.
 
 On macOS, Prompuff is checked on GitHub's macOS runners rather than by hand, because the developer has no Mac. If something looks wrong, please [open an issue](https://github.com/hazeliscoding/prompuff/issues). The builds aren't notarized by Apple, so macOS blocks the first launch:
 
@@ -210,8 +212,8 @@ This writes the `.AppImage` and its update files (`*-full.nupkg`, `releases.linu
 ## Releases
 
 1. Set the version in `Directory.Build.props` and commit.
-2. Tag and push: `git tag v0.1.0 && git push origin v0.1.0`.
-3. The [Release workflow](.github/workflows/release.yml) tests and packs both platforms, starts the AppImage under Xvfb as a smoke test, and opens a **draft** GitHub Release. It holds `Prompuff-Setup.exe`, `Prompuff-linux-x64.AppImage`, a portable Windows zip and the Velopack update files.
+2. Tag and push: `git tag v0.1.0 && git push origin v0.1.0`. A tag with a pre-release suffix, such as `v0.8.0-beta.1`, makes a beta: it packs to the `-beta` Velopack channels and becomes a GitHub pre-release.
+3. The [Release workflow](.github/workflows/release.yml) tests and packs every platform, smoke-tests the app and the `prompuff` command from each package, and opens a **draft** GitHub Release with the installers, the Velopack update files and `SHA256SUMS`.
 4. Read the draft and publish it. Installed copies only see published releases.
 
 Running the workflow by hand from the Actions tab builds the same artifacts without publishing anything.
