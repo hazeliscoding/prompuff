@@ -219,7 +219,7 @@ Stash a good prompt from any app in a few seconds.
 
 **Done when:** you can copy text in a browser, press the hotkey, and find the prompt stashed in under five seconds on Windows, on Linux under X11, and on macOS (CI-verified).
 
-## v0.6: Workflows
+## v0.6: Workflows (tagged 2026-10-08)
 
 The design's Workflows view: prompts that run in order, with a person copying between steps. Prompuff never runs a model.
 
@@ -227,6 +227,7 @@ The design's Workflows view: prompts that run in order, with a person copying be
 - [x] Shared variables: a variable that appears in several steps is filled once.
 - [x] Render and copy step by step, with progress through the steps.
 - [x] Export a workflow as one Markdown document, and import it back.
+- [x] Publish v0.6.0 (2026-10-08). Every smoke-tested build applied migration 6 and logged the hotkey as ready.
 
 **Done when:** the design's "Angular upgrade, start to finish" workflow can be built, filled once and copied step by step.
 
