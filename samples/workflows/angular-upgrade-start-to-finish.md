@@ -23,7 +23,7 @@ First, list the current major dependencies that will block the upgrade. Then pro
 For each phase, call out breaking changes and the `ng update` command to run. Package manager: {{package_manager}}. Keep the tone {{tone}}. End with a risk table.
 ```
 
-> **Hands off:** the phased plan. Paste it into `{{upgrade_plan}}` for the next step.
+> **Hands off:** the phased plan. Paste it into {{upgrade_plan}} for the next step.
 
 ## Step 2: Angular Upgrade Phase Runner
 
@@ -35,7 +35,7 @@ You are upgrading {{repo_name}} to Angular {{target_version}} with {{package_man
 Carry out phase {{phase}} only. Run each `ng update` command from the plan, fix what it breaks, and stop at the end of the phase. Commit the work in small, reviewable steps, and list anything you had to decide that the plan didn't cover.
 ```
 
-> **Hands off:** the list of commits and open decisions. Paste it into `{{phase_report}}` for the check.
+> **Hands off:** the list of commits and open decisions. Paste it into {{phase_report}} for the check.
 
 ## Step 3: Angular Upgrade Checker
 
