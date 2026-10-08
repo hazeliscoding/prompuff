@@ -110,7 +110,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
   - So on Linux and macOS, Install copies the `cli` folder into Prompuff's data folder and links `~/.local/bin/prompuff` to it, instead of copying one file into `~/.local/bin`. On macOS the copy drops the download's quarantine flag, or Terminal refuses to run it. That step can only be checked by hand on a Mac.
   - Uninstalling on Windows takes the PATH entry back out, through Velopack's uninstall hook.
   - The app ignores its own writes when it watches `data_version`: whenever it announces a change itself, it takes the current version as the new baseline.
-  - Client setups: `claude mcp add`, `codex mcp add` and `copilot mcp add` each take `-- <command> mcp`, and Claude Desktop takes a JSON `mcpServers` entry. Claude Code and Codex were checked by hand on Windows: each searched a library and rendered a prompt with variables through MCP. Copilot CLI follows GitHub's docs and hasn't been run by hand.
+  - Client setups: `claude mcp add`, `codex mcp add` and `copilot mcp add` each take `-- <command> mcp`, and Claude Desktop takes a JSON `mcpServers` entry. Claude Code and Codex were checked by hand on Windows: each searched a library and rendered a prompt with variables through MCP. Copilot CLI follows GitHub's docs, and the owner checked it by hand after the release.
 
 ## v0.1: MVP (tagged 2026-10-07)
 
@@ -263,7 +263,7 @@ Let scripts and coding agents use the vault without opening the app.
 - [x] The app picks up changes the CLI makes without a restart, using SQLite's `data_version`.
 - [x] CI and the release workflow smoke-test the packaged CLI on every platform: quick-save, render, and an MCP session before and after the switch.
 - [x] Publish v0.7.0 (2026-10-08).
-- [ ] Run the Copilot CLI setup by hand, which the owner's machine doesn't have yet.
+- [x] Copilot CLI checked by hand by the owner: it searched the library and rendered a prompt through MCP (2026-10-08).
 
 **Done when:** Claude Code, GitHub Copilot CLI and Codex can each search the vault and render a prompt with variables through MCP, and `prompuff render "Angular Upgrade Planner" --var repo_name=acme` prints the result on all three platforms.
 
