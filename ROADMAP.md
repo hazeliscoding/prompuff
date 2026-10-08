@@ -159,6 +159,8 @@ Ship the remaining platforms early, so every later feature is built for all of t
 - [x] Windows signing with Azure Artifact Signing in the release workflow, checked on the runner with `signtool verify /pa`.
 - [x] Signing switches on only when the Azure variables exist; forks and manual runs still build unsigned.
 - [x] README: list macOS as CI-verified, and explain System Settings › Privacy & Security › Open Anyway, since the builds aren't notarized. macOS 15 removed the right-click › Open shortcut.
+- [x] Publish v0.3.0 (2026-10-08). The installer's signature checks out as valid, signed by Hazel Granados.
+- [ ] Download the published `Prompuff-Setup.exe` and confirm Windows shows no SmartScreen warning.
 
 **Done when:** one tag produces Windows, Linux x64, Linux ARM64 and both macOS packages, each one launches and creates its library on a CI runner, and `Prompuff-Setup.exe` is signed and installs without a SmartScreen warning.
 
