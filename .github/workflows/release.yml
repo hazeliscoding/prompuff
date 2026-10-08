@@ -1,7 +1,9 @@
 name: Release
 
-# A pushed v* tag builds every platform and creates a draft GitHub Release with the installers and the
-# Velopack update files. Run it by hand to build the same artifacts without signing or publishing anything.
+# A pushed v* tag builds every platform and creates a draft GitHub Release with the installers, the
+# Velopack update files and SHA256SUMS. A tag with a pre-release suffix, such as v0.8.0-beta.1, packs to the
+# "-beta" channels and becomes a GitHub pre-release, which only installs set to Beta read.
+# Run it by hand to build the same artifacts without signing or publishing anything.
 on:
   push:
     tags: ['v*']
@@ -25,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
+      # "-beta" for a pre-release version, appended to every Velopack channel name; empty for stable.
+      suffix: ${{ steps.version.outputs.suffix }}
     steps:
       - id: version
         shell: bash
@@ -34,6 +38,7 @@ jobs:
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then version="${GITHUB_REF_NAME#v}"; else version="$INPUT_VERSION"; fi
           if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then echo "Not a version: $version"; exit 1; fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$version" == *-* ]]; then echo "suffix=-beta" >> "$GITHUB_OUTPUT"; else echo "suffix=" >> "$GITHUB_OUTPUT"; fi
 
   windows:
     needs: version
@@ -46,6 +51,7 @@ jobs:
       id-token: write
     env:
       VERSION: ${{ needs.version.outputs.version }}
+      CHANNEL: win${{ needs.version.outputs.suffix }}
       SIGN: ${{ vars.AZURE_CLIENT_ID != '' && vars.ARTIFACT_SIGNING_ENDPOINT != '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -62,7 +68,8 @@ jobs:
         # Only tag builds make deltas; a manual run's version may be lower than the latest release, which vpk refuses.
         if: github.ref_type == 'tag'
         continue-on-error: true
-        run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel win --outputDir releases --token ${{ github.token }}
+        shell: bash
+        run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel "$CHANNEL" $([[ "$CHANNEL" == *-beta ]] && echo --pre) --outputDir releases --token ${{ github.token }}
       - name: Sign in to Azure for code signing
         if: env.SIGN == 'true'
         uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
@@ -87,22 +94,22 @@ jobs:
           if [ "$SIGN" = "true" ]; then sign=(--azureTrustedSignFile "$RUNNER_TEMP/signing.json"); fi
           dotnet vpk pack --packId "$PACK_ID" --packVersion "$VERSION" --packDir publish \
             --mainExe Prompuff.exe --packTitle Prompuff --packAuthors "Hazel Granados" \
-            --icon src/Prompuff.App/Assets/prompuff.ico --channel win --outputDir releases "${sign[@]}"
+            --icon src/Prompuff.App/Assets/prompuff.ico --channel "$CHANNEL" --outputDir releases "${sign[@]}"
       - name: Check the installer's signature
         if: env.SIGN == 'true'
         shell: pwsh
         run: |
           $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
             Where-Object FullName -like '*\x64\*' | Sort-Object FullName -Descending | Select-Object -First 1
-          & $signtool.FullName verify /pa /v "releases\$env:PACK_ID-win-Setup.exe"
+          & $signtool.FullName verify /pa /v "releases\$env:PACK_ID-$env:CHANNEL-Setup.exe"
           if ($LASTEXITCODE -ne 0) { throw "Prompuff-Setup.exe isn't signed" }
-          Expand-Archive "releases\$env:PACK_ID-win-Portable.zip" portable
+          Expand-Archive "releases\$env:PACK_ID-$env:CHANNEL-Portable.zip" portable
           & $signtool.FullName verify /pa (Get-ChildItem portable -Recurse -Filter prompuff.exe).FullName
           if ($LASTEXITCODE -ne 0) { throw "The command-line tool isn't signed" }
       - name: Smoke test the command-line tool from the package
         shell: bash
         run: |
-          [ -d portable ] || unzip -q "releases/${PACK_ID}-win-Portable.zip" -d portable
+          [ -d portable ] || unzip -q "releases/${PACK_ID}-${CHANNEL}-Portable.zip" -d portable
           cli=$(find portable -name prompuff.exe | head -1)
           test -n "$cli" || { echo "The package has no command-line tool"; exit 1; }
           bash scripts/smoke-cli.sh "$cli"
@@ -110,9 +117,13 @@ jobs:
         shell: bash
         run: |
           mkdir dist
-          cp "releases/${PACK_ID}-win-Setup.exe" dist/Prompuff-Setup.exe
-          cp "releases/${PACK_ID}-win-Portable.zip" dist/Prompuff-win-x64-Portable.zip
-          cp releases/releases.win.json releases/RELEASES dist/
+          ls -la releases
+          cp "releases/${PACK_ID}-${CHANNEL}-Setup.exe" dist/Prompuff-Setup.exe
+          cp "releases/${PACK_ID}-${CHANNEL}-Portable.zip" dist/Prompuff-win-x64-Portable.zip
+          cp "releases/releases.${CHANNEL}.json" dist/
+          # The legacy RELEASES index is "RELEASES" on the default channel and "RELEASES-<channel>" on others.
+          if [ -f releases/RELEASES ]; then cp releases/RELEASES dist/; fi
+          if [ -f "releases/RELEASES-${CHANNEL}" ]; then cp "releases/RELEASES-${CHANNEL}" dist/; fi
           cp releases/${PACK_ID}-${VERSION}-*.nupkg dist/
           ls -la dist
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -138,7 +149,7 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.version }}
       RID: ${{ matrix.rid }}
-      CHANNEL: ${{ matrix.channel }}
+      CHANNEL: ${{ matrix.channel }}${{ needs.version.outputs.suffix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -154,7 +165,7 @@ jobs:
         # Only tag builds make deltas; a manual run's version may be lower than the latest release, which vpk refuses.
         if: github.ref_type == 'tag'
         continue-on-error: true
-        run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel "$CHANNEL" --outputDir releases --token ${{ github.token }}
+        run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel "$CHANNEL" $([[ "$CHANNEL" == *-beta ]] && echo --pre) --outputDir releases --token ${{ github.token }}
       - name: Pack the AppImage with Velopack
         run: >
           dotnet vpk pack --packId "$PACK_ID" --packVersion "$VERSION" --packDir publish --runtime "$RID"
@@ -231,6 +242,7 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.version }}
       RID: ${{ matrix.rid }}
+      CHANNEL: ${{ matrix.rid }}${{ needs.version.outputs.suffix }}
       ARCH: ${{ matrix.arch }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -246,13 +258,13 @@ jobs:
         # Only tag builds make deltas; a manual run's version may be lower than the latest release, which vpk refuses.
         if: github.ref_type == 'tag'
         continue-on-error: true
-        run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel "$RID" --outputDir releases --token ${{ github.token }}
+        run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel "$CHANNEL" $([[ "$CHANNEL" == *-beta ]] && echo --pre) --outputDir releases --token ${{ github.token }}
       - name: Pack the app with Velopack
         run: >
           dotnet vpk pack --packId "$PACK_ID" --packVersion "$VERSION" --packDir publish --runtime "$RID"
           --mainExe Prompuff --packTitle Prompuff --packAuthors "Hazel Granados"
           --icon src/Prompuff.App/Assets/prompuff.icns --bundleId io.github.hazeliscoding.prompuff
-          --signAppIdentity "-" --channel "$RID" --outputDir releases
+          --signAppIdentity "-" --channel "$CHANNEL" --outputDir releases
       - name: Check the app's signature
         run: |
           ls -la releases
@@ -279,7 +291,7 @@ jobs:
           mkdir dist
           cp releases/*-Setup.pkg "dist/Prompuff-macOS-$ARCH.pkg"
           cp releases/*-Portable.zip "dist/Prompuff-macOS-$ARCH.zip"
-          cp "releases/releases.$RID.json" "releases/RELEASES-$RID" dist/
+          cp "releases/releases.$CHANNEL.json" "releases/RELEASES-$CHANNEL" dist/
           cp releases/${PACK_ID}-${VERSION}-*.nupkg dist/
           ls -la dist
       - name: Smoke test the app
@@ -329,10 +341,19 @@ jobs:
           pattern: dist-*
           merge-multiple: true
           path: dist
+      - name: Write SHA256SUMS
+        working-directory: dist
+        run: |
+          sha256sum -- * > "$RUNNER_TEMP/SHA256SUMS"
+          mv "$RUNNER_TEMP/SHA256SUMS" SHA256SUMS
+          cat SHA256SUMS
       - name: Create a draft release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.version.outputs.version }}
+          SUFFIX: ${{ needs.version.outputs.suffix }}
         run: |
           ls -la dist
-          gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --draft --title "Prompuff $VERSION" --generate-notes
+          prerelease=()
+          if [ -n "$SUFFIX" ]; then prerelease=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --draft "${prerelease[@]}" --title "Prompuff $VERSION" --generate-notes
