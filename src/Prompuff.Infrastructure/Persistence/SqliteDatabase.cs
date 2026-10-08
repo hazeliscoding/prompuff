@@ -67,7 +67,14 @@ public sealed class SqliteDatabase
 
             foreach (var migration in pending)
             {
-                await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+                // BEGIN IMMEDIATE takes the write lock, and the version is checked again under it: the app, the CLI and
+                // the MCP server can open the library at the same moment, and only one of them may apply a migration.
+                await using var transaction = connection.BeginTransaction(deferred: false);
+                if (Convert.ToInt32(await ScalarAsync(connection, "PRAGMA user_version;", cancellationToken, transaction), CultureInfo.InvariantCulture) >= migration.Version)
+                {
+                    continue;
+                }
+
                 await ExecuteAsync(connection, migration.Sql, cancellationToken, transaction);
                 await ExecuteAsync(connection, $"PRAGMA user_version = {migration.Version};", cancellationToken, transaction);
                 await transaction.CommitAsync(cancellationToken);
@@ -125,10 +132,11 @@ public sealed class SqliteDatabase
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static async Task<object?> ScalarAsync(SqliteConnection connection, string sql, CancellationToken cancellationToken)
+    private static async Task<object?> ScalarAsync(SqliteConnection connection, string sql, CancellationToken cancellationToken, SqliteTransaction? transaction = null)
     {
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
+        command.Transaction = transaction;
         return await command.ExecuteScalarAsync(cancellationToken);
     }
 }

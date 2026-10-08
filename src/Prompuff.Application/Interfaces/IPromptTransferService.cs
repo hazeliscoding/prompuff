@@ -8,6 +8,9 @@ public interface IPromptTransferService
     string SuggestFileName(string title);
     Task ExportPromptAsync(Guid promptId, string filePath, CancellationToken cancellationToken = default);
 
+    /// <summary>The prompt as the Markdown an export would write, for showing it to another tool.</summary>
+    Task<string> GetMarkdownAsync(Guid promptId, CancellationToken cancellationToken = default);
+
     /// <summary>Saves a workflow as one Markdown document that holds each step's prompt and hand-off note.</summary>
     Task ExportWorkflowAsync(Guid workflowId, string filePath, CancellationToken cancellationToken = default);
 

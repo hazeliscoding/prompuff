@@ -85,6 +85,12 @@ public sealed class MarkdownTransferService(
         return (workflow.Name, MarkdownWorkflowFormat.Write(new MarkdownWorkflow(workflow.Name, workflow.Description, steps)));
     }
 
+    public async Task<string> GetMarkdownAsync(Guid promptId, CancellationToken cancellationToken = default)
+    {
+        var prompt = await prompts.GetAsync(promptId, cancellationToken) ?? throw new LibraryException("That prompt no longer exists.");
+        return await ToMarkdownAsync(prompt, cancellationToken);
+    }
+
     public async Task ExportPromptAsync(Guid promptId, string filePath, CancellationToken cancellationToken = default)
     {
         try

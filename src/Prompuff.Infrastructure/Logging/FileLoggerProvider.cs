@@ -6,19 +6,23 @@ namespace Prompuff.Infrastructure.Logging;
 
 /// <summary>
 /// Writes one log file per day (<c>prompuff-yyyyMMdd.log</c>) and deletes files older than the retention period.
-/// Messages carry IDs and counts only; prompt content is never logged.
+/// Messages carry IDs and counts only; prompt content is never logged. The command-line tool writes its own files
+/// (<c>prompuff-cli-yyyyMMdd.log</c>), and every line is written at the current end of the file, so several processes
+/// can share a log without overwriting each other.
 /// </summary>
 public sealed class FileLoggerProvider : ILoggerProvider
 {
     private readonly string _directory;
+    private readonly string _filePrefix;
     private readonly LogLevel _minimumLevel;
     private readonly Lock _gate = new();
     private StreamWriter? _writer;
     private DateOnly _currentDay;
 
-    public FileLoggerProvider(string directory, LogLevel minimumLevel = LogLevel.Information, int retentionDays = 14)
+    public FileLoggerProvider(string directory, LogLevel minimumLevel = LogLevel.Information, int retentionDays = 14, string filePrefix = "prompuff")
     {
         _directory = directory;
+        _filePrefix = filePrefix;
         _minimumLevel = minimumLevel;
         try
         {
@@ -70,7 +74,7 @@ public sealed class FileLoggerProvider : ILoggerProvider
                 if (_writer is null || today != _currentDay)
                 {
                     _writer?.Dispose();
-                    var path = Path.Combine(_directory, $"prompuff-{now:yyyyMMdd}.log");
+                    var path = Path.Combine(_directory, $"{_filePrefix}-{now:yyyyMMdd}.log");
                     _writer = new StreamWriter(new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), new UTF8Encoding(false))
                     {
                         AutoFlush = true,
@@ -79,6 +83,7 @@ public sealed class FileLoggerProvider : ILoggerProvider
                     _currentDay = today;
                 }
 
+                _writer.BaseStream.Seek(0, SeekOrigin.End);
                 _writer.WriteLine(line.ToString());
             }
             catch (Exception writeException) when (writeException is IOException or UnauthorizedAccessException)

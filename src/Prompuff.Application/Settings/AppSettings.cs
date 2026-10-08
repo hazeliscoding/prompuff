@@ -45,6 +45,12 @@ public sealed record AppSettings
 
     /// <summary>The system-wide Quick save hotkey, such as "Ctrl+Alt+P". Empty turns it off.</summary>
     public string QuickSaveHotkey { get; init; } = "Ctrl+Alt+P";
+
+    /// <summary>Lets AI tools read the library through <c>prompuff mcp</c>. Off until the user turns it on.</summary>
+    public bool AllowMcp { get; init; }
+
+    /// <summary>Where "Install command-line tool" copied the CLI on Linux and macOS, so Prompuff can refresh that copy.</summary>
+    public string? InstalledCommandLineTool { get; init; }
     public PromptSort LibrarySort { get; init; } = PromptSort.LastEdited;
     public WindowPlacement? Window { get; init; }
 
