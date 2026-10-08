@@ -1,14 +1,14 @@
 name: Release
 
-# A pushed v* tag builds both platforms and creates a draft GitHub Release with the installers and the
-# Velopack update files. Run it by hand to build the same artifacts without publishing anything.
+# A pushed v* tag builds every platform and creates a draft GitHub Release with the installers and the
+# Velopack update files. Run it by hand to build the same artifacts without signing or publishing anything.
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
     inputs:
       version:
-        description: Version to build (nothing is published)
+        description: Version to build (nothing is signed or published)
         required: true
         default: 0.0.1
 
@@ -38,8 +38,15 @@ jobs:
   windows:
     needs: version
     runs-on: windows-latest
+    # Tag builds run in the release environment, whose variables let this job sign in to Azure Artifact Signing.
+    # Manual runs have no environment, so they build unsigned.
+    environment: ${{ github.ref_type == 'tag' && 'release' || '' }}
+    permissions:
+      contents: read
+      id-token: write
     env:
       VERSION: ${{ needs.version.outputs.version }}
+      SIGN: ${{ vars.AZURE_CLIENT_ID != '' && vars.ARTIFACT_SIGNING_ENDPOINT != '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -52,11 +59,39 @@ jobs:
       - name: Download the previous release for delta updates
         continue-on-error: true
         run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel win --outputDir releases --token ${{ github.token }}
+      - name: Sign in to Azure for code signing
+        if: env.SIGN == 'true'
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Write the Artifact Signing metadata
+        if: env.SIGN == 'true'
+        shell: pwsh
+        env:
+          ENDPOINT: ${{ vars.ARTIFACT_SIGNING_ENDPOINT }}
+          ACCOUNT: ${{ vars.ARTIFACT_SIGNING_ACCOUNT }}
+          PROFILE: ${{ vars.ARTIFACT_SIGNING_PROFILE }}
+        run: |
+          [ordered]@{ Endpoint = $env:ENDPOINT; CodeSigningAccountName = $env:ACCOUNT; CertificateProfileName = $env:PROFILE } |
+            ConvertTo-Json | Out-File -Encoding utf8NoBOM "$env:RUNNER_TEMP/signing.json"
       - name: Pack with Velopack
-        run: >
-          dotnet vpk pack --packId ${{ env.PACK_ID }} --packVersion ${{ env.VERSION }} --packDir publish
-          --mainExe Prompuff.exe --packTitle Prompuff --packAuthors "Hazel Granados"
-          --icon src/Prompuff.App/Assets/prompuff.ico --channel win --outputDir releases
+        shell: bash
+        run: |
+          sign=()
+          if [ "$SIGN" = "true" ]; then sign=(--azureTrustedSignFile "$RUNNER_TEMP/signing.json"); fi
+          dotnet vpk pack --packId "$PACK_ID" --packVersion "$VERSION" --packDir publish \
+            --mainExe Prompuff.exe --packTitle Prompuff --packAuthors "Hazel Granados" \
+            --icon src/Prompuff.App/Assets/prompuff.ico --channel win --outputDir releases "${sign[@]}"
+      - name: Check the installer's signature
+        if: env.SIGN == 'true'
+        shell: pwsh
+        run: |
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
+            Where-Object FullName -like '*\x64\*' | Sort-Object FullName -Descending | Select-Object -First 1
+          & $signtool.FullName verify /pa /v "releases\$env:PACK_ID-win-Setup.exe"
+          if ($LASTEXITCODE -ne 0) { throw "Prompuff-Setup.exe isn't signed" }
       - name: Collect this version's files
         shell: bash
         run: |
@@ -68,15 +103,28 @@ jobs:
           ls -la dist
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: windows
+          name: dist-windows
           path: dist/*
           if-no-files-found: error
 
   linux:
     needs: version
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # x64 keeps the "linux" channel that installed copies already follow.
+          - rid: linux-x64
+            runner: ubuntu-latest
+            channel: linux
+          - rid: linux-arm64
+            runner: ubuntu-24.04-arm
+            channel: linux-arm64
+    runs-on: ${{ matrix.runner }}
     env:
       VERSION: ${{ needs.version.outputs.version }}
+      RID: ${{ matrix.rid }}
+      CHANNEL: ${{ matrix.channel }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -84,22 +132,22 @@ jobs:
           dotnet-version: 10.0.x
       - run: dotnet tool restore
       - run: dotnet test -c Release
-      - name: Publish self-contained linux-x64
-        run: dotnet publish src/Prompuff.App -c Release -r linux-x64 --self-contained true -p:Version=${{ env.VERSION }} -o publish
+      - name: Publish self-contained ${{ matrix.rid }}
+        run: dotnet publish src/Prompuff.App -c Release -r "$RID" --self-contained true -p:Version=$VERSION -o publish
       - name: Download the previous release for delta updates
         continue-on-error: true
-        run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel linux --outputDir releases --token ${{ github.token }}
+        run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel "$CHANNEL" --outputDir releases --token ${{ github.token }}
       - name: Pack the AppImage with Velopack
         run: >
-          dotnet vpk pack --packId ${{ env.PACK_ID }} --packVersion ${{ env.VERSION }} --packDir publish
+          dotnet vpk pack --packId "$PACK_ID" --packVersion "$VERSION" --packDir publish --runtime "$RID"
           --mainExe Prompuff --packTitle Prompuff --packAuthors "Hazel Granados"
-          --icon src/Prompuff.App/Assets/prompuff.png --categories "Utility;Development" --channel linux --outputDir releases
+          --icon src/Prompuff.App/Assets/prompuff.png --categories "Utility;Development" --channel "$CHANNEL" --outputDir releases
       - name: Collect this version's files
         run: |
           ls -la releases
           mkdir dist
-          cp releases/*.AppImage dist/Prompuff-linux-x64.AppImage
-          cp releases/releases.linux.json releases/RELEASES-linux dist/
+          cp releases/*.AppImage "dist/Prompuff-$RID.AppImage"
+          cp "releases/releases.$CHANNEL.json" "releases/RELEASES-$CHANNEL" dist/
           cp releases/${PACK_ID}-${VERSION}-*.nupkg dist/
           ls -la dist
       - name: Smoke test the AppImage under Xvfb
@@ -108,12 +156,12 @@ jobs:
           sudo apt-get install -y -qq xvfb x11-apps imagemagick > /dev/null
           export XDG_DATA_HOME="$RUNNER_TEMP/xdg-data" XDG_CONFIG_HOME="$RUNNER_TEMP/xdg-config"
           export APPIMAGE_EXTRACT_AND_RUN=1
-          chmod +x dist/Prompuff-linux-x64.AppImage
+          chmod +x "dist/Prompuff-$RID.AppImage"
           xvfb-run -a -s "-screen 0 1280x800x24" bash -c '
-            ./dist/Prompuff-linux-x64.AppImage > "$RUNNER_TEMP/app.log" 2>&1 &
+            "./dist/Prompuff-$RID.AppImage" > "$RUNNER_TEMP/app.log" 2>&1 &
             pid=$!
             sleep 20
-            import -window root "$RUNNER_TEMP/linux-smoke.png"
+            import -window root "$RUNNER_TEMP/smoke-$RID.png"
             kill -0 $pid || { echo "Prompuff exited early"; cat "$RUNNER_TEMP/app.log"; exit 1; }
             kill $pid'
           test -f "$XDG_DATA_HOME/prompuff/prompuff.db" || { echo "No database in the XDG data folder"; cat "$RUNNER_TEMP/app.log"; exit 1; }
@@ -122,17 +170,98 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
-          name: linux-smoke-screenshot
-          path: ${{ runner.temp }}/linux-smoke.png
+          name: smoke-${{ matrix.rid }}
+          path: ${{ runner.temp }}/smoke-${{ matrix.rid }}.png
           if-no-files-found: ignore
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: linux
+          name: dist-${{ matrix.rid }}
+          path: dist/*
+          if-no-files-found: error
+
+  macos:
+    needs: version
+    # Both builds run on the Apple Silicon runner; the Intel one is smoke-tested under Rosetta.
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: osx-arm64
+            arch: arm64
+          - rid: osx-x64
+            arch: x64
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      RID: ${{ matrix.rid }}
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet tool restore
+      - name: Publish self-contained ${{ matrix.rid }}
+        run: dotnet publish src/Prompuff.App -c Release -r "$RID" --self-contained true -p:Version=$VERSION -o publish
+      - name: Download the previous release for delta updates
+        continue-on-error: true
+        run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel "$RID" --outputDir releases --token ${{ github.token }}
+      - name: Pack the app with Velopack
+        run: >
+          dotnet vpk pack --packId "$PACK_ID" --packVersion "$VERSION" --packDir publish --runtime "$RID"
+          --mainExe Prompuff --packTitle Prompuff --packAuthors "Hazel Granados"
+          --icon src/Prompuff.App/Assets/prompuff.icns --bundleId io.github.hazeliscoding.prompuff
+          --channel "$RID" --outputDir releases
+      - name: Check the app's ad-hoc signature
+        run: |
+          ls -la releases
+          mkdir unpacked
+          ditto -x -k releases/*-Portable.zip unpacked
+          app=$(ls -d unpacked/*.app)
+          codesign -dv "$app" 2>&1 | sed 's/^/  /'
+          # Apple Silicon refuses to run code without at least an ad-hoc signature.
+          codesign --verify --deep --strict --verbose=2 "$app"
+      - name: Collect this version's files
+        run: |
+          mkdir dist
+          cp releases/*-Setup.pkg "dist/Prompuff-macOS-$ARCH.pkg"
+          cp releases/*-Portable.zip "dist/Prompuff-macOS-$ARCH.zip"
+          cp "releases/releases.$RID.json" "releases/RELEASES-$RID" dist/
+          cp releases/${PACK_ID}-${VERSION}-*.nupkg dist/
+          ls -la dist
+      - name: Smoke test the app
+        run: |
+          if [ "$ARCH" = x64 ]; then
+            /usr/bin/pgrep -q oahd || softwareupdate --install-rosetta --agree-to-license
+            run=(arch -x86_64)
+          else
+            run=()
+          fi
+          app=$(ls -d unpacked/*.app)
+          "${run[@]}" "$app/Contents/MacOS/Prompuff" > "$RUNNER_TEMP/app.log" 2>&1 &
+          pid=$!
+          sleep 25
+          screencapture -x "$RUNNER_TEMP/smoke-$RID.png" || echo "No screenshot"
+          kill -0 $pid || { echo "Prompuff exited early"; cat "$RUNNER_TEMP/app.log"; exit 1; }
+          kill $pid
+          data="$HOME/Library/Application Support/Prompuff"
+          test -f "$data/prompuff.db" || { echo "No database in $data"; cat "$RUNNER_TEMP/app.log"; exit 1; }
+          ls -la "$data"
+          cat "$data"/logs/*.log
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: smoke-${{ matrix.rid }}
+          path: ${{ runner.temp }}/smoke-${{ matrix.rid }}.png
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist-${{ matrix.rid }}
           path: dist/*
           if-no-files-found: error
 
   publish:
-    needs: [version, windows, linux]
+    needs: [version, windows, linux, macos]
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     permissions:
@@ -140,11 +269,8 @@ jobs:
     steps:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: windows
-          path: dist
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: linux
+          pattern: dist-*
+          merge-multiple: true
           path: dist
       - name: Create a draft release
         env:
