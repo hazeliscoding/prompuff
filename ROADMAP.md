@@ -95,6 +95,17 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Workflows in library zips (v0.6.1):** Export everything adds each workflow under `workflows/`; Export collection and the library's Export button stay prompts only, because a workflow can span collections. Imports read every prompt in a zip, folder or file list before any workflow, so steps find the prompts from the same export with their tags, notes and collection.
 - **Markdown format:** frontmatter with `type: workflow`, `title` and `description`, then `## Step N: Title` per step, the prompt in a fenced `prompt` block longer than any backtick run inside it, and the note as a `> **Hands off:**` quote. Only each prompt's title and body travel. Importing one reuses the library's prompt with the same title and body, or creates it with just those, and a workflow with the same name and steps is skipped. The regular Import picks workflow documents out by their frontmatter.
 
+## Decisions: v0.7 (2026-10-08)
+
+- **The CLI is its own program.** `Prompuff.Cli` is a small console app without Avalonia, published as one self-contained file and shipped inside every package beside the app. Prompuff.exe is a GUI program on Windows, so it can't write to a terminal, and a `prompuff.exe` can't sit beside it in the same folder because Windows ignores case. On Linux the app lives inside the AppImage, which a terminal can't reach while Prompuff is closed.
+- **Installing it is the user's choice.** "Install command-line tool" in Settings adds the CLI's folder inside the install to the user PATH on Windows. On Linux and macOS it copies the CLI to `~/.local/bin/prompuff`, and Prompuff refreshes that copy whenever it starts as a newer version. This is the one place Prompuff writes outside its data and config folders, and only after the user asks.
+- **MCP uses the official SDK's Core package** (`ModelContextProtocol.Core`) with its low-level handlers. Library prompts are rows that change, not compile-time types, so the attribute-based hosting package doesn't fit, and Core keeps the dependency small.
+- **Favorites become MCP prompts.** Clients show them as slash commands, such as `/mcp__prompuff__…` in Claude Code or the + menu in Claude Desktop, with the prompt's `{{variables}}` as arguments. The search, get and render tools reach the whole library, and every prompt is also a resource.
+- **MCP is off until turned on.** Settings › Integrations has "Let AI tools read my library (MCP)", off by default. "Copy MCP config" offers to turn it on. While it's off, `prompuff mcp` starts, says it's turned off, and serves nothing, so a config left in some client can't read the library. The CLI needs no switch, because the user runs it.
+- **Read-only MCP; the CLI can save.** MCP never changes the library (write tools stay under Later, behind a setting). The CLI's `quick-save` adds a prompt, as Quick save does.
+- **CLI conventions:** plain text by default and `--json` for scripts. A prompt can be named by ID or by title; a title that matches several prompts lists them and exits with code 2. `render` leaves unfilled `{{tokens}}` in place, as the app does, and lists them on stderr. Exit codes are 0 for success, 1 for errors and 2 for not found or ambiguous.
+- **Same library, same rules.** The CLI and the MCP server open the library through `IAppDataPathProvider` (so `PROMPUFF_DATA_DIR` works), migrate it with a backup like the app, refuse a library from a newer version, and never log titles, bodies or values. The app checks `PRAGMA data_version` every two seconds and refreshes when another process has changed the library.
+
 ## v0.1: MVP (tagged 2026-10-07)
 
 ### M0: Foundation
@@ -239,7 +250,8 @@ Let scripts and coding agents use the vault without opening the app.
 
 - [ ] `prompuff` CLI: `search`, `list`, `get`, `render` with `--var name=value`, and `quick-save` from stdin.
 - [ ] Ship the CLI in every package, and add an "Install command-line tool" button to Settings that puts it on the user's PATH (`~/.local/bin` on Linux and macOS, a user PATH entry on Windows).
-- [ ] `prompuff mcp`: a read-only MCP server over stdio with search, get and render tools, and prompts as resources.
+- [ ] `prompuff mcp`: a read-only MCP server over stdio with search, get and render tools, every prompt as a resource, and favorites as MCP prompts with their variables as arguments.
+- [ ] Settings › Integrations: "Let AI tools read my library (MCP)", off by default; while it's off, `prompuff mcp` serves nothing.
 - [ ] "Copy MCP config" in Settings, with a ready-to-paste setup for each client: Claude Code, Claude Desktop, GitHub Copilot CLI and Codex. The README shows the same setups.
 - [ ] The app picks up changes the CLI makes without a restart, using SQLite's `data_version`.
 
