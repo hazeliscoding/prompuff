@@ -250,7 +250,12 @@ public sealed class MarkdownTransferService(
         return Finish(import);
     }
 
-    private async Task ImportFileAsync(string path, ImportProgress import, CancellationToken cancellationToken)
+    /// <param name="workflowPass">
+    /// False on the first pass, which imports prompts and notes where the workflows are. True on the second, which
+    /// reads those workflow files again. Only their paths wait in between, never their text, so a large import can't
+    /// pile up in memory.
+    /// </param>
+    private async Task ImportFileAsync(string path, ImportProgress import, CancellationToken cancellationToken, bool workflowPass = false)
     {
         try
         {
@@ -275,13 +280,24 @@ public sealed class MarkdownTransferService(
             else
             {
                 await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
-                if (await ReadLimitedAsync(stream, cancellationToken) is { } text)
+                if (await ReadLimitedAsync(stream, cancellationToken) is not { } text)
                 {
-                    await ImportTextAsync(path, text, Path.GetFileNameWithoutExtension(path), import, cancellationToken);
+                    import.Failures.Add(new ImportFailure(path, TooLarge));
+                }
+                else if (!MarkdownWorkflowFormat.IsWorkflow(text))
+                {
+                    if (!workflowPass)
+                    {
+                        await ImportPromptAsync(path, text, Path.GetFileNameWithoutExtension(path), import, cancellationToken);
+                    }
+                }
+                else if (workflowPass)
+                {
+                    await ImportWorkflowAsync(path, text, Path.GetFileNameWithoutExtension(path), import, cancellationToken);
                 }
                 else
                 {
-                    import.Failures.Add(new ImportFailure(path, TooLarge));
+                    import.PendingWorkflowFiles.Add(path);
                 }
             }
         }
@@ -302,7 +318,8 @@ public sealed class MarkdownTransferService(
 
     /// <summary>
     /// Imports the Markdown files in a zip, reading each entry in memory with the 5 MB limit. Folders such as
-    /// <c>__MACOSX</c> and <c>.obsidian</c>, and files that aren't Markdown, are passed over.
+    /// <c>__MACOSX</c> and <c>.obsidian</c>, and files that aren't Markdown, are passed over. Prompts come first; the
+    /// workflow entries are read again once they're in, so steps find the prompts from the same zip.
     /// </summary>
     private async Task ImportArchiveAsync(string zipPath, ImportProgress import, CancellationToken cancellationToken)
     {
@@ -313,6 +330,7 @@ public sealed class MarkdownTransferService(
             return;
         }
 
+        var workflowEntries = new List<ZipArchiveEntry>();
         foreach (var entry in archive.Entries)
         {
             var segments = entry.FullName.Split('/', '\\');
@@ -331,13 +349,26 @@ public sealed class MarkdownTransferService(
             }
 
             await using var stream = await entry.OpenAsync(cancellationToken);
-            if (await ReadLimitedAsync(stream, cancellationToken) is { } text)
+            if (await ReadLimitedAsync(stream, cancellationToken) is not { } text)
             {
-                await ImportTextAsync(entryPath, text, Path.GetFileNameWithoutExtension(entry.Name), import, cancellationToken);
+                import.Failures.Add(new ImportFailure(entryPath, TooLarge));
+            }
+            else if (MarkdownWorkflowFormat.IsWorkflow(text))
+            {
+                workflowEntries.Add(entry);
             }
             else
             {
-                import.Failures.Add(new ImportFailure(entryPath, TooLarge));
+                await ImportPromptAsync(entryPath, text, Path.GetFileNameWithoutExtension(entry.Name), import, cancellationToken);
+            }
+        }
+
+        foreach (var entry in workflowEntries)
+        {
+            await using var stream = await entry.OpenAsync(cancellationToken);
+            if (await ReadLimitedAsync(stream, cancellationToken) is { } text)
+            {
+                await ImportWorkflowAsync(zipPath + "/" + entry.FullName, text, Path.GetFileNameWithoutExtension(entry.Name), import, cancellationToken);
             }
         }
     }
@@ -366,16 +397,8 @@ public sealed class MarkdownTransferService(
         return await reader.ReadToEndAsync(cancellationToken);
     }
 
-    private async Task ImportTextAsync(string path, string text, string fallbackTitle, ImportProgress import, CancellationToken cancellationToken)
+    private async Task ImportPromptAsync(string path, string text, string fallbackTitle, ImportProgress import, CancellationToken cancellationToken)
     {
-        if (MarkdownWorkflowFormat.IsWorkflow(text))
-        {
-            // Workflows wait until every prompt is in, so a step finds the prompt from the same export, with its tags,
-            // notes and collection, instead of creating a bare copy of it.
-            import.PendingWorkflows.Add((path, text, fallbackTitle));
-            return;
-        }
-
         MarkdownPrompt parsed;
         try
         {
@@ -440,14 +463,18 @@ public sealed class MarkdownTransferService(
         });
     }
 
+    /// <summary>
+    /// The second pass over files and folders: workflows wait until every prompt is in, so a step finds the prompt from
+    /// the same export, with its tags, notes and collection, instead of creating a bare copy of it.
+    /// </summary>
     private async Task ImportWorkflowsAsync(ImportProgress import, CancellationToken cancellationToken)
     {
-        foreach (var (path, text, fallbackTitle) in import.PendingWorkflows)
+        foreach (var path in import.PendingWorkflowFiles)
         {
-            await ImportWorkflowAsync(path, text, fallbackTitle, import, cancellationToken);
+            await ImportFileAsync(path, import, cancellationToken, workflowPass: true);
         }
 
-        import.PendingWorkflows.Clear();
+        import.PendingWorkflowFiles.Clear();
     }
 
     /// <summary>
@@ -531,8 +558,8 @@ public sealed class MarkdownTransferService(
         public List<Guid> Imported { get; } = [];
         public List<Guid> Workflows { get; } = [];
 
-        /// <summary>Workflow documents read so far, imported once every prompt is in.</summary>
-        public List<(string Path, string Text, string FallbackTitle)> PendingWorkflows { get; } = [];
+        /// <summary>Workflow files found on the first pass, read again once every prompt is in.</summary>
+        public List<string> PendingWorkflowFiles { get; } = [];
         public List<ImportFailure> Failures { get; } = [];
         public List<string> OtherFiles { get; } = [];
         public int Skipped { get; set; }

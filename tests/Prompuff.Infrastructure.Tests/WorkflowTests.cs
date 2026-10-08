@@ -201,6 +201,23 @@ public class WorkflowTests
     }
 
     [Fact]
+    public async Task A_folder_imports_its_prompts_before_its_workflows()
+    {
+        await using var library = await TestLibrary.CreateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(library.Folder, "export")).FullName;
+        var workflow = MarkdownWorkflowFormat.Write(new MarkdownWorkflow("Flow", null, [new MarkdownWorkflowStep("Plan", "Plan {{repo}}.", null)]));
+        await File.WriteAllTextAsync(Path.Combine(folder, "a-flow.md"), workflow);
+        await File.WriteAllTextAsync(Path.Combine(folder, "plan.md"), "---\ntitle: Plan\ntags: [planning]\n---\n\n# Prompt\n\nPlan {{repo}}.\n");
+
+        var result = await library.Transfer.ImportFolderAsync(folder);
+
+        var prompt = await library.Prompts.GetAsync(Assert.Single(result.ImportedPromptIds));
+        Assert.Equal(["planning"], prompt!.Tags);
+        var steps = (await library.WorkflowService.GetAsync(Assert.Single(result.ImportedWorkflowIds)))!.Steps;
+        Assert.Equal(prompt.Id, Assert.Single(steps).PromptId);
+    }
+
+    [Fact]
     public async Task Export_then_import_rebuilds_the_workflow_and_reuses_prompts_already_there()
     {
         await using var library = await TestLibrary.CreateAsync();
