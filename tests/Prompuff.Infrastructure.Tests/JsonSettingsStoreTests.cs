@@ -51,6 +51,19 @@ public sealed class JsonSettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void Settings_missing_newer_keys_keep_their_defaults()
+    {
+        Directory.CreateDirectory(_folder);
+        File.WriteAllText(Path.Combine(_folder, "settings.json"), """{ "updateChannel": "beta" }""");
+
+        var settings = _store.Load();
+
+        Assert.Equal(UpdateChannel.Beta, settings.UpdateChannel);
+        Assert.Equal(AppSettings.Default with { UpdateChannel = UpdateChannel.Beta }, settings);
+        Assert.Equal("Ctrl+Alt+P", settings.QuickSaveHotkey);
+    }
+
+    [Fact]
     public void Missing_file_gives_defaults()
     {
         Assert.Equal(AppSettings.Default, _store.Load());

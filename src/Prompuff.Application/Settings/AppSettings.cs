@@ -31,34 +31,40 @@ public enum Density
 
 public sealed record WindowPlacement(double Width, double Height, bool IsMaximized);
 
+/// <remarks>
+/// The properties are settable, not init-only, because the source-generated JSON reader only keeps these defaults for
+/// settable properties; with init-only ones, a key missing from an older settings file came back as false or empty.
+/// Treat a loaded instance as a value and change it with <c>with</c>.
+/// </remarks>
 public sealed record AppSettings
 {
-    public ThemePreference Theme { get; init; } = ThemePreference.Dark;
+    public ThemePreference Theme { get; set; } = ThemePreference.Dark;
 
     /// <summary>The theme for Dark, and for System while the OS is dark. An ID from Prompuff.App's theme catalog.</summary>
-    public string DarkTheme { get; init; } = "prompuff-dark";
+    public string DarkTheme { get; set; } = "prompuff-dark";
 
     /// <summary>The theme for Light, and for System while the OS is light.</summary>
-    public string LightTheme { get; init; } = "prompuff-light";
-    public bool ShowMascot { get; init; } = true;
-    public bool CheckForUpdatesAutomatically { get; init; } = true;
-    public UpdateChannel UpdateChannel { get; init; } = UpdateChannel.Stable;
-    public LibraryLayout LibraryLayout { get; init; } = LibraryLayout.Cards;
-    public Density Density { get; init; } = Density.Cozy;
+    public string LightTheme { get; set; } = "prompuff-light";
+    public bool ShowMascot { get; set; } = true;
+    public bool CheckForUpdatesAutomatically { get; set; } = true;
+    public UpdateChannel UpdateChannel { get; set; } = UpdateChannel.Stable;
+    public LibraryLayout LibraryLayout { get; set; } = LibraryLayout.Cards;
+    public Density Density { get; set; } = Density.Cozy;
 
     /// <summary>Closing the window hides it and keeps Prompuff in the tray, so Quick save stays a keypress away.</summary>
-    public bool KeepRunningInTray { get; init; }
+    public bool KeepRunningInTray { get; set; }
 
     /// <summary>The system-wide Quick save hotkey, such as "Ctrl+Alt+P". Empty turns it off.</summary>
-    public string QuickSaveHotkey { get; init; } = "Ctrl+Alt+P";
+    public string QuickSaveHotkey { get; set; } = "Ctrl+Alt+P";
 
     /// <summary>Lets AI tools read the library through <c>prompuff mcp</c>. Off until the user turns it on.</summary>
-    public bool AllowMcp { get; init; }
+    public bool AllowMcp { get; set; }
 
     /// <summary>Where "Install command-line tool" copied the CLI on Linux and macOS, so Prompuff can refresh that copy.</summary>
-    public string? InstalledCommandLineTool { get; init; }
-    public PromptSort LibrarySort { get; init; } = PromptSort.LastEdited;
-    public WindowPlacement? Window { get; init; }
+    public string? InstalledCommandLineTool { get; set; }
+    public PromptSort LibrarySort { get; set; } = PromptSort.LastEdited;
+    public WindowPlacement? Window { get; set; }
 
-    public static AppSettings Default { get; } = new();
+    /// <summary>A fresh copy each time, so nothing can change the defaults by accident.</summary>
+    public static AppSettings Default => new();
 }
