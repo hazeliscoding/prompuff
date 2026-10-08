@@ -76,6 +76,11 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Opening a prompt** puts the cursor at the top of its body, so typing edits it right away.
 - **Dialogs take focus** when they open, so Enter confirms the dialog instead of pressing the button behind it, and focus returns where it was when they close.
 
+## Decisions: v0.5 (2026-10-08)
+
+- **One copy per library.** The first copy holds an exclusive lock on `prompuff.lock` in the data folder (a sharing lock on Windows, `flock` elsewhere), which the operating system releases if it crashes. Later launches send `activate` or `quick-save` to it over a local pipe (a named pipe on Windows, a Unix socket elsewhere) that only the same user can open, then exit. The pipe name is a hash of the data folder, so a development run with `PROMPUFF_DATA_DIR` never talks to the real one. This is local IPC, not network code.
+- **`--quick-save` and `quick-save`** both open Quick save, so a desktop shortcut can run the app executable or AppImage with either.
+
 ## v0.1: MVP (tagged 2026-10-07)
 
 ### M0: Foundation
@@ -192,7 +197,7 @@ Make daily use fast, and keep track of where prompts came from.
 
 Stash a good prompt from any app in a few seconds.
 
-- [ ] Single instance: launching Prompuff again, or running `Prompuff --quick-save`, hands off to the running copy.
+- [x] Single instance: launching Prompuff again, or running `Prompuff --quick-save`, hands off to the running copy.
 - [ ] Tray icon with Quick save, Open and Quit, and an option to keep running in the tray when the window closes.
 - [ ] A configurable system-wide Quick save hotkey behind `IGlobalHotkeyService`, implemented for Windows, X11 and macOS.
 - [ ] Wayland: Settings explains how to bind a desktop shortcut to `prompuff quick-save`.
