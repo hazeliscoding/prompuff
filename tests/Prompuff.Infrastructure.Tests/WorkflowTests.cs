@@ -1,7 +1,9 @@
+using Microsoft.Extensions.Logging;
 using Prompuff.Application;
 using Prompuff.Application.DTOs;
 using Prompuff.Domain.ValueObjects;
 using Prompuff.Infrastructure.ImportExport;
+using Prompuff.Infrastructure.Logging;
 
 namespace Prompuff.Infrastructure.Tests;
 
@@ -108,6 +110,31 @@ public class WorkflowTests
     {
         var error = Assert.Throws<MarkdownFormatException>(() => MarkdownWorkflowFormat.Read(text, "fallback"));
         Assert.Contains(message, error.Message);
+    }
+
+    [Fact]
+    public async Task A_workflow_that_can_not_be_imported_keeps_its_step_titles_out_of_the_log()
+    {
+        await using var library = await TestLibrary.CreateAsync();
+        var logs = Path.Combine(library.Folder, "logs");
+        var provider = new FileLoggerProvider(logs);
+        using (var factory = new LoggerFactory([provider]))
+        {
+            var transfer = new MarkdownTransferService(
+                library.PromptService, library.CollectionService, library.Collections, library.WorkflowService, factory.CreateLogger<MarkdownTransferService>());
+            var file = library.TempFile("lost.md");
+            await File.WriteAllTextAsync(file, "---\ntype: workflow\n---\n\n## Step 1: Secret Planner\n\nNo fence here.\n");
+
+            var result = await transfer.ImportFilesAsync([file]);
+
+            // The person importing still sees which step it was.
+            Assert.Contains("Secret Planner", Assert.Single(result.Failures).Reason);
+        }
+
+        provider.Dispose();
+        var log = string.Concat(Directory.GetFiles(logs).Select(File.ReadAllText));
+        Assert.Contains("Import skipped a workflow", log);
+        Assert.DoesNotContain("Secret Planner", log);
     }
 
     [Fact]

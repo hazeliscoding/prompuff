@@ -496,7 +496,8 @@ public sealed class MarkdownTransferService(
         }
         catch (MarkdownFormatException exception)
         {
-            logger.LogWarning("Import skipped a workflow: {Reason}", exception.Message);
+            // The reason can quote a step's title, which is a prompt title, so only the import result shows it.
+            logger.LogWarning("Import skipped a workflow it couldn't read");
             import.Failures.Add(new ImportFailure(path, exception.Message));
             return;
         }
