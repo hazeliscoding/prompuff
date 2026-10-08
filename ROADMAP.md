@@ -116,6 +116,11 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 
 - **Themes join v0.8.** They land before v0.9, so v0.9's contrast check covers every theme, not only Prompuff Dark and Light.
 - **SmartScreen waits until after 1.0.** The signing certificate is new, and reputation only builds as people download signed builds, so the check moves from v0.9 to Later.
+- **Themes, as built:**
+  - Each theme is a palette in `ThemePalette.cs`: six backgrounds, three borders, four text colors, the accent and eight tones. `ThemeBuilder` derives the subtle fills, borders, shadows and control colors the same way for every theme, and registers each one as an Avalonia theme variant that inherits from Dark or Light. Prompuff Dark and Light stay in `Tokens.axaml`.
+  - Fluent only takes palettes for Dark and Light, so each theme's dictionary also carries the `System*Color` values Fluent's stock controls read.
+  - Picking a theme while the other mode shows switches to its mode, so the choice is visible at once. System keeps following the OS between the chosen dark and light theme.
+  - A test checks every palette's contrast: Text1, Text2, the accent text and the tone texts reach 4.5:1 on the backgrounds they sit on, white or dark labels on the accent reach 4.5:1, and Text3 reaches 3:1 for now. It caught Prompuff Light's primary buttons at 3.74:1, so that accent moved one step darker, to teal-700 (`#0F766E`).
 - **1.0 launches with a video and a landing page.** The video is made with the `/brag` skill. The landing page is a static site on GitHub Pages and keeps the app's promise: no analytics or trackers, and nothing loaded from other sites.
 
 ## v0.1: MVP (tagged 2026-10-07)
@@ -277,10 +282,10 @@ Let scripts and coding agents use the vault without opening the app.
 
 - [ ] A `SHA256SUMS` file with every release.
 - [ ] A Beta channel: `-beta` tags publish pre-releases to `*-beta` Velopack channels, and the Beta option in Settings › Updates works.
-- [ ] Themes in Settings › Appearance. Prompuff Dark and Light stay the defaults, joined by palettes developers know from their editors: Darcula, Gruvbox Dark and Light, Dracula, Nord, One Dark, Tokyo Night, Solarized Dark and Light, and Catppuccin Mocha and Latte.
-- [ ] Pick a dark theme and a light theme, and System switches between them with the OS. Each theme fills the same tokens in `Tokens.axaml` (backgrounds, text, borders, accent and status colors), so views don't change.
-- [ ] Each palette's license and authors are credited in `licenses/`.
-- [ ] The headless UI tests capture the library, the editor and a dialog in every theme.
+- [x] Themes in Settings › Appearance. Prompuff Dark and Light stay the defaults, joined by palettes developers know from their editors: Darcula, Gruvbox Dark and Light, Dracula, Nord, One Dark, Tokyo Night, Solarized Dark and Light, and Catppuccin Mocha and Latte.
+- [x] Pick a dark theme and a light theme, and System switches between them with the OS. Each theme fills the same tokens in `Tokens.axaml` (backgrounds, text, borders, accent and status colors), so views don't change.
+- [x] Each palette's license and authors are credited in `licenses/Themes.md`.
+- [x] The headless UI tests capture the library, the editor and a dialog in every theme.
 
 **Done when:** a beta install updates from the beta channel, every release carries a `SHA256SUMS` file, and switching themes restyles the whole window, dialogs included, without a restart.
 

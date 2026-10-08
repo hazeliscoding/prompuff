@@ -41,6 +41,7 @@ These are the working rules for agents in this repo. Prompuff is a local-first d
 ## UI and copy
 
 - The look follows the Prompuff design on the Quorum design system: tokens live in `src/Prompuff.App/Themes/Tokens.axaml`, with Dark as the primary theme and a full Light theme. Use `DynamicResource` for theme colors.
+- The other themes are palettes in `Themes/ThemePalette.cs` that `ThemeBuilder` turns into the same keys. A new token goes in both places; `ThemeTests` fails if a theme misses one or if a palette's text falls below the contrast bar.
 - Manrope for interface text, IBM Plex Mono for data, variables and prompt bodies. Lucide icons through the `Icon` control.
 - Voice: cute, concise, lightly playful, never chatty. Personality goes in empty states, confirmations and the About page. Buttons and labels stay plain ("Save", "Copy", "Delete").
 - Errors say what happened and that the library is safe, with technical details behind "Show details". Never show a raw exception.
