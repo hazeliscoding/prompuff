@@ -20,6 +20,37 @@ public sealed class JsonSettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void Settings_files_from_earlier_versions_still_read_and_keep_their_spelling()
+    {
+        Directory.CreateDirectory(_folder);
+        var path = Path.Combine(_folder, "settings.json");
+        File.WriteAllText(path, """
+            {
+              "theme": "light",
+              "showMascot": false,
+              "libraryLayout": "list",
+              "librarySort": "lastEdited",
+              "density": "compact",
+              "updateChannel": "stable"
+            }
+            """);
+
+        var settings = _store.Load();
+        Assert.Equal(ThemePreference.Light, settings.Theme);
+        Assert.False(settings.ShowMascot);
+        Assert.Equal(LibraryLayout.List, settings.LibraryLayout);
+        Assert.Equal(PromptSort.LastEdited, settings.LibrarySort);
+        Assert.Equal(Density.Compact, settings.Density);
+        Assert.False(settings.AllowMcp);
+
+        _store.Save(settings with { AllowMcp = true });
+        var written = File.ReadAllText(path);
+        Assert.Contains("\"theme\": \"light\"", written);
+        Assert.Contains("\"librarySort\": \"lastEdited\"", written);
+        Assert.Contains("\"allowMcp\": true", written);
+    }
+
+    [Fact]
     public void Missing_file_gives_defaults()
     {
         Assert.Equal(AppSettings.Default, _store.Load());

@@ -6,14 +6,23 @@ using Prompuff.Application.Settings;
 
 namespace Prompuff.Infrastructure.Storage;
 
+/// <summary>Source-generated, so settings still read and write in the trimmed command-line tool.</summary>
+[JsonSourceGenerationOptions(
+    WriteIndented = true,
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    UseStringEnumConverter = true,
+    Converters = [typeof(CamelCaseEnumConverter<ThemePreference>), typeof(CamelCaseEnumConverter<UpdateChannel>),
+        typeof(CamelCaseEnumConverter<LibraryLayout>), typeof(CamelCaseEnumConverter<Density>), typeof(CamelCaseEnumConverter<Application.DTOs.PromptSort>)])]
+[JsonSerializable(typeof(AppSettings))]
+internal sealed partial class SettingsJsonContext : JsonSerializerContext;
+
+/// <summary>Enums as camelCase strings ("dark", "lastEdited"), as settings files have always stored them.</summary>
+internal sealed class CamelCaseEnumConverter<TEnum>() : JsonStringEnumConverter<TEnum>(JsonNamingPolicy.CamelCase)
+    where TEnum : struct, Enum;
+
 public sealed class JsonSettingsStore(IAppDataPathProvider paths, ILogger<JsonSettingsStore> logger) : ISettingsStore
 {
-    private static readonly JsonSerializerOptions Options = new()
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
-    };
+    private static readonly System.Text.Json.Serialization.Metadata.JsonTypeInfo<AppSettings> Options = SettingsJsonContext.Default.AppSettings;
 
     public AppSettings Load()
     {
