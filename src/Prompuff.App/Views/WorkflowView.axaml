@@ -1,0 +1,346 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Prompuff.App.ViewModels"
+             xmlns:c="using:Prompuff.App.Controls"
+             x:Class="Prompuff.App.Views.WorkflowView"
+             x:DataType="vm:WorkflowViewModel">
+  <UserControl.Styles>
+    <Style Selector="Border.step-number">
+      <Setter Property="Width" Value="26" />
+      <Setter Property="Height" Value="26" />
+      <Setter Property="CornerRadius" Value="13" />
+      <Setter Property="Background" Value="{DynamicResource Bg3Brush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Border2Brush}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Border.step-number TextBlock">
+      <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.run-step">
+      <Setter Property="Height" Value="NaN" />
+      <Setter Property="Padding" Value="10,7" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="FontWeight" Value="Normal" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="Button.run-step.current">
+      <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
+    </Style>
+    <Style Selector="Button.run-step.current Border.step-number">
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    <Style Selector="Button.run-step.current Border.step-number TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource TextInverseBrush}" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel>
+    <!-- Header -->
+    <Border DockPanel.Dock="Top" Padding="20,12,20,0" Classes="hairline-bottom">
+      <StackPanel Spacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Classes="bare" Command="{Binding BackCommand}" Foreground="{DynamicResource Text3Brush}" Cursor="Hand">
+            <TextBlock Classes="compact" Text="Workflows" />
+          </Button>
+          <TextBlock Classes="compact faint" Text="›" />
+          <TextBlock Classes="compact faint" Text="{Binding StepCountLabel}" />
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+          <TextBox x:Name="NameBox" Classes="plain title" Margin="-6,0,0,0" Text="{Binding Name}" PlaceholderText="Untitled workflow" />
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Button Command="{Binding ExportCommand}" ToolTip.Tip="Save as one Markdown file, with every step's prompt inside">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <c:Icon Kind="Upload" Size="13" />
+                <TextBlock Text="Export" />
+              </StackPanel>
+            </Button>
+            <Button Classes="primary" Command="{Binding ShowRunCommand}" IsVisible="{Binding IsStepsTab}" IsEnabled="{Binding HasSteps}" ToolTip.Tip="Fill in once and copy step by step (Ctrl Enter)">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <c:Icon Kind="Play" Size="12" />
+                <TextBlock Text="Run" />
+              </StackPanel>
+            </Button>
+            <Button Classes="ghost icon" ToolTip.Tip="More">
+              <c:Icon Kind="Ellipsis" Size="15" />
+              <Button.Flyout>
+                <MenuFlyout Placement="BottomEdgeAlignedRight">
+                  <MenuItem Header="Delete workflow…" Classes="danger" Command="{Binding DeleteCommand}" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+          </StackPanel>
+        </Grid>
+
+        <TextBox Classes="plain" Margin="-6,-6,0,0" Foreground="{DynamicResource Text2Brush}" FontSize="12"
+                 Text="{Binding Description}" PlaceholderText="Add a one-line description" />
+
+        <StackPanel Orientation="Horizontal" Spacing="2" Margin="0,2,0,0">
+          <RadioButton Theme="{StaticResource TabButton}" GroupName="workflow-tabs" IsChecked="{Binding IsStepsTab}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="Steps" />
+              <Border Background="{DynamicResource Bg3Brush}" CornerRadius="2" Padding="5,0">
+                <TextBlock Classes="data faint" Text="{Binding Steps.Count}" />
+              </Border>
+            </StackPanel>
+          </RadioButton>
+          <RadioButton Theme="{StaticResource TabButton}" GroupName="workflow-tabs" IsChecked="{Binding IsRunTab}" Content="Run &amp; copy" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <Panel>
+      <!-- Steps -->
+      <DockPanel IsVisible="{Binding IsStepsTab}">
+        <Border DockPanel.Dock="Top" Height="40" Padding="20,0" Classes="hairline-bottom">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Classes="label" Text="STEPS, IN ORDER" VerticalAlignment="Center" />
+            <Button x:Name="AddStepButton" Grid.Column="1" Classes="sm" VerticalAlignment="Center">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <c:Icon Kind="Plus" Size="12" StrokeWidth="2" />
+                <TextBlock Text="Add a step" />
+              </StackPanel>
+              <Button.Flyout>
+                <Flyout Placement="BottomEdgeAlignedRight">
+                  <StackPanel Width="340" Spacing="6">
+                    <TextBox x:Name="PickerBox" Text="{Binding PickerQuery}" PlaceholderText="Find a prompt in your library" Height="30" />
+                    <TextBlock Classes="compact faint" Margin="4,4" Text="No prompts match that." IsVisible="{Binding !PickerResults.Count}" />
+                    <ItemsControl ItemsSource="{Binding PickerResults}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:PromptPickViewModel">
+                          <Button Classes="nav" Height="NaN" Padding="8,6" Command="{Binding AddCommand}" Click="OnPickerItemClick">
+                            <StackPanel Spacing="1">
+                              <TextBlock Classes="strong" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                              <TextBlock Classes="compact faint" Text="{Binding Description}" TextTrimming="CharacterEllipsis"
+                                         IsVisible="{Binding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            </StackPanel>
+                          </Button>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+            </Button>
+          </Grid>
+        </Border>
+
+        <Panel>
+          <StackPanel IsVisible="{Binding !HasSteps}" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" Margin="20">
+            <TextBlock Classes="section-title" HorizontalAlignment="Center" Text="No steps yet." />
+            <TextBlock Classes="faint" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="400"
+                       Text="Add the prompt that comes first, then the ones that build on its answer." />
+          </StackPanel>
+
+          <ScrollViewer IsVisible="{Binding HasSteps}" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Steps}" Margin="20,16,20,32" MaxWidth="860" HorizontalAlignment="Left">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:WorkflowStepViewModel">
+                  <Grid ColumnDefinitions="26,*" ColumnSpacing="14">
+                    <Grid RowDefinitions="Auto,*">
+                      <Border Classes="step-number" Margin="0,12,0,0">
+                        <TextBlock Text="{Binding NumberLabel}" />
+                      </Border>
+                      <Border Grid.Row="1" Width="1" Background="{DynamicResource Border2Brush}" HorizontalAlignment="Center" IsVisible="{Binding !IsLast}" />
+                    </Grid>
+                    <Border Grid.Column="1" Background="{DynamicResource Bg2Brush}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="1"
+                            CornerRadius="8" Padding="14,12" Margin="0,0,0,12">
+                      <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Classes="bare" Command="{Binding OpenPromptCommand}" ToolTip.Tip="Open this prompt">
+                              <TextBlock Classes="card-title" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                            </Button>
+                            <Border Classes="badge" IsVisible="{Binding IsPromptDeleted}" BorderBrush="{DynamicResource AmberBorderBrush}" VerticalAlignment="Center">
+                              <TextBlock Text="IN RECENTLY DELETED" Foreground="{DynamicResource AmberTextBrush}" />
+                            </Border>
+                          </StackPanel>
+                          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                            <Button Classes="ghost icon sm" Command="{Binding MoveUpCommand}" IsEnabled="{Binding !IsFirst}" ToolTip.Tip="Move up">
+                              <c:Icon Kind="ArrowUp" Size="13" />
+                            </Button>
+                            <Button Classes="ghost icon sm" Command="{Binding MoveDownCommand}" IsEnabled="{Binding !IsLast}" ToolTip.Tip="Move down">
+                              <c:Icon Kind="ArrowDown" Size="13" />
+                            </Button>
+                            <Button Classes="ghost icon sm" Command="{Binding RemoveCommand}" ToolTip.Tip="Remove this step (the prompt stays in your library)">
+                              <c:Icon Kind="X" Size="13" />
+                            </Button>
+                          </StackPanel>
+                        </Grid>
+                        <ItemsControl ItemsSource="{Binding Variables}" IsVisible="{Binding HasVariables}">
+                          <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                              <WrapPanel ItemSpacing="6" LineSpacing="4" />
+                            </ItemsPanelTemplate>
+                          </ItemsControl.ItemsPanel>
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                              <TextBlock Classes="variable" Text="{Binding}" />
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                          <c:Icon Kind="ArrowRight" Size="12" Foreground="{DynamicResource Text3Brush}" VerticalAlignment="Top" Margin="0,8,0,0" />
+                          <TextBox Grid.Column="1" Classes="raised" MinHeight="30" AcceptsReturn="True" TextWrapping="Wrap" FontSize="12"
+                                   Text="{Binding Note}" PlaceholderText="Hands off: what does this step pass to the next? Optional." />
+                        </Grid>
+                      </StackPanel>
+                    </Border>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Panel>
+      </DockPanel>
+
+      <!-- Run -->
+      <Panel IsVisible="{Binding IsRunTab}">
+        <StackPanel IsVisible="{Binding !HasSteps}" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+          <TextBlock Classes="section-title" HorizontalAlignment="Center" Text="Nothing to run yet." />
+          <TextBlock Classes="faint" HorizontalAlignment="Center" Text="Add a step on the Steps tab first." />
+        </StackPanel>
+
+        <Grid ColumnDefinitions="0.85*,1.35*" IsVisible="{Binding HasSteps}">
+          <!-- Fill in once -->
+          <Border BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,0,1,0" MinWidth="280">
+            <DockPanel>
+              <Border DockPanel.Dock="Top" Height="32" Padding="20,0,12,0" Classes="hairline-bottom">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Classes="label" Text="FILL IN ONCE" VerticalAlignment="Center" />
+                  <Button Grid.Column="1" Classes="ghost sm" VerticalAlignment="Center" Command="{Binding ClearValuesCommand}" IsVisible="{Binding HasVariables}"
+                          ToolTip.Tip="Forget the values remembered for this workflow">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <c:Icon Kind="X" Size="12" />
+                      <TextBlock Text="Clear values" />
+                    </StackPanel>
+                  </Button>
+                </Grid>
+              </Border>
+              <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="20,16" Spacing="14">
+                  <TextBlock Classes="compact faint" Text="{Binding VariableCountLabel}" />
+                  <TextBlock Classes="compact faint" TextWrapping="Wrap" IsVisible="{Binding !HasVariables}"
+                             Text="These steps have no variables, so each one copies as written." />
+                  <ItemsControl x:Name="VariableInputs" ItemsSource="{Binding Variables}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <StackPanel Spacing="14" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:WorkflowVariableViewModel">
+                        <StackPanel Spacing="5">
+                          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                            <TextBlock Classes="variable" Text="{Binding Braced}" />
+                            <TextBlock Grid.Column="1" Classes="compact faint" Text="{Binding UsedIn}" HorizontalAlignment="Right" VerticalAlignment="Center" IsVisible="{Binding !IsShared}" />
+                            <TextBlock Grid.Column="1" Classes="compact" Text="{Binding UsedIn}" HorizontalAlignment="Right" VerticalAlignment="Center" IsVisible="{Binding IsShared}"
+                                       Foreground="{DynamicResource AccentTextBrush}" />
+                          </Grid>
+                          <TextBox Classes="raised" MinHeight="30" MaxHeight="150" AcceptsReturn="True" TextWrapping="Wrap"
+                                   Text="{Binding Value}" PlaceholderText="{Binding Placeholder}" />
+                        </StackPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </ScrollViewer>
+            </DockPanel>
+          </Border>
+
+          <!-- Step by step -->
+          <DockPanel Grid.Column="1">
+            <Border DockPanel.Dock="Top" Padding="16,10" Classes="hairline-bottom" Background="{DynamicResource Bg1Brush}">
+              <ItemsControl ItemsSource="{Binding Steps}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel ItemSpacing="6" LineSpacing="6" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:WorkflowStepViewModel">
+                    <Button Classes="run-step" Classes.current="{Binding IsCurrent}" Command="{Binding SelectCommand}" HorizontalAlignment="Left" MaxWidth="260">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Panel>
+                          <Border Classes="step-number" IsVisible="{Binding !IsCopied}">
+                            <TextBlock Text="{Binding NumberLabel}" />
+                          </Border>
+                          <c:Icon Kind="CircleCheck" Size="26" StrokeWidth="1.6" Foreground="{DynamicResource MintBrush}" IsVisible="{Binding IsCopied}" />
+                        </Panel>
+                        <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </Border>
+            <Border DockPanel.Dock="Top" Height="40" Padding="20,0" Classes="hairline-bottom">
+              <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto" ColumnSpacing="10">
+                <TextBlock Classes="label" Text="{Binding ProgressLabel}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Classes="data" Text="{Binding FillLabel}" VerticalAlignment="Center"
+                           Foreground="{DynamicResource AmberTextBrush}" IsVisible="{Binding !IsFullyFilled}" />
+                <TextBlock Grid.Column="1" Classes="data" Text="{Binding FillLabel}" VerticalAlignment="Center"
+                           Foreground="{DynamicResource MintTextBrush}" IsVisible="{Binding IsFullyFilled}" />
+                <Button Grid.Column="3" Classes="ghost sm" Command="{Binding PreviousStepCommand}" IsEnabled="{Binding CanGoBack}" VerticalAlignment="Center" ToolTip.Tip="Previous step">
+                  <c:Icon Kind="ArrowUp" Size="12" />
+                </Button>
+                <Button Grid.Column="4" Classes="ghost sm" Command="{Binding NextStepCommand}" IsEnabled="{Binding CanGoForward}" VerticalAlignment="Center" ToolTip.Tip="Next step">
+                  <c:Icon Kind="ArrowDown" Size="12" />
+                </Button>
+                <Button Grid.Column="5" Classes="primary sm" Command="{Binding CopyStepCommand}" VerticalAlignment="Center" ToolTip.Tip="Copy, then move to the next step (Ctrl Enter)">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <c:Icon Kind="Copy" Size="12" />
+                    <TextBlock Text="{Binding CopyLabel}" />
+                  </StackPanel>
+                </Button>
+              </Grid>
+            </Border>
+            <Border DockPanel.Dock="Bottom" Padding="20,8" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="compact faint" VerticalAlignment="Center" TextWrapping="Wrap"
+                           Text="Copy a step, paste it into your model, and carry its answer into the next step's values." />
+                <Button Grid.Column="1" Classes="ghost sm" Command="{Binding StartOverCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <c:Icon Kind="RotateCcw" Size="12" />
+                    <TextBlock Text="Start over" />
+                  </StackPanel>
+                </Button>
+              </Grid>
+            </Border>
+            <Border DockPanel.Dock="Top" Padding="20,10,20,0" IsVisible="{Binding CurrentStep.HasNote, FallbackValue=False}">
+              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <c:Icon Kind="ArrowRight" Size="12" Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Top" Margin="0,3,0,0" />
+                <TextBlock Grid.Column="1" Classes="compact" TextWrapping="Wrap" Foreground="{DynamicResource Text2Brush}">
+                  <Run Text="Hands off: " FontWeight="SemiBold" />
+                  <Run Text="{Binding CurrentStep.Note, FallbackValue=''}" />
+                </TextBlock>
+              </Grid>
+            </Border>
+            <ScrollViewer Background="{DynamicResource BgInsetBrush}" HorizontalScrollBarVisibility="Disabled" Margin="0,10,0,0">
+              <c:TemplatePreview Margin="20,18"
+                                 Segments="{Binding Segments}"
+                                 FilledForeground="{DynamicResource AccentTextBrush}"
+                                 FilledBackground="{DynamicResource AccentSubtleBrush}"
+                                 MissingForeground="{DynamicResource LavenderTextBrush}"
+                                 MissingBackground="{DynamicResource LavenderSubtleBrush}"
+                                 SelectionBrush="{DynamicResource AccentBorderBrush}"
+                                 FontFamily="{StaticResource MonoFont}"
+                                 FontSize="13"
+                                 LineHeight="21.5"
+                                 TextWrapping="Wrap"
+                                 Foreground="{DynamicResource Text1Brush}" />
+            </ScrollViewer>
+          </DockPanel>
+        </Grid>
+      </Panel>
+    </Panel>
+  </DockPanel>
+</UserControl>

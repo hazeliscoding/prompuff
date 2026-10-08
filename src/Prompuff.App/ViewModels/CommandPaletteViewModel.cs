@@ -23,9 +23,11 @@ public sealed partial class CommandPaletteViewModel(
     PromptService prompts,
     IClipboardService clipboard,
     Navigator navigator,
-    ToastService toasts) : ObservableObject
+    ToastService toasts,
+    WorkflowService workflows) : ObservableObject
 {
     private IReadOnlyList<PromptSummary> _prompts = [];
+    private IReadOnlyList<WorkflowSummary> _workflows = [];
     private IReadOnlyList<TagSummary> _tags = [];
 
     public ObservableCollection<PaletteItem> Items { get; } = [];
@@ -48,6 +50,7 @@ public sealed partial class CommandPaletteViewModel(
     {
         _prompts = await search.SearchAsync(new PromptQuery { Sort = PromptSort.RecentActivity });
         _tags = await tags.ListAsync();
+        _workflows = await workflows.ListAsync();
         Query = string.Empty;
         Rebuild();
         IsOpen = true;
@@ -104,6 +107,12 @@ public sealed partial class CommandPaletteViewModel(
             items.Add(new PaletteItem("Copy " + prompt.Title, "Copy", "Copy", () => CopyAsync(prompt)));
         }
 
+        foreach (var workflow in _workflows.Where(workflow => query.Length > 0 && Matches(workflow.Name, query)).Take(3))
+        {
+            items.Add(new PaletteItem(workflow.Name, "Workflows", "Workflow", () => navigator.OpenWorkflowAsync(workflow.Id),
+                Hint: Format.Count(workflow.StepCount, "step")));
+        }
+
         if (query.Length > 0)
         {
             items.Add(new PaletteItem($"Search the library for “{query}”", "Actions", "Search", () => RunAction?.Invoke("search:" + query) ?? Task.CompletedTask));
@@ -115,6 +124,8 @@ public sealed partial class CommandPaletteViewModel(
             ("Quick save from clipboard", "ClipboardPlus", "quick-save", Shortcuts.Display(ShortcutAction.QuickSave)),
             ("Go to favorites", "Heart", "favorites", null),
             ("Go to recent", "Clock", "recent", null),
+            ("Go to workflows", "Workflow", "workflows", null),
+            ("New workflow", "Workflow", "new-workflow", null),
             ("New collection", "FolderPlus", "new-collection", null),
             ("Import Markdown", "Download", "import", null),
             ("Import a folder", "FolderOpen", "import-folder", null),

@@ -22,6 +22,8 @@ public sealed class Navigator
     public event Func<Guid?, Task>? NewPromptRequested;
     public event Func<LibraryFilter?, Task>? LibraryRequested;
     public event Func<Task>? SettingsRequested;
+    public event Func<Task>? WorkflowsRequested;
+    public event Func<Guid, Task>? OpenWorkflowRequested;
 
     public Task OpenPromptAsync(Guid id) => OpenPromptRequested?.Invoke(id) ?? Task.CompletedTask;
 
@@ -31,6 +33,10 @@ public sealed class Navigator
     public Task ShowLibraryAsync(LibraryFilter? filter = null) => LibraryRequested?.Invoke(filter) ?? Task.CompletedTask;
 
     public Task ShowSettingsAsync() => SettingsRequested?.Invoke() ?? Task.CompletedTask;
+
+    public Task ShowWorkflowsAsync() => WorkflowsRequested?.Invoke() ?? Task.CompletedTask;
+
+    public Task OpenWorkflowAsync(Guid id) => OpenWorkflowRequested?.Invoke(id) ?? Task.CompletedTask;
 }
 
 /// <summary>Raised whenever prompts, collections or tags change, so lists and counts can refresh.</summary>

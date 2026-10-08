@@ -36,6 +36,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly PromptService _prompts;
     private readonly RenderValuesCache _renderValues;
     private readonly Func<PromptEditorViewModel> _createEditor;
+    private readonly Func<WorkflowViewModel> _createWorkflow;
     private readonly IPlatformLauncher _launcher;
     private readonly IAppDataPathProvider _paths;
     private readonly LibraryNotifier _notifier;
@@ -60,6 +61,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Navigator navigator,
         LibraryNotifier notifier,
         Func<PromptEditorViewModel> createEditor,
+        WorkflowsViewModel workflows,
+        Func<WorkflowViewModel> createWorkflow,
         IPlatformLauncher launcher,
         IAppDataPathProvider paths,
         ILogger<MainWindowViewModel> logger)
@@ -77,6 +80,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Toasts = toasts;
         Appearance = appearance;
         _createEditor = createEditor;
+        Workflows = workflows;
+        _createWorkflow = createWorkflow;
         _launcher = launcher;
         _paths = paths;
         _notifier = notifier;
@@ -86,6 +91,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         navigator.NewPromptRequested += NewPromptAsync;
         navigator.LibraryRequested += ShowLibraryAsync;
         navigator.SettingsRequested += ShowSettingsAsync;
+        navigator.WorkflowsRequested += ShowWorkflowsAsync;
+        navigator.OpenWorkflowRequested += OpenWorkflowAsync;
         notifier.Changed += (_, _) => QueueRefresh();
         palette.RunAction = RunPaletteActionAsync;
         _currentPage = library;
@@ -94,6 +101,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public SidebarViewModel Sidebar { get; }
     public LibraryViewModel Library { get; }
     public SettingsViewModel Settings { get; }
+    public WorkflowsViewModel Workflows { get; }
     public QuickSaveViewModel QuickSave { get; }
     public CommandPaletteViewModel Palette { get; }
     public DialogService Dialogs { get; }
@@ -120,6 +128,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private string _searchText = string.Empty;
 
     public PromptEditorViewModel? Editor => CurrentPage as PromptEditorViewModel;
+
+    public WorkflowViewModel? Workflow => CurrentPage as WorkflowViewModel;
 
     /// <summary>Raised when Ctrl+F should move focus to the search box.</summary>
     public event EventHandler? FocusSearchRequested;
@@ -193,7 +203,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _ when Palette.IsOpen || QuickSave.IsOpen => false,
             ShortcutAction.NewPrompt or ShortcutAction.FocusSearch => true,
             ShortcutAction.ShowHistory => Editor is { IsNew: false },
-            ShortcutAction.Back => CurrentPage is PromptEditorViewModel or SettingsViewModel,
+            ShortcutAction.Back => CurrentPage is PromptEditorViewModel or SettingsViewModel or WorkflowViewModel or WorkflowsViewModel,
+            ShortcutAction.RenderOrCopy => Editor is not null || Workflow is not null,
             _ => Editor is not null,
         };
 
@@ -257,6 +268,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
             case ShortcutAction.RenderOrCopy when Editor is { } editor:
                 await editor.RenderOrCopyCommand.ExecuteAsync(null);
                 return true;
+            case ShortcutAction.RenderOrCopy when Workflow is { } workflow:
+                await workflow.RunOrCopyCommand.ExecuteAsync(null);
+                return true;
             case ShortcutAction.CopyPrompt when Editor is { } editor:
                 await editor.CopyTemplateCommand.ExecuteAsync(null);
                 return true;
@@ -266,7 +280,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
             case ShortcutAction.ShowHistory when Editor is { IsNew: false } editor:
                 editor.Tab = EditorTab.History;
                 return true;
-            case ShortcutAction.Back when CurrentPage is PromptEditorViewModel or SettingsViewModel:
+            case ShortcutAction.Back when CurrentPage is WorkflowViewModel:
+                await ShowWorkflowsAsync();
+                return true;
+            case ShortcutAction.Back when CurrentPage is PromptEditorViewModel or SettingsViewModel or WorkflowsViewModel:
                 await ShowLibraryAsync(null);
                 return true;
             default:
@@ -278,6 +295,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public async Task<bool> PrepareToCloseAsync()
     {
         if (Editor is { IsDirty: true } editor && !await editor.SaveAsync(quiet: true))
+        {
+            return false;
+        }
+
+        if (Workflow is { } workflow && !await workflow.FlushAsync())
         {
             return false;
         }
@@ -327,7 +349,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     partial void OnCurrentPageChanged(object value)
     {
         OnPropertyChanged(nameof(Editor));
-        Sidebar.SetActive(value is LibraryViewModel ? Library.Filter : null, value is SettingsViewModel);
+        OnPropertyChanged(nameof(Workflow));
+        Sidebar.SetActive(value is LibraryViewModel ? Library.Filter : null, value is SettingsViewModel, value is WorkflowsViewModel or WorkflowViewModel);
     }
 
     private async Task OpenPromptAsync(Guid id)
@@ -383,6 +406,37 @@ public sealed partial class MainWindowViewModel : ObservableObject
         await Library.RefreshAsync();
     }
 
+    private async Task ShowWorkflowsAsync()
+    {
+        if (!await LeaveCurrentPageAsync())
+        {
+            return;
+        }
+
+        await Workflows.RefreshAsync();
+        CurrentPage = Workflows;
+    }
+
+    private async Task OpenWorkflowAsync(Guid id)
+    {
+        if (!await LeaveCurrentPageAsync())
+        {
+            return;
+        }
+
+        try
+        {
+            var workflow = _createWorkflow();
+            await workflow.LoadAsync(id);
+            CurrentPage = workflow;
+        }
+        catch (LibraryException exception)
+        {
+            await Dialogs.ShowErrorAsync("Couldn't open that workflow.", exception.Message);
+            _notifier.Notify();
+        }
+    }
+
     private async Task ShowSettingsAsync()
     {
         if (!await LeaveCurrentPageAsync())
@@ -394,8 +448,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
         CurrentPage = Settings;
     }
 
-    private async Task<bool> LeaveCurrentPageAsync() =>
-        CurrentPage is not PromptEditorViewModel { IsDirty: true } editor || await editor.SaveAsync(quiet: true);
+    private async Task<bool> LeaveCurrentPageAsync() => CurrentPage switch
+    {
+        PromptEditorViewModel { IsDirty: true } editor => await editor.SaveAsync(quiet: true),
+        WorkflowViewModel workflow => await workflow.FlushAsync(),
+        _ => true,
+    };
 
     private Guid? CurrentCollectionId() => CurrentPage switch
     {
@@ -436,6 +494,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
             case "settings":
                 await ShowSettingsAsync();
                 break;
+            case "workflows":
+                await ShowWorkflowsAsync();
+                break;
+            case "new-workflow":
+                await ShowWorkflowsAsync();
+                await Workflows.NewWorkflowCommand.ExecuteAsync(null);
+                break;
             case var search when search.StartsWith("search:", StringComparison.Ordinal):
                 await ShowLibraryAsync(LibraryFilter.All);
                 SearchText = search["search:".Length..];
@@ -466,8 +531,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private async Task RefreshAllAsync()
     {
         await Sidebar.RefreshAsync();
-        Sidebar.SetActive(CurrentPage is LibraryViewModel ? Library.Filter : null, CurrentPage is SettingsViewModel);
-        if (CurrentPage is LibraryViewModel)
+        Sidebar.SetActive(CurrentPage is LibraryViewModel ? Library.Filter : null, CurrentPage is SettingsViewModel, CurrentPage is WorkflowsViewModel or WorkflowViewModel);
+        if (CurrentPage is WorkflowsViewModel)
+        {
+            await Workflows.RefreshAsync();
+        }
+        else if (CurrentPage is LibraryViewModel)
         {
             await Library.RefreshAsync();
         }

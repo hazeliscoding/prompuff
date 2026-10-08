@@ -138,6 +138,9 @@ public sealed class App : Avalonia.Application
         services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<PromptEditorViewModel>();
         services.AddSingleton<Func<PromptEditorViewModel>>(provider => provider.GetRequiredService<PromptEditorViewModel>);
+        services.AddSingleton<WorkflowsViewModel>();
+        services.AddTransient<WorkflowViewModel>();
+        services.AddSingleton<Func<WorkflowViewModel>>(provider => provider.GetRequiredService<WorkflowViewModel>);
         replace?.Invoke(services);
         return services.BuildServiceProvider();
     }

@@ -103,7 +103,7 @@ internal sealed class FakeFilePicker : IFilePickerService
 
     public Task<string?> PickFolderToImportAsync() => Task.FromResult(ImportFolder);
 
-    public Task<string?> PickExportFileAsync(string suggestedFileName)
+    public Task<string?> PickExportFileAsync(string suggestedFileName, string title = "Export prompt")
     {
         SuggestedName = suggestedFileName;
         return Task.FromResult(ExportPath);

@@ -93,6 +93,7 @@ public sealed partial class SidebarViewModel : ObservableObject
     private readonly DialogService _dialogs;
     private readonly ToastService _toasts;
     private readonly LibraryNotifier _notifier;
+    private readonly WorkflowService _workflows;
     private readonly ILogger<SidebarViewModel> _logger;
     private LibraryFilter? _activeFilter = LibraryFilter.All;
 
@@ -104,8 +105,10 @@ public sealed partial class SidebarViewModel : ObservableObject
         DialogService dialogs,
         ToastService toasts,
         LibraryNotifier notifier,
+        WorkflowService workflows,
         ILogger<SidebarViewModel> logger)
     {
+        _workflows = workflows;
         _prompts = prompts;
         _collections = collections;
         _tags = tags;
@@ -138,6 +141,12 @@ public sealed partial class SidebarViewModel : ObservableObject
     private bool _isSettingsActive;
 
     [ObservableProperty]
+    private bool _isWorkflowsActive;
+
+    [ObservableProperty]
+    private int _workflowCount;
+
+    [ObservableProperty]
     private bool _showRecentlyDeleted;
 
     [ObservableProperty]
@@ -151,6 +160,7 @@ public sealed partial class SidebarViewModel : ObservableObject
         Recent.Count = Math.Min(counts.All, PromptQuery.RecentLimit);
         RecentlyDeleted.Count = counts.Deleted;
         Footer = $"Stored on this device · {Format.Count(counts.All, "prompt")}";
+        WorkflowCount = (await _workflows.ListAsync()).Count;
 
         Collections.Clear();
         foreach (var collection in await _collections.ListAsync())
@@ -174,10 +184,11 @@ public sealed partial class SidebarViewModel : ObservableObject
     }
 
     /// <param name="filter">The library filter on screen, or null when the library isn't showing.</param>
-    public void SetActive(LibraryFilter? filter, bool settingsActive)
+    public void SetActive(LibraryFilter? filter, bool settingsActive, bool workflowsActive = false)
     {
         _activeFilter = filter;
         IsSettingsActive = settingsActive;
+        IsWorkflowsActive = workflowsActive;
         ApplyActive();
     }
 
@@ -204,6 +215,9 @@ public sealed partial class SidebarViewModel : ObservableObject
 
     [RelayCommand]
     private Task OpenSettings() => Navigator.ShowSettingsAsync();
+
+    [RelayCommand]
+    private Task OpenWorkflows() => Navigator.ShowWorkflowsAsync();
 
     internal async Task RenameCollectionAsync(CollectionItemViewModel item)
     {

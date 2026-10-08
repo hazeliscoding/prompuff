@@ -9,7 +9,7 @@ public interface IFilePickerService
     Task<string?> PickFolderToImportAsync();
 
     /// <summary>Asks where to save one exported prompt. Returns null when cancelled.</summary>
-    Task<string?> PickExportFileAsync(string suggestedFileName);
+    Task<string?> PickExportFileAsync(string suggestedFileName, string title = "Export prompt");
 
     /// <summary>Asks where to save a .zip of several prompts. Returns null when cancelled.</summary>
     Task<string?> PickArchiveExportFileAsync(string suggestedFileName);

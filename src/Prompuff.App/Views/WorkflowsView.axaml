@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Prompuff.App.ViewModels"
+             xmlns:c="using:Prompuff.App.Controls"
+             x:Class="Prompuff.App.Views.WorkflowsView"
+             x:DataType="vm:WorkflowsViewModel">
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Height="56" Padding="20,0" Classes="hairline-bottom">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+        <StackPanel VerticalAlignment="Center" Spacing="1">
+          <TextBlock Classes="section-title" Text="Workflows" />
+          <TextBlock Classes="compact faint" Text="{Binding Subtitle}" />
+        </StackPanel>
+        <Button Grid.Column="1" Classes="primary sm" Command="{Binding NewWorkflowCommand}" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <c:Icon Kind="Plus" Size="12" StrokeWidth="2" />
+            <TextBlock Text="New workflow" />
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Border>
+
+    <Panel>
+      <StackPanel IsVisible="{Binding IsEmpty}" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Margin="20">
+        <c:Puff Classes="ghost bob" Width="72" Height="56" HorizontalAlignment="Center" IsVisible="{Binding Appearance.ShowMascot}" />
+        <TextBlock Classes="section-title" Text="Some prompts work best in order." HorizontalAlignment="Center" />
+        <TextBlock Classes="faint" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="420"
+                   Text="Chain them into a workflow: plan, build, then check. Fill in the shared details once, and copy each step into your model in turn." />
+        <Button Classes="primary" HorizontalAlignment="Center" Margin="0,4,0,0" Command="{Binding NewWorkflowCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <c:Icon Kind="Workflow" Size="13" />
+            <TextBlock Text="New workflow" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+
+      <ScrollViewer IsVisible="{Binding !IsEmpty}" HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl ItemsSource="{Binding Items}" Margin="20,16,20,32">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <c:AdaptiveGrid MinItemWidth="340" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:WorkflowCardViewModel">
+              <Button Classes="card" Command="{Binding OpenCommand}">
+                <StackPanel Spacing="10">
+                  <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                    <c:Icon Kind="Workflow" Size="14" Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Top" Margin="0,3,0,0" />
+                    <TextBlock Grid.Column="1" Classes="card-title" Text="{Binding Name}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                  </Grid>
+                  <Panel MinHeight="34">
+                    <TextBlock Classes="compact muted" Text="{Binding Description}" IsVisible="{Binding HasDescription}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Classes="compact faint" Text="No description yet." IsVisible="{Binding !HasDescription}" />
+                  </Panel>
+                  <Border Classes="well" CornerRadius="4" Padding="8,6">
+                    <TextBlock Classes="data" Text="{Binding Chain}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource Text2Brush}" />
+                  </Border>
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Classes="compact faint" Text="{Binding StepCountLabel}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Classes="data faint" Text="{Binding EditedLabel}" VerticalAlignment="Center" />
+                  </Grid>
+                </StackPanel>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Panel>
+  </DockPanel>
+</UserControl>

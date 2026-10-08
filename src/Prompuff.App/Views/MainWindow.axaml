@@ -21,6 +21,12 @@
     <DataTemplate DataType="vm:SettingsViewModel">
       <v:SettingsView />
     </DataTemplate>
+    <DataTemplate DataType="vm:WorkflowsViewModel">
+      <v:WorkflowsView />
+    </DataTemplate>
+    <DataTemplate DataType="vm:WorkflowViewModel">
+      <v:WorkflowView />
+    </DataTemplate>
     <DataTemplate DataType="vm:StartupErrorViewModel">
       <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" MaxWidth="520">
         <c:Puff Classes="ghost" Width="72" Height="56" HorizontalAlignment="Center" Mood="Sleepy" />
@@ -149,24 +155,33 @@
 
           <ScrollViewer HorizontalScrollBarVisibility="Disabled">
             <StackPanel Spacing="14">
-              <ItemsControl ItemsSource="{Binding NavItems}">
-                <ItemsControl.ItemsPanel>
-                  <ItemsPanelTemplate>
-                    <StackPanel Spacing="1" />
-                  </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate x:DataType="vm:NavItemViewModel">
-                    <Button Classes="nav" Classes.active="{Binding IsActive}" Command="{Binding SelectCommand}">
-                      <Grid ColumnDefinitions="Auto,*,Auto">
-                        <c:Icon Kind="{Binding Icon}" />
-                        <TextBlock Grid.Column="1" Margin="9,0,0,0" Text="{Binding Label}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" Classes="data faint" Text="{Binding Count}" VerticalAlignment="Center" />
-                      </Grid>
-                    </Button>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
+              <StackPanel Spacing="1">
+                <ItemsControl ItemsSource="{Binding NavItems}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Spacing="1" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:NavItemViewModel">
+                      <Button Classes="nav" Classes.active="{Binding IsActive}" Command="{Binding SelectCommand}">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                          <c:Icon Kind="{Binding Icon}" />
+                          <TextBlock Grid.Column="1" Margin="9,0,0,0" Text="{Binding Label}" VerticalAlignment="Center" />
+                          <TextBlock Grid.Column="2" Classes="data faint" Text="{Binding Count}" VerticalAlignment="Center" />
+                        </Grid>
+                      </Button>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button Classes="nav" Classes.active="{Binding IsWorkflowsActive}" Command="{Binding OpenWorkflowsCommand}">
+                  <Grid ColumnDefinitions="Auto,*,Auto">
+                    <c:Icon Kind="Workflow" />
+                    <TextBlock Grid.Column="1" Margin="9,0,0,0" Text="Workflows" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Classes="data faint" Text="{Binding WorkflowCount}" VerticalAlignment="Center" />
+                  </Grid>
+                </Button>
+              </StackPanel>
 
               <StackPanel Spacing="1">
                 <Grid ColumnDefinitions="*,Auto" Margin="8,0,2,4">

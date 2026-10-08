@@ -81,11 +81,11 @@ public sealed class AvaloniaFilePickerService(TopLevelAccessor accessor) : IFile
         return folders.Count == 0 ? null : folders[0].TryGetLocalPath();
     }
 
-    public async Task<string?> PickExportFileAsync(string suggestedFileName)
+    public async Task<string?> PickExportFileAsync(string suggestedFileName, string title = "Export prompt")
     {
         var file = await accessor.Require().StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "Export prompt",
+            Title = title,
             SuggestedFileName = suggestedFileName,
             DefaultExtension = "md",
             FileTypeChoices = [Markdown],
