@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Prompuff.Infrastructure.ImportExport;
 
@@ -16,18 +15,9 @@ public sealed record MarkdownWorkflowStep(string Title, string Body, string? Not
 /// the prompt in a fenced <c>prompt</c> block and the hand-off note as a quote. The fence is longer than any run of
 /// backticks in the prompt, so prompts that contain code blocks survive. It reads like any Markdown on GitHub.
 /// </summary>
-public static partial class MarkdownWorkflowFormat
+public static class MarkdownWorkflowFormat
 {
     private const string HandsOff = "**Hands off:**";
-
-    [GeneratedRegex(@"^##\s+(?:Step\s+\d+\s*[:.\-–—]\s*)?(?<title>.+?)\s*$", RegexOptions.CultureInvariant)]
-    private static partial Regex StepHeading();
-
-    [GeneratedRegex(@"^ {0,3}(?<fence>`{3,}|~{3,})\s*(?<info>\S*)\s*$", RegexOptions.CultureInvariant)]
-    private static partial Regex FenceLine();
-
-    [GeneratedRegex("`+", RegexOptions.CultureInvariant)]
-    private static partial Regex BacktickRun();
 
     /// <summary>True when the text's frontmatter says <c>type: workflow</c>.</summary>
     public static bool IsWorkflow(string text)
@@ -71,8 +61,7 @@ public static partial class MarkdownWorkflowFormat
         {
             var step = workflow.Steps[i];
             var body = MarkdownPromptFormat.Normalize(step.Body).Trim('\n');
-            var longest = BacktickRun().Matches(body).Select(match => match.Length).DefaultIfEmpty(0).Max();
-            var fence = new string('`', Math.Max(3, longest + 1));
+            var fence = new string('`', Math.Max(3, LongestBacktickRun(body) + 1));
 
             text.Append("## Step ").Append(i + 1).Append(": ").Append(step.Title.Replace('\n', ' ').Trim()).Append("\n\n");
             text.Append(fence).Append("prompt\n").Append(body).Append('\n').Append(fence).Append("\n\n");
@@ -127,8 +116,7 @@ public static partial class MarkdownWorkflowFormat
             var line = lines[i];
             if (fence is { } open)
             {
-                var closing = FenceLine().Match(line);
-                if (closing.Success && closing.Groups["info"].Length == 0 && closing.Groups["fence"].Value[0] == open.Mark && closing.Groups["fence"].Length >= open.Length)
+                if (ReadFence(line) is { Info.Length: 0 } closing && closing.Mark == open.Mark && closing.Length >= open.Length)
                 {
                     fence = null;
                 }
@@ -146,10 +134,10 @@ public static partial class MarkdownWorkflowFormat
                 continue;
             }
 
-            if (StepHeading().Match(line) is { Success: true } heading)
+            if (ReadStepHeading(line) is { } heading)
             {
                 Finish();
-                stepTitle = heading.Groups["title"].Value;
+                stepTitle = heading;
                 body = null;
                 note = [];
                 continue;
@@ -160,10 +148,9 @@ public static partial class MarkdownWorkflowFormat
                 continue;
             }
 
-            if (FenceLine().Match(line) is { Success: true } opening && body is null)
+            if (body is null && ReadFence(line) is { } opening)
             {
-                var marks = opening.Groups["fence"].Value;
-                fence = (marks[0], marks.Length);
+                fence = (opening.Mark, opening.Length);
                 body = [];
                 continue;
             }
@@ -193,6 +180,88 @@ public static partial class MarkdownWorkflowFormat
         }
 
         return new MarkdownWorkflow(string.IsNullOrWhiteSpace(title) ? fallbackTitle : title.Trim(), description, steps);
+    }
+
+    // The line readers below are single forward scans, so a crafted file can't make them slow the way an
+    // overlapping regex such as \s+(.+?)\s*$ can.
+
+    /// <summary>Reads "## Step 2: Title" or "## Title", returning the title, or null for any other line.</summary>
+    private static string? ReadStepHeading(string line)
+    {
+        if (line.Length < 3 || !line.StartsWith("##", StringComparison.Ordinal) || !char.IsWhiteSpace(line[2]))
+        {
+            return null;
+        }
+
+        var rest = line.AsSpan(2).Trim();
+        if (rest.StartsWith("Step", StringComparison.Ordinal) && rest.Length > 4 && char.IsWhiteSpace(rest[4]))
+        {
+            var i = 4;
+            while (i < rest.Length && char.IsWhiteSpace(rest[i]))
+            {
+                i++;
+            }
+
+            var digits = i;
+            while (i < rest.Length && char.IsAsciiDigit(rest[i]))
+            {
+                i++;
+            }
+
+            while (i > digits && i < rest.Length && char.IsWhiteSpace(rest[i]))
+            {
+                i++;
+            }
+
+            if (i > digits && i < rest.Length && rest[i] is ':' or '.' or '-' or '–' or '—' && rest[(i + 1)..].Trim() is { Length: > 0 } title)
+            {
+                return title.ToString();
+            }
+        }
+
+        return rest.Length == 0 ? null : rest.ToString();
+    }
+
+    /// <summary>Reads a fence: up to three spaces, three or more backticks or tildes, then at most one info word.</summary>
+    private static (char Mark, int Length, string Info)? ReadFence(string line)
+    {
+        var i = 0;
+        while (i < 3 && i < line.Length && line[i] == ' ')
+        {
+            i++;
+        }
+
+        if (i >= line.Length || line[i] is not ('`' or '~'))
+        {
+            return null;
+        }
+
+        var mark = line[i];
+        var start = i;
+        while (i < line.Length && line[i] == mark)
+        {
+            i++;
+        }
+
+        var info = line.AsSpan(i).Trim();
+        if (i - start < 3 || info.IndexOfAny(' ', '\t') >= 0)
+        {
+            return null;
+        }
+
+        return (mark, i - start, info.ToString());
+    }
+
+    private static int LongestBacktickRun(string text)
+    {
+        int longest = 0, run = 0;
+        foreach (var ch in text)
+        {
+            run = ch == '`' ? run + 1 : 0;
+            longest = Math.Max(longest, run);
+        }
+
+        return longest;
     }
 
     private static Dictionary<string, object> ReadFrontmatter(string[] lines, out int contentStart)

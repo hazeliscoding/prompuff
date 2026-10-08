@@ -111,6 +111,21 @@ public class WorkflowTests
     }
 
     [Fact]
+    public void Long_crafted_lines_read_in_linear_time()
+    {
+        var padding = new string(' ', 200_000);
+        var text = "---\ntype: workflow\n---\n\n## Step 1: " + padding + "x" + padding + "!\n\n```" + padding + "a" + padding + "b\n\n```prompt\nbody\n```\n\n## " + padding + "y" + padding + "\n\n```prompt\nsecond\n```\n";
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var read = MarkdownWorkflowFormat.Read(text, "fallback");
+
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(2), $"Reading took {watch.Elapsed}.");
+        Assert.Equal(2, read.Steps.Count);
+        Assert.StartsWith("x", read.Steps[0].Title);
+        Assert.Equal("y", read.Steps[1].Title);
+    }
+
+    [Fact]
     public void A_prompt_file_is_not_a_workflow() =>
         Assert.False(MarkdownWorkflowFormat.IsWorkflow("---\ntitle: Just a prompt\n---\n\n# Prompt\n\nHello"));
 
