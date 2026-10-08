@@ -31,5 +31,6 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Prompuff.App.Tests" />
+    <InternalsVisibleTo Include="Prompuff.Performance.Tests" />
   </ItemGroup>
 </Project>
