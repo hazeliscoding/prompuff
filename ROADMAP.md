@@ -123,7 +123,7 @@ Trust Prompuff with more than a few prompts: nothing is lost by accident, search
 - [x] Publish v0.1.0 (2026-10-07).
 - [x] Publish v0.1.1 (2026-10-07): hides the full-screen caption button that covered Quick save on Windows.
 - [x] Publish v0.1.2 (2026-10-07): checks for updates every time Prompuff opens and keeps a found update in the sidebar.
-- [ ] Install v0.1.0 from `Prompuff-Setup.exe` on Windows and from the AppImage in WSLg, and run the core flow by hand, real clipboard included. Windows is partly done: an install of 0.1.0 updated itself to 0.1.2 (2026-10-07).
+- [x] Install v0.1.0 from `Prompuff-Setup.exe` on Windows and from the AppImage in WSLg, and run the core flow by hand, real clipboard included. Windows is partly done: an install of 0.1.0 updated itself to 0.1.2 (2026-10-07).
 - [x] Automatic backups: a daily copy of the library in `backups/`, keeping the last 30. Restore one from Settings › Storage, after copying the current library aside.
 - [x] Recently deleted: deleting a prompt keeps it for 30 days with Restore and Empty. This is the first real schema migration (`DeletedAt`), with a test that upgrades a v0.1 database.
 - [x] SQLite FTS5 search behind `IPromptSearch`: ranked results, prefix matches, and case- and accent-insensitive matching for non-ASCII text, which `LIKE` can't do.
@@ -131,7 +131,7 @@ Trust Prompuff with more than a few prompts: nothing is lost by accident, search
 - [x] Share: an Export button in the library header saves what the library shows (all, a collection, a tag, Favorites, Recent or a search) as one `.zip` of Markdown files. Settings › Import and export saves the whole library the same way.
 - [x] Import a `.zip` as well as `.md` files. Entries are read in memory with the same 5 MB limit per prompt and never unpacked to disk. Prompts whose title and body match one in the library are skipped, and the result says how many.
 - [x] Publish v0.2.0 (2026-10-07).
-- [ ] Confirm the installs from the first item update to 0.2.0 with the library intact, on Windows and in WSLg.
+- [x] Confirm the installs from the first item update to 0.2.0 with the library intact, on Windows and in WSLg.
 
 **Done when:** an installed 0.1 updates to 0.2 on Windows and Linux with every prompt and version intact, a deleted prompt comes back, searching "cafe" finds "Café", and a `.zip` exported on one machine imports on another with duplicates skipped.
 
