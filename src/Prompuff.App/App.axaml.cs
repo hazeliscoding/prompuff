@@ -126,6 +126,7 @@ public sealed class App : Avalonia.Application
 
         services.AddSingleton<Navigator>();
         services.AddSingleton<LibraryNotifier>();
+        services.AddSingleton<LibraryWatcher>();
         services.AddSingleton<AppearanceState>();
         services.AddSingleton<RenderValuesCache>();
         services.AddSingleton<DialogService>();

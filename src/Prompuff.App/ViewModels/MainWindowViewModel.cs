@@ -40,6 +40,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IPlatformLauncher _launcher;
     private readonly IAppDataPathProvider _paths;
     private readonly LibraryNotifier _notifier;
+    private readonly LibraryWatcher _watcher;
     private readonly ILogger<MainWindowViewModel> _logger;
     private readonly TaskCompletionSource _initialized = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private bool _refreshQueued;
@@ -60,6 +61,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AppearanceState appearance,
         Navigator navigator,
         LibraryNotifier notifier,
+        LibraryWatcher watcher,
         Func<PromptEditorViewModel> createEditor,
         WorkflowsViewModel workflows,
         Func<WorkflowViewModel> createWorkflow,
@@ -85,6 +87,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _launcher = launcher;
         _paths = paths;
         _notifier = notifier;
+        _watcher = watcher;
         _logger = logger;
 
         navigator.OpenPromptRequested += OpenPromptAsync;
@@ -154,6 +157,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _backups.StartDailySchedule();
             await PurgeExpiredAsync();
             await RefreshAllAsync();
+            _ = _watcher.StartAsync();
             _ = Settings.CheckOnStartupAsync();
         }
         finally

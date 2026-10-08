@@ -1,10 +1,12 @@
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 using Prompuff.Application.DTOs;
 using Prompuff.Application.Interfaces;
 using Prompuff.Application.Settings;
+using Prompuff.Infrastructure.Persistence;
 using Prompuff.Infrastructure.Repositories;
 
 namespace Prompuff.App.ViewModels;
@@ -45,6 +47,106 @@ public sealed class LibraryNotifier
     public event EventHandler? Changed;
 
     public void Notify() => Changed?.Invoke(this, EventArgs.Empty);
+}
+
+/// <summary>
+/// Refreshes the app when something outside it, such as <c>prompuff quick-save</c>, changes the library. Changes the
+/// app announces through <see cref="LibraryNotifier"/> are already showing, so they only move the baseline.
+/// </summary>
+public sealed class LibraryWatcher : IDisposable
+{
+    public static readonly TimeSpan Interval = TimeSpan.FromSeconds(2);
+
+    private readonly LibraryChangeMonitor _monitor;
+    private readonly LibraryNotifier _notifier;
+    private readonly ILogger<LibraryWatcher> _logger;
+    private Avalonia.Threading.DispatcherTimer? _timer;
+    private bool _checking;
+    private bool _notifying;
+    private bool _warned;
+
+    public LibraryWatcher(LibraryChangeMonitor monitor, LibraryNotifier notifier, ILogger<LibraryWatcher> logger)
+    {
+        _monitor = monitor;
+        _notifier = notifier;
+        _logger = logger;
+        notifier.Changed += (_, _) =>
+        {
+            if (!_notifying)
+            {
+                _ = ResetAsync();
+            }
+        };
+    }
+
+    public async Task StartAsync()
+    {
+        await ResetAsync();
+        _timer ??= new Avalonia.Threading.DispatcherTimer(Interval, Avalonia.Threading.DispatcherPriority.Background, async (_, _) => await CheckAsync());
+        _timer.Start();
+    }
+
+    /// <summary>Runs on the timer, and directly in tests.</summary>
+    public async Task CheckAsync()
+    {
+        if (_checking)
+        {
+            return;
+        }
+
+        _checking = true;
+        try
+        {
+            if (await _monitor.CheckAsync())
+            {
+                _logger.LogInformation("The library changed outside Prompuff; refreshing");
+                _notifying = true;
+                try
+                {
+                    _notifier.Notify();
+                }
+                finally
+                {
+                    _notifying = false;
+                }
+            }
+        }
+        catch (Exception exception) when (exception is SqliteException or IOException or ObjectDisposedException)
+        {
+            Warn(exception);
+        }
+        finally
+        {
+            _checking = false;
+        }
+    }
+
+    private async Task ResetAsync()
+    {
+        try
+        {
+            await _monitor.ResetAsync();
+        }
+        catch (Exception exception) when (exception is SqliteException or IOException or ObjectDisposedException)
+        {
+            Warn(exception);
+        }
+    }
+
+    /// <summary>Once per run, so a library that's gone missing doesn't fill the log every two seconds.</summary>
+    private void Warn(Exception exception)
+    {
+        if (!_warned)
+        {
+            _warned = true;
+            _logger.LogWarning(exception, "Couldn't check the library for outside changes");
+        }
+    }
+
+    /// <summary>Stops the timer. Tests call <see cref="CheckAsync"/> themselves.</summary>
+    public void Stop() => _timer?.Stop();
+
+    public void Dispose() => Stop();
 }
 
 /// <summary>Appearance settings that many views read.</summary>
