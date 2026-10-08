@@ -167,7 +167,9 @@ public class MainWindowTests
     {
         await using var app = await AppHarness.StartAsync();
 
-        app.Window.KeyPressQwerty(PhysicalKey.K, RawInputModifiers.Control);
+        // Cmd on macOS, Ctrl elsewhere, the same way the app reads shortcuts.
+        var command = Platform.Shortcuts.CommandModifier == KeyModifiers.Meta ? RawInputModifiers.Meta : RawInputModifiers.Control;
+        app.Window.KeyPressQwerty(PhysicalKey.K, command);
         await app.SettleAsync();
         Assert.True(app.ViewModel.Palette.IsOpen);
         app.ViewModel.Palette.Query = "angular";
@@ -180,7 +182,7 @@ public class MainWindowTests
         Assert.False(app.ViewModel.Palette.IsOpen);
 
         await app.Get<IClipboardService>().SetTextAsync("Review this pull request for {{repo_name}}. Focus on behaviour changes, not style.");
-        app.Window.KeyPressQwerty(PhysicalKey.S, RawInputModifiers.Control | RawInputModifiers.Shift);
+        app.Window.KeyPressQwerty(PhysicalKey.S, command | RawInputModifiers.Shift);
         await app.SettleAsync();
         Assert.True(app.ViewModel.QuickSave.IsOpen);
         Assert.Equal("Review this pull request for {{repo_name}}. Focus on…", app.ViewModel.QuickSave.Title);
