@@ -6,6 +6,7 @@ These are the working rules for agents in this repo. Prompuff is a local-first d
 
 - `README.md`: what Prompuff is, how to build, run, test and package it, and the privacy promise.
 - `ROADMAP.md`: decisions already made, the milestones, and what is out of scope. Check it before proposing features, and respect its decisions unless the owner reopens them.
+- `docs/user-guide.md`: how Prompuff works, for the people using it. Update it in the same change whenever behavior or a label it mentions changes. `CONTRIBUTING.md` is the short version of these rules for human contributors.
 - Work from the next unchecked item in `ROADMAP.md`. Tick items off as they land and record new decisions there under a dated heading. Don't create separate plan, spec or backlog documents.
 
 ## Privacy (hard rules)
