@@ -33,3 +33,6 @@ Thumbs.db
 
 # /brag launch video work (the finished video is copied into the site)
 /brag-output*/
+
+# Browser tool output from checking the site
+/.playwright-mcp/
