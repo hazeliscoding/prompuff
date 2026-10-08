@@ -63,6 +63,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 
 - **MCP clients:** besides Claude Code and Claude Desktop, GitHub Copilot CLI and Codex are supported clients. The stdio server is the same for all of them; each client gets its own ready-to-paste setup, since each reads a different config (`claude mcp add`, Claude Desktop's JSON, Copilot CLI's `mcp-config.json`, Codex's `config.toml`). Check each format against the client's docs when building v0.7.
 - **GitHub's OIDC subject includes immutable IDs.** The signing app's federated credential trusts `repo:hazeliscoding@23608664/prompuff@1408214273:environment:release`. The plain `repo:hazeliscoding/prompuff:...` form doesn't match, and the IDs mean a renamed or transferred repo can't inherit the trust.
+- **SmartScreen reputation isn't a release gate.** Signed builds name the publisher right away, but the "unrecognized app" warning only fades as people download and run them, and no certificate skips that since 2024. It gets a re-check before 1.0.
 
 ## v0.1: MVP (tagged 2026-10-07)
 
@@ -160,9 +161,9 @@ Ship the remaining platforms early, so every later feature is built for all of t
 - [x] Signing switches on only when the Azure variables exist; forks and manual runs still build unsigned.
 - [x] README: list macOS as CI-verified, and explain System Settings › Privacy & Security › Open Anyway, since the builds aren't notarized. macOS 15 removed the right-click › Open shortcut.
 - [x] Publish v0.3.0 (2026-10-08). The installer's signature checks out as valid, signed by Hazel Granados.
-- [ ] Download the published `Prompuff-Setup.exe` and confirm Windows shows no SmartScreen warning.
+- [x] Download the published `Prompuff-Setup.exe` and check SmartScreen (2026-10-08): it names Hazel Granados as the publisher, and still says "unrecognized app" until downloads build reputation.
 
-**Done when:** one tag produces Windows, Linux x64, Linux ARM64 and both macOS packages, each one launches and creates its library on a CI runner, and `Prompuff-Setup.exe` is signed and installs without a SmartScreen warning.
+**Done when:** one tag produces Windows, Linux x64, Linux ARM64 and both macOS packages, each one launches and creates its library on a CI runner, and `Prompuff-Setup.exe` is signed, so SmartScreen names the publisher.
 
 ## v0.4: Keyboard-first and lineage
 
@@ -225,6 +226,7 @@ Let scripts and coding agents use the vault without opening the app.
 - [ ] Settings › About › "Copy diagnostic info" gathers versions, paths and recent log lines for bug reports, still with no telemetry.
 - [ ] A user guide and `CONTRIBUTING.md`.
 - [ ] Two beta releases in a row with no data-loss or crash reports.
+- [ ] Check that a fresh download of `Prompuff-Setup.exe` no longer gets SmartScreen's "unrecognized app" warning. If it still does, note it in the README instead of blocking.
 
 **Done when:** the release candidate updates cleanly from 0.8 on every platform, and no open issue is labeled data loss or crash.
 
