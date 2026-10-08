@@ -43,7 +43,7 @@
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:WorkflowCardViewModel">
-              <Button Classes="card" Command="{Binding OpenCommand}">
+              <Button Classes="card" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Name}" AutomationProperties.HelpText="{Binding Description}">
                 <StackPanel Spacing="10">
                   <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                     <c:Icon Kind="Workflow" Size="14" Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Top" Margin="0,3,0,0" />

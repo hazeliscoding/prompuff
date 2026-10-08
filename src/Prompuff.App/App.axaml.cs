@@ -31,6 +31,7 @@ public sealed class App : Avalonia.Application
     {
         AvaloniaXamlLoader.Load(this);
         Themes.ThemeBuilder.Register(this);
+        Controls.AccessibleNames.Install();
     }
 
     public override void OnFrameworkInitializationCompleted()

@@ -425,6 +425,7 @@
                         Command="{TemplateBinding RemoveCommand}"
                         CommandParameter="{TemplateBinding RemoveCommandParameter}"
                         ToolTip.Tip="Remove tag"
+                        AutomationProperties.Name="{Binding $parent[c:TagChip].Text, StringFormat='Remove tag {0}'}"
                         Foreground="{TemplateBinding Foreground}"
                         Margin="0,0,-3,0">
                   <c:Icon Kind="X" Size="11" StrokeWidth="1.8" />

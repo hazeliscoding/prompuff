@@ -192,7 +192,7 @@
             <TextBlock Text="Empty" />
           </StackPanel>
         </Button>
-        <ComboBox Grid.Column="4" Width="160" VerticalAlignment="Center" IsVisible="{Binding CanSort}"
+        <ComboBox Grid.Column="4" Width="160" AutomationProperties.Name="Sort by" VerticalAlignment="Center" IsVisible="{Binding CanSort}"
                   ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSort}" ToolTip.Tip="Sort">
           <ComboBox.ItemTemplate>
             <DataTemplate x:DataType="vm:SortOption">

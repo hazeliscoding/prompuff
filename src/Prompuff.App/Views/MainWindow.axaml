@@ -61,7 +61,7 @@
               BorderThickness="0,0,0,1"
               WindowDecorationProperties.ElementRole="TitleBar">
         <Grid ColumnDefinitions="216,*,Auto" Margin="{Binding TitleBarInset}">
-          <Button Grid.Column="0" Classes="bare" Margin="14,0,0,0" Command="{Binding GoToLibraryCommand}" ToolTip.Tip="Library">
+          <Button Grid.Column="0" Classes="bare" Margin="14,0,0,0" Command="{Binding GoToLibraryCommand}" ToolTip.Tip="Library" AutomationProperties.Name="Library">
             <StackPanel Orientation="Horizontal" Spacing="10">
               <c:Puff Classes="bob" Width="22" Height="18" />
               <TextBlock Text="Prompuff" FontSize="14" FontWeight="Bold" LetterSpacing="-0.14" VerticalAlignment="Center" />
@@ -85,7 +85,7 @@
               <c:Icon Kind="Search" Size="13" Margin="8,0,0,0" Foreground="{DynamicResource Text3Brush}" />
             </TextBox.InnerLeftContent>
             <TextBox.InnerRightContent>
-              <Button Classes="bare" Margin="0,0,6,0" Command="{Binding OpenPaletteCommand}" ToolTip.Tip="Command palette">
+              <Button Classes="bare" Margin="0,0,6,0" Command="{Binding OpenPaletteCommand}" ToolTip.Tip="Command palette" AutomationProperties.Name="Command palette">
                 <Border Classes="kbd">
                   <TextBlock Text="{Binding PaletteShortcut}" />
                 </Border>
@@ -111,8 +111,9 @@
               BorderBrush="{DynamicResource Border1Brush}"
               BorderThickness="0,0,1,0"
               DataContext="{Binding Sidebar}">
-        <DockPanel Margin="8,10" x:DataType="vm:SidebarViewModel">
-          <Button DockPanel.Dock="Top"
+        <!-- Rows, not a DockPanel, so Tab reaches Settings after the library, as it looks -->
+        <Grid Margin="8,10" RowDefinitions="Auto,*,Auto" x:DataType="vm:SidebarViewModel">
+          <Button Grid.Row="0"
                   Classes="primary"
                   HorizontalAlignment="Stretch"
                   Margin="2,0,2,14"
@@ -123,37 +124,7 @@
             </StackPanel>
           </Button>
 
-          <StackPanel DockPanel.Dock="Bottom" Spacing="1">
-            <Button Classes="nav"
-                    Foreground="{DynamicResource AccentTextBrush}"
-                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenUpdatesCommand}"
-                    IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Settings.CanInstallUpdate}"
-                    ToolTip.Tip="Install it from Settings › Updates">
-              <StackPanel Orientation="Horizontal" Spacing="9">
-                <c:Icon Kind="Download" />
-                <TextBlock Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Settings.AvailableUpdateLabel}" TextTrimming="CharacterEllipsis" />
-              </StackPanel>
-            </Button>
-            <Button Classes="nav" Classes.active="{Binding RecentlyDeleted.IsActive}" Command="{Binding RecentlyDeleted.SelectCommand}" IsVisible="{Binding ShowRecentlyDeleted}">
-              <Grid ColumnDefinitions="Auto,*,Auto">
-                <c:Icon Kind="Trash2" />
-                <TextBlock Grid.Column="1" Margin="9,0,0,0" Text="Recently deleted" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="2" Classes="data faint" Text="{Binding RecentlyDeleted.Count}" VerticalAlignment="Center" />
-              </Grid>
-            </Button>
-            <Button Classes="nav" Classes.active="{Binding IsSettingsActive}" Command="{Binding OpenSettingsCommand}">
-              <StackPanel Orientation="Horizontal" Spacing="9">
-                <c:Icon Kind="Settings" />
-                <TextBlock Text="Settings" />
-              </StackPanel>
-            </Button>
-            <StackPanel Orientation="Horizontal" Spacing="8" Margin="8,8,8,2">
-              <Ellipse Width="7" Height="7" Fill="{DynamicResource MintBrush}" VerticalAlignment="Center" />
-              <TextBlock Classes="compact faint" Text="{Binding Footer}" TextTrimming="CharacterEllipsis" />
-            </StackPanel>
-          </StackPanel>
-
-          <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+          <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Spacing="14">
               <StackPanel Spacing="1">
                 <ItemsControl ItemsSource="{Binding NavItems}">
@@ -237,7 +208,37 @@
               </StackPanel>
             </StackPanel>
           </ScrollViewer>
-        </DockPanel>
+
+          <StackPanel Grid.Row="2" Spacing="1">
+            <Button Classes="nav"
+                    Foreground="{DynamicResource AccentTextBrush}"
+                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenUpdatesCommand}"
+                    IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Settings.CanInstallUpdate}"
+                    ToolTip.Tip="Install it from Settings › Updates">
+              <StackPanel Orientation="Horizontal" Spacing="9">
+                <c:Icon Kind="Download" />
+                <TextBlock Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Settings.AvailableUpdateLabel}" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+            </Button>
+            <Button Classes="nav" Classes.active="{Binding RecentlyDeleted.IsActive}" Command="{Binding RecentlyDeleted.SelectCommand}" IsVisible="{Binding ShowRecentlyDeleted}">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <c:Icon Kind="Trash2" />
+                <TextBlock Grid.Column="1" Margin="9,0,0,0" Text="Recently deleted" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Classes="data faint" Text="{Binding RecentlyDeleted.Count}" VerticalAlignment="Center" />
+              </Grid>
+            </Button>
+            <Button Classes="nav" Classes.active="{Binding IsSettingsActive}" Command="{Binding OpenSettingsCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="9">
+                <c:Icon Kind="Settings" />
+                <TextBlock Text="Settings" />
+              </StackPanel>
+            </Button>
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="8,8,8,2">
+              <Ellipse Width="7" Height="7" Fill="{DynamicResource MintBrush}" VerticalAlignment="Center" />
+              <TextBlock Classes="compact faint" Text="{Binding Footer}" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </StackPanel>
+        </Grid>
       </Border>
 
       <!-- Page -->
@@ -284,7 +285,7 @@
           <Border BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0">
             <Panel>
               <TextBlock Classes="compact faint" Margin="16,18" Text="Nothing matches. Try a prompt title or a tag." IsVisible="{Binding IsEmpty}" />
-              <ListBox x:Name="PaletteList"
+              <ListBox x:Name="PaletteList" AutomationProperties.Name="Commands and prompts"
                        Classes="plain"
                        MaxHeight="360"
                        Margin="6"
@@ -364,7 +365,7 @@
             <TextBlock Classes="compact" Foreground="{DynamicResource CriticalTextBrush}" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
             <TextBox x:Name="QuickSaveTitle" Classes="raised" Height="32" FontWeight="SemiBold" Text="{Binding Title}" PlaceholderText="Title" />
             <Grid ColumnDefinitions="200,*" ColumnSpacing="10">
-              <ComboBox ItemsSource="{Binding CollectionOptions}" SelectedItem="{Binding SelectedCollection}" HorizontalAlignment="Stretch">
+              <ComboBox ItemsSource="{Binding CollectionOptions}" SelectedItem="{Binding SelectedCollection}" HorizontalAlignment="Stretch" AutomationProperties.Name="Collection">
                 <ComboBox.ItemTemplate>
                   <DataTemplate x:DataType="vm:CollectionOption">
                     <StackPanel Orientation="Horizontal" Spacing="8">
@@ -389,7 +390,7 @@
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <TextBox Width="96" Height="22" MinHeight="22" FontSize="11" Padding="6,0" Classes="mono" Text="{Binding NewTag}" PlaceholderText="+ tag">
+                <TextBox Width="96" Height="22" MinHeight="22" FontSize="11" Padding="6,0" Classes="mono" Text="{Binding NewTag}" PlaceholderText="+ tag" AutomationProperties.Name="Add a tag">
                   <TextBox.KeyBindings>
                     <KeyBinding Gesture="Enter" Command="{Binding AddTagCommand}" />
                   </TextBox.KeyBindings>

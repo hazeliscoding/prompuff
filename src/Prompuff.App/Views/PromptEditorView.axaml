@@ -98,7 +98,7 @@
                  Text="{Binding Description}" PlaceholderText="Add a one-line description" />
 
         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
-          <ComboBox Classes="sm" MinWidth="150" ItemsSource="{Binding CollectionOptions}" SelectedItem="{Binding SelectedCollection}" ToolTip.Tip="Collection">
+          <ComboBox Classes="sm" MinWidth="150" AutomationProperties.Name="Collection" ItemsSource="{Binding CollectionOptions}" SelectedItem="{Binding SelectedCollection}" ToolTip.Tip="Collection">
             <ComboBox.ItemTemplate>
               <DataTemplate x:DataType="vm:CollectionOption">
                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -124,7 +124,7 @@
               </ItemsControl.ItemTemplate>
             </ItemsControl>
             <TextBox Width="110" Height="22" MinHeight="22" FontSize="11" Padding="6,0" Classes="mono"
-                     Text="{Binding NewTag}" PlaceholderText="+ add tag" ToolTip.Tip="Type a tag and press Enter">
+                     Text="{Binding NewTag}" PlaceholderText="+ add tag" ToolTip.Tip="Type a tag and press Enter" AutomationProperties.Name="Add a tag">
               <TextBox.KeyBindings>
                 <KeyBinding Gesture="Enter" Command="{Binding AddTagCommand}" />
               </TextBox.KeyBindings>
