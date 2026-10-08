@@ -24,6 +24,9 @@ Thumbs.db
 *.db-wal
 /screenshots/
 
+# Libraries from released schema versions, kept as test fixtures
+!/tests/Prompuff.Infrastructure.Tests/Fixtures/schema-*.db
+
 # Agent instructions are committed in this repo (the global gitignore excludes them)
 !AGENTS.md
 !CLAUDE.md

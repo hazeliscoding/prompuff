@@ -40,11 +40,24 @@ internal sealed class TestLibrary : IAsyncDisposable
 
     public static async Task<TestLibrary> CreateAsync()
     {
-        var folder = Path.Combine(Path.GetTempPath(), "prompuff-tests", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(folder);
-        var library = new TestLibrary(folder);
+        var library = new TestLibrary(NewFolder());
         await library.Database.InitializeAsync();
         return library;
+    }
+
+    /// <summary>Copies an existing library file in as <c>prompuff.db</c>, without opening it yet.</summary>
+    public static TestLibrary FromCopy(string libraryPath)
+    {
+        var folder = NewFolder();
+        File.Copy(libraryPath, Path.Combine(folder, "prompuff.db"));
+        return new TestLibrary(folder);
+    }
+
+    private static string NewFolder()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "prompuff-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        return folder;
     }
 
     public string TempFile(string name) => Path.Combine(Folder, name);

@@ -14,4 +14,8 @@
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Libraries from every released schema version; LibraryFixtureTests opens copies of them. -->
+    <None Update="Fixtures\*.db" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
