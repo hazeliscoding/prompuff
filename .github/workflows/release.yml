@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Version to build (nothing is signed or published)
+        description: Version to build (nothing is signed or published, and no delta packages are made)
         required: true
         default: 0.0.1
 
@@ -57,6 +57,8 @@ jobs:
       - name: Publish self-contained win-x64
         run: dotnet publish src/Prompuff.App -c Release -r win-x64 --self-contained true -p:Version=${{ env.VERSION }} -o publish
       - name: Download the previous release for delta updates
+        # Only tag builds make deltas; a manual run's version may be lower than the latest release, which vpk refuses.
+        if: github.ref_type == 'tag'
         continue-on-error: true
         run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel win --outputDir releases --token ${{ github.token }}
       - name: Sign in to Azure for code signing
@@ -135,6 +137,8 @@ jobs:
       - name: Publish self-contained ${{ matrix.rid }}
         run: dotnet publish src/Prompuff.App -c Release -r "$RID" --self-contained true -p:Version=$VERSION -o publish
       - name: Download the previous release for delta updates
+        # Only tag builds make deltas; a manual run's version may be lower than the latest release, which vpk refuses.
+        if: github.ref_type == 'tag'
         continue-on-error: true
         run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel "$CHANNEL" --outputDir releases --token ${{ github.token }}
       - name: Pack the AppImage with Velopack
@@ -213,6 +217,8 @@ jobs:
       - name: Publish self-contained ${{ matrix.rid }}
         run: dotnet publish src/Prompuff.App -c Release -r "$RID" --self-contained true -p:Version=$VERSION -o publish
       - name: Download the previous release for delta updates
+        # Only tag builds make deltas; a manual run's version may be lower than the latest release, which vpk refuses.
+        if: github.ref_type == 'tag'
         continue-on-error: true
         run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --channel "$RID" --outputDir releases --token ${{ github.token }}
       - name: Pack the app with Velopack
