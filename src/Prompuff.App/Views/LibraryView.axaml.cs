@@ -31,13 +31,21 @@ public partial class LibraryView : UserControl
         if (_subscribed is not null)
         {
             _subscribed.FocusCurrentRequested -= OnFocusCurrentRequested;
+            _subscribed.ScrollToTopRequested -= OnScrollToTopRequested;
         }
 
         _subscribed = ViewModel;
         if (_subscribed is not null)
         {
             _subscribed.FocusCurrentRequested += OnFocusCurrentRequested;
+            _subscribed.ScrollToTopRequested += OnScrollToTopRequested;
         }
+    }
+
+    private void OnScrollToTopRequested(object? sender, EventArgs e)
+    {
+        CardsScroller.ScrollToHome();
+        RowsScroller.ScrollToHome();
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)

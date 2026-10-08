@@ -227,6 +227,12 @@ public sealed partial class LibraryViewModel : ObservableObject
     /// <summary>Raised when the view should move keyboard focus to <see cref="CurrentItem"/>.</summary>
     public event EventHandler? FocusCurrentRequested;
 
+    /// <summary>
+    /// Raised when a refresh shows a different search, filter or sort, so the view starts again at the best matches.
+    /// A refresh of the same view, such as after a favorite, keeps its place.
+    /// </summary>
+    public event EventHandler? ScrollToTopRequested;
+
     /// <summary>True while letters typed in the library extend a type-ahead word instead of starting one.</summary>
     public bool IsTypingAhead => _typeAhead.Length > 0 && _time.GetUtcNow() - _lastTypedAt < TypeAheadReset;
 
@@ -302,6 +308,10 @@ public sealed partial class LibraryViewModel : ObservableObject
         }
 
         Items.ReplaceAll(cards);
+        if (!sameView)
+        {
+            ScrollToTopRequested?.Invoke(this, EventArgs.Empty);
+        }
 
         // The cursor stays on its prompt. If that prompt left this view, as after a delete, it moves to the card
         // that took its place.

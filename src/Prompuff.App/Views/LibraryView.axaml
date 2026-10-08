@@ -247,7 +247,7 @@
       </StackPanel>
 
       <!-- Cards: only the rows on screen exist as controls, so a library of thousands scrolls like one of six -->
-      <ScrollViewer IsVisible="{Binding IsCards}" HorizontalScrollBarVisibility="Disabled">
+      <ScrollViewer x:Name="CardsScroller" IsVisible="{Binding IsCards}" HorizontalScrollBarVisibility="Disabled">
         <c:CardGrid x:Name="CardsList" Cards="{Binding Items}" Margin="20,16,20,32">
           <c:CardGrid.CardTemplate>
             <DataTemplate x:DataType="vm:PromptCardViewModel">
@@ -295,7 +295,7 @@
       </ScrollViewer>
 
       <!-- List: rows are created as they scroll into view -->
-      <ScrollViewer IsVisible="{Binding IsList}" HorizontalScrollBarVisibility="Disabled">
+      <ScrollViewer x:Name="RowsScroller" IsVisible="{Binding IsList}" HorizontalScrollBarVisibility="Disabled">
         <Border Margin="20,16,20,32" CornerRadius="6" ClipToBounds="True"
                 BorderBrush="{DynamicResource Border1Brush}" BorderThickness="1" Background="{DynamicResource Bg1Brush}"
                 VerticalAlignment="Top">
