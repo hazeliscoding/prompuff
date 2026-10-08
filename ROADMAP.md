@@ -207,7 +207,7 @@ Make daily use fast, and keep track of where prompts came from.
 
 **Done when:** you can find, open, edit, render and copy a prompt without the mouse, and a duplicate links back to its parent.
 
-## v0.5: Capture anywhere
+## v0.5: Capture anywhere (tagged 2026-10-08)
 
 Stash a good prompt from any app in a few seconds.
 
@@ -215,6 +215,7 @@ Stash a good prompt from any app in a few seconds.
 - [x] Tray icon with Quick save, Open and Quit, and an option to keep running in the tray when the window closes.
 - [x] A configurable system-wide Quick save hotkey behind `IGlobalHotkeyService`, implemented for Windows, X11 and macOS.
 - [x] Wayland: Settings explains how to bind a desktop shortcut to `prompuff quick-save`.
+- [x] Publish v0.5.0 (2026-10-08). The release smoke tests copied text, pressed Ctrl+Alt+P and stashed it on both Linux AppImages, and both Macs logged the Carbon hotkey as ready.
 
 **Done when:** you can copy text in a browser, press the hotkey, and find the prompt stashed in under five seconds on Windows, on Linux under X11, and on macOS (CI-verified).
 
