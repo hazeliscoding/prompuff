@@ -361,11 +361,20 @@ public sealed partial class WorkflowViewModel : ObservableObject
 
     public async Task MoveStepAsync(WorkflowStepViewModel step, int offset)
     {
-        await RunAsync("Couldn't move that step.", async () => await ApplyStepsAsync(await _workflows.MoveStepAsync(Id, step.Id, offset)));
+        // Steps reload from the library after a change, so notes still being typed are saved first.
+        if (await FlushAsync())
+        {
+            await RunAsync("Couldn't move that step.", async () => await ApplyStepsAsync(await _workflows.MoveStepAsync(Id, step.Id, offset)));
+        }
     }
 
     public async Task RemoveStepAsync(WorkflowStepViewModel step)
     {
+        if (!await FlushAsync())
+        {
+            return;
+        }
+
         await RunAsync("Couldn't remove that step.", async () =>
         {
             await ApplyStepsAsync(await _workflows.RemoveStepAsync(Id, step.Id));
@@ -559,6 +568,11 @@ public sealed partial class WorkflowViewModel : ObservableObject
 
     private async Task AddStepAsync(PromptSummary prompt)
     {
+        if (!await FlushAsync())
+        {
+            return;
+        }
+
         await RunAsync("Couldn't add that step.", async () =>
         {
             await ApplyStepsAsync(await _workflows.AddStepAsync(Id, prompt.Id));

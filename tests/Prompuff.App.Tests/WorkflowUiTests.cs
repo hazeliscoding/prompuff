@@ -151,6 +151,25 @@ public class WorkflowUiTests
     }
 
     [AvaloniaFact]
+    public async Task A_note_typed_just_before_moving_a_step_is_kept()
+    {
+        await using var app = await AppHarness.StartAsync();
+        var items = app.ViewModel.Library.Items;
+        var workflow = await app.Get<WorkflowService>().CreateAsync("Two steps", steps: [(items[0].Id, null), (items[1].Id, null)]);
+        await app.Get<Navigator>().OpenWorkflowAsync(workflow.Id);
+        await app.SettleAsync();
+        var page = Assert.IsType<WorkflowViewModel>(app.ViewModel.CurrentPage);
+
+        page.Steps[0].Note = "Typed a moment ago";
+        await page.Steps[0].MoveDownCommand.ExecuteAsync(null);
+        await app.SettleAsync(800);
+
+        Assert.Equal([items[1].Id, items[0].Id], page.Steps.Select(step => step.PromptId));
+        Assert.Equal("Typed a moment ago", page.Steps[1].Note);
+        Assert.Equal("Typed a moment ago", (await app.Get<WorkflowService>().GetAsync(workflow.Id))!.Steps[1].Note);
+    }
+
+    [AvaloniaFact]
     public async Task Deleting_a_workflow_keeps_its_prompts()
     {
         await using var app = await AppHarness.StartAsync();
