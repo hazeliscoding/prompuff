@@ -66,9 +66,9 @@ internal static class SchemaFixtures
 
     /// <summary>
     /// The schema each release left behind, from the <c>Migrations.cs</c> its tag shipped: 1 in v0.1.0–v0.1.2, 4 in
-    /// v0.2.0–v0.3.0, 5 in v0.4.0–v0.5.0, and 6 from v0.6.0 on. Schemas 2 and 3 never shipped on their own.
+    /// v0.2.0–v0.3.0, 5 in v0.4.0–v0.5.0, 6 in v0.6.0–v0.8.0, and 7 from v0.9.0 on. Schemas 2 and 3 never shipped on their own.
     /// </summary>
-    public static IReadOnlyList<int> ReleasedVersions { get; } = [1, 4, 5, 6];
+    public static IReadOnlyList<int> ReleasedVersions { get; } = [1, 4, 5, 6, 7];
 
     public static string FileName(int schemaVersion) => $"schema-{schemaVersion}.db";
 
