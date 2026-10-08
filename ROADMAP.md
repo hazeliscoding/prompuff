@@ -121,6 +121,9 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
   - Fluent only takes palettes for Dark and Light, so each theme's dictionary also carries the `System*Color` values Fluent's stock controls read.
   - Picking a theme while the other mode shows switches to its mode, so the choice is visible at once. System keeps following the OS between the chosen dark and light theme.
   - A test checks every palette's contrast: Text1, Text2, the accent text and the tone texts reach 4.5:1 on the backgrounds they sit on, white or dark labels on the accent reach 4.5:1, and Text3 reaches 3:1 for now. It caught Prompuff Light's primary buttons at 3.74:1, so that accent moved one step darker, to teal-700 (`#0F766E`).
+- **Beta channel, as built:** each platform's Velopack channel is set explicitly (`win`, `linux`, `linux-arm64`, `osx-arm64`, `osx-x64`, plus `-beta`), so an install that came from a beta follows the setting. Beta reads the beta and the stable channel and takes the newer version, so a release only ever packs to one channel. Velopack never goes back a version, so switching to Stable keeps a beta until the next stable release. A tag with a pre-release suffix packs to the `-beta` channels, downloads the previous beta for deltas, and becomes a GitHub pre-release; `releases/latest` stays on the last stable release.
+- **Checked by hand (2026-10-08):** the Windows portable build of 0.8.0-beta.1, set to Beta, found 0.8.0-beta.2, downloaded the 233 KB delta, restarted and came back as beta.2.
+- **Settings keep their defaults (fixed in 0.8.0):** since 0.7.0's source-generated settings reader, a key missing from `settings.json` came back as false or empty instead of its default, because the generator only keeps initializers for settable properties. `AppSettings` properties are settable again. No released setting was affected, since Prompuff writes every key, but each new setting would have been.
 - **1.0 launches with a video and a landing page.** The video is made with the `/brag` skill. The landing page is a static site on GitHub Pages and keeps the app's promise: no analytics or trackers, and nothing loaded from other sites.
 
 ## v0.1: MVP (tagged 2026-10-07)
@@ -280,12 +283,13 @@ Let scripts and coding agents use the vault without opening the app.
 
 ## v0.8: Beta channel and themes
 
-- [ ] A `SHA256SUMS` file with every release.
-- [ ] A Beta channel: `-beta` tags publish pre-releases to `*-beta` Velopack channels, and the Beta option in Settings › Updates works.
+- [x] A `SHA256SUMS` file with every release.
+- [x] A Beta channel: `-beta` tags publish pre-releases to `*-beta` Velopack channels, and the Beta option in Settings › Updates works.
 - [x] Themes in Settings › Appearance. Prompuff Dark and Light stay the defaults, joined by palettes developers know from their editors: Darcula, Gruvbox Dark and Light, Dracula, Nord, One Dark, Tokyo Night, Solarized Dark and Light, and Catppuccin Mocha and Latte.
 - [x] Pick a dark theme and a light theme, and System switches between them with the OS. Each theme fills the same tokens in `Tokens.axaml` (backgrounds, text, borders, accent and status colors), so views don't change.
 - [x] Each palette's license and authors are credited in `licenses/Themes.md`.
 - [x] The headless UI tests capture the library, the editor and a dialog in every theme.
+- [x] Publish v0.8.0-beta.1 and v0.8.0-beta.2 as pre-releases (2026-10-08).
 
 **Done when:** a beta install updates from the beta channel, every release carries a `SHA256SUMS` file, and switching themes restyles the whole window, dialogs included, without a restart.
 
