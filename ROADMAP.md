@@ -251,7 +251,7 @@ The design's Workflows view: prompts that run in order, with a person copying be
 
 **Done when:** the design's "Angular upgrade, start to finish" workflow can be built, filled once and copied step by step.
 
-## v0.7: CLI and MCP server
+## v0.7: CLI and MCP server (tagged 2026-10-08)
 
 Let scripts and coding agents use the vault without opening the app.
 
