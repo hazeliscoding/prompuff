@@ -211,15 +211,16 @@ jobs:
           dotnet vpk pack --packId "$PACK_ID" --packVersion "$VERSION" --packDir publish --runtime "$RID"
           --mainExe Prompuff --packTitle Prompuff --packAuthors "Hazel Granados"
           --icon src/Prompuff.App/Assets/prompuff.icns --bundleId io.github.hazeliscoding.prompuff
-          --channel "$RID" --outputDir releases
-      - name: Check the app's ad-hoc signature
+          --signAppIdentity "-" --channel "$RID" --outputDir releases
+      - name: Check the app's signature
         run: |
           ls -la releases
           mkdir unpacked
           ditto -x -k releases/*-Portable.zip unpacked
           app=$(ls -d unpacked/*.app)
           codesign -dv "$app" 2>&1 | sed 's/^/  /'
-          # Apple Silicon refuses to run code without at least an ad-hoc signature.
+          # The whole bundle must carry a valid ad-hoc signature. Apple Silicon won't run unsigned code, and a
+          # downloaded app with a broken signature is reported as damaged, with no Open Anyway.
           codesign --verify --deep --strict --verbose=2 "$app"
       - name: Collect this version's files
         run: |
