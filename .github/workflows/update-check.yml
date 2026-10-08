@@ -1,0 +1,77 @@
+name: Update check
+
+# Run by hand after a release is published: starts the previous stable release on each platform, with a scratch
+# library, and checks that its update check finds the new one. Installing it needs a click in the app, so that part
+# is checked by hand on Windows and in WSLg; macOS has only this.
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: Version to start from
+        required: true
+        default: 0.9.0
+      to:
+        description: Version it should find
+        required: true
+        default: 1.0.0
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Finds ${{ inputs.to }} from ${{ inputs.from }} (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            asset: Prompuff-win-x64-Portable.zip
+          - os: ubuntu-latest
+            asset: Prompuff-linux-x64.AppImage
+          - os: macos-latest
+            asset: Prompuff-macOS-arm64.zip
+    runs-on: ${{ matrix.os }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FROM: ${{ inputs.from }}
+      TO: ${{ inputs.to }}
+      ASSET: ${{ matrix.asset }}
+    steps:
+      - name: Download ${{ inputs.from }}
+        shell: bash
+        run: |
+          gh release download "v$FROM" --repo "$GITHUB_REPOSITORY" --pattern "$ASSET" --pattern SHA256SUMS --dir app
+          cd app && sha256sum --check --ignore-missing SHA256SUMS 2>/dev/null || shasum -a 256 --check --ignore-missing SHA256SUMS
+      - name: Start it and wait for its update check
+        shell: bash
+        run: |
+          case "$RUNNER_OS" in
+            Windows) unzip -q "app/$ASSET" -d app/portable; run=(app/portable/Prompuff.exe) ;;
+            Linux)
+              sudo apt-get update -qq && sudo apt-get install -y -qq xvfb > /dev/null
+              chmod +x "app/$ASSET"; export APPIMAGE_EXTRACT_AND_RUN=1
+              run=(xvfb-run -a -s "-screen 0 1280x800x24" "app/$ASSET") ;;
+            macOS) ditto -x -k "app/$ASSET" app/unpacked; run=("$(ls -d app/unpacked/*.app)/Contents/MacOS/Prompuff") ;;
+          esac
+          # GitHub limits unauthenticated API calls per address, and runners share addresses, so a rate-limited check
+          # is retried. Each attempt gets its own library: Prompuff runs one copy per library, and an earlier copy
+          # may still be running.
+          for attempt in 1 2 3; do
+            data="$RUNNER_TEMP/data-$attempt"
+            mkdir -p "$data"
+            echo '{ "checkForUpdatesAutomatically": true }' > "$data/settings.json"
+            if command -v cygpath > /dev/null; then export PROMPUFF_DATA_DIR="$(cygpath -w "$data")"; else export PROMPUFF_DATA_DIR="$data"; fi
+            "${run[@]}" > "$RUNNER_TEMP/app-$attempt.log" 2>&1 &
+            pid=$!
+            for _ in $(seq 120); do grep -qs "Update check on the Stable channel finished\|Update check failed" "$data"/logs/*.log && break; sleep 1; done
+            kill $pid 2>/dev/null || true
+            sleep 2
+            cat "$data"/logs/*.log || true
+            if grep -qs "update available: True" "$data"/logs/*.log; then echo "$FROM found an update; $TO is the latest stable release."; exit 0; fi
+            if grep -qs "update available: False" "$data"/logs/*.log; then echo "::error::$FROM found no update"; exit 1; fi
+            echo "Attempt $attempt: the update check didn't finish; trying again in a minute."
+            sleep 60
+          done
+          echo "::error::$FROM never finished an update check"
+          exit 1
