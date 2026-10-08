@@ -83,6 +83,23 @@
           </Border>
         </StackPanel>
 
+        <!-- Quick save -->
+        <StackPanel Spacing="4" IsVisible="{Binding IsQuickSave}">
+          <TextBlock Classes="page-title" Text="Quick save" Margin="0,0,0,4" />
+          <TextBlock Classes="muted" TextWrapping="Wrap" LineHeight="19.5" Margin="0,0,0,8"
+                     Text="Stash a prompt from any app: copy it, then reach for Prompuff's tray icon. Quick save opens with the clipboard, and Enter stashes it." />
+          <Border Classes="setting-row">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel>
+                <TextBlock Classes="strong" Text="Keep running in the tray" />
+                <TextBlock Classes="compact faint" TextWrapping="Wrap"
+                           Text="Closing the window keeps Prompuff in the tray (the menu bar on macOS), ready for the next prompt. Quit from the tray menu. If your desktop has no tray, open Prompuff again to bring the window back." />
+              </StackPanel>
+              <ToggleButton Grid.Column="1" Theme="{StaticResource Switch}" IsChecked="{Binding KeepRunningInTray}" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+        </StackPanel>
+
         <!-- Storage -->
         <StackPanel Spacing="16" IsVisible="{Binding IsStorage}">
           <TextBlock Classes="page-title" Text="Storage" />

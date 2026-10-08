@@ -15,6 +15,7 @@ namespace Prompuff.App.ViewModels;
 public enum SettingsSection
 {
     Appearance,
+    QuickSave,
     Storage,
     ImportExport,
     Updates,
@@ -114,6 +115,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         Sections =
         [
             new(SettingsSection.Appearance, "Appearance", "Palette", Select),
+            new(SettingsSection.QuickSave, "Quick save", "ClipboardPlus", Select),
             new(SettingsSection.Storage, "Storage", "HardDrive", Select),
             new(SettingsSection.ImportExport, "Import / export", "ArrowLeftRight", Select),
             new(SettingsSection.Updates, "Updates", "RefreshCw", Select),
@@ -137,7 +139,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public string AboutVersion => $"v{CurrentVersion} · Avalonia 12 · .NET {Environment.Version.Major}";
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsAppearance), nameof(IsStorage), nameof(IsImportExport), nameof(IsUpdates), nameof(IsShortcuts), nameof(IsAbout))]
+    [NotifyPropertyChangedFor(nameof(IsAppearance), nameof(IsQuickSave), nameof(IsStorage), nameof(IsImportExport), nameof(IsUpdates), nameof(IsShortcuts), nameof(IsAbout))]
     private SettingsSection _section;
 
     [ObservableProperty]
@@ -153,6 +155,9 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _checkForUpdatesAutomatically;
+
+    [ObservableProperty]
+    private bool _keepRunningInTray;
 
     [ObservableProperty]
     private string _storageSummary = string.Empty;
@@ -181,6 +186,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public bool HasExportCollections => ExportCollections.Count > 0;
 
     public bool IsAppearance => Section == SettingsSection.Appearance;
+    public bool IsQuickSave => Section == SettingsSection.QuickSave;
     public bool IsStorage => Section == SettingsSection.Storage;
     public bool IsImportExport => Section == SettingsSection.ImportExport;
     public bool IsUpdates => Section == SettingsSection.Updates;
@@ -268,6 +274,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         ShowMascot = settings.ShowMascot;
         Density = settings.Density;
         CheckForUpdatesAutomatically = settings.CheckForUpdatesAutomatically;
+        KeepRunningInTray = settings.KeepRunningInTray;
         Appearance.ShowMascot = settings.ShowMascot;
         Appearance.Density = settings.Density;
         ThemeApplier.Apply(settings.Theme);
@@ -542,6 +549,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         Appearance.Density = value;
         Persist(settings => settings with { Density = value });
     }
+
+    partial void OnKeepRunningInTrayChanged(bool value) => Persist(settings => settings with { KeepRunningInTray = value });
 
     partial void OnCheckForUpdatesAutomaticallyChanged(bool value) =>
         Persist(settings => settings with { CheckForUpdatesAutomatically = value });

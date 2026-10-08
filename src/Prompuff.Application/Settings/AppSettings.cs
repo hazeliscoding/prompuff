@@ -39,6 +39,9 @@ public sealed record AppSettings
     public UpdateChannel UpdateChannel { get; init; } = UpdateChannel.Stable;
     public LibraryLayout LibraryLayout { get; init; } = LibraryLayout.Cards;
     public Density Density { get; init; } = Density.Cozy;
+
+    /// <summary>Closing the window hides it and keeps Prompuff in the tray, so Quick save stays a keypress away.</summary>
+    public bool KeepRunningInTray { get; init; }
     public PromptSort LibrarySort { get; init; } = PromptSort.LastEdited;
     public WindowPlacement? Window { get; init; }
 

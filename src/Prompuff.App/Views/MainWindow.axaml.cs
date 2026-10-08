@@ -16,6 +16,7 @@ public partial class MainWindow : Window
 {
     private readonly ISettingsStore? _settings;
     private bool _closeConfirmed;
+    private bool _quitting;
 
     // For the XAML previewer.
     public MainWindow()
@@ -93,6 +94,16 @@ public partial class MainWindow : Window
 
     private MainWindowViewModel? ViewModel => DataContext as MainWindowViewModel;
 
+    /// <summary>True while the window is hidden in the tray rather than closed.</summary>
+    public bool IsInTray { get; private set; }
+
+    /// <summary>Closes the window for good, even when closing it would normally keep Prompuff in the tray.</summary>
+    public void Quit()
+    {
+        _quitting = true;
+        Close();
+    }
+
     protected override async void OnClosing(WindowClosingEventArgs e)
     {
         base.OnClosing(e);
@@ -103,10 +114,30 @@ public partial class MainWindow : Window
         }
 
         e.Cancel = true;
-        if (await viewModel.PrepareToCloseAsync())
+        if (!await viewModel.PrepareToCloseAsync())
         {
-            _closeConfirmed = true;
-            Close();
+            return;
+        }
+
+        // Quitting from the tray, ⌘Q, or the system shutting down really closes; the close button only hides.
+        var quitting = _quitting || e.CloseReason is WindowCloseReason.ApplicationShutdown or WindowCloseReason.OSShutdown;
+        if (!quitting && viewModel.Settings.KeepRunningInTray)
+        {
+            IsInTray = true;
+            Hide();
+            return;
+        }
+
+        _closeConfirmed = true;
+        Close();
+    }
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (change.Property == IsVisibleProperty && IsVisible)
+        {
+            IsInTray = false;
         }
     }
 

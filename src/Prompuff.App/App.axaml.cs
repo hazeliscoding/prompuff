@@ -58,9 +58,41 @@ public sealed class App : Avalonia.Application
                 // Later launches arrive on a background thread.
                 launch.Instance.SetHandler(request => Dispatcher.UIThread.Post(() => _ = HandleLaunchAsync(window, viewModel, request)));
             }
+
+            InstallTray(window, viewModel);
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private void InstallTray(MainWindow window, MainWindowViewModel viewModel)
+    {
+        try
+        {
+            TrayMenu.Install(
+                this,
+                quickSave: () => _ = HandleLaunchAsync(window, viewModel, LaunchRequest.QuickSave),
+                open: () => WindowActivation.BringForward(window),
+                quit: window.Quit,
+                quickSaveHint: viewModel.QuickSaveShortcut);
+        }
+        catch (Exception exception)
+        {
+            // A desktop without a tray still has the window, the shortcuts and a second launch to bring it back.
+            _logger?.LogWarning(exception, "Couldn't add the tray icon");
+        }
+
+        // macOS: clicking the Dock icon while the window is hidden in the menu bar brings it back.
+        if (TryGetFeature(typeof(IActivatableLifetime)) is IActivatableLifetime activatable)
+        {
+            activatable.Activated += (_, e) =>
+            {
+                if (e.Kind == ActivationKind.Reopen && window.IsInTray)
+                {
+                    WindowActivation.BringForward(window);
+                }
+            };
+        }
     }
 
     /// <summary>Builds the service container. Used by the app and by the headless UI tests, which can replace services.</summary>
