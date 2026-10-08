@@ -85,6 +85,11 @@ ICONS: list[tuple[str, str]] = [
     ("Hash", "hash"),
     ("Eye", "eye"),
     ("Undo2", "undo-2"),
+    ("Workflow", "workflow"),
+    ("ArrowUp", "arrow-up"),
+    ("ArrowDown", "arrow-down"),
+    ("ArrowRight", "arrow-right"),
+    ("CircleCheck", "circle-check"),
 ]
 
 # Older/newer Lucide names to try when the primary file name is missing.
