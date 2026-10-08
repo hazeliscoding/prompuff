@@ -239,13 +239,16 @@ jobs:
             run=()
           fi
           app=$(ls -d unpacked/*.app)
+          data="$HOME/Library/Application Support/Prompuff"
           "${run[@]}" "$app/Contents/MacOS/Prompuff" > "$RUNNER_TEMP/app.log" 2>&1 &
           pid=$!
-          sleep 25
+          # The first launch under Rosetta translates the whole runtime, so wait for the library rather than a
+          # fixed time, then give the window a moment to draw.
+          for _ in $(seq 120); do [ -f "$data/prompuff.db" ] && break; sleep 1; done
+          sleep 8
           screencapture -x "$RUNNER_TEMP/smoke-$RID.png" || echo "No screenshot"
           kill -0 $pid || { echo "Prompuff exited early"; cat "$RUNNER_TEMP/app.log"; exit 1; }
           kill $pid
-          data="$HOME/Library/Application Support/Prompuff"
           test -f "$data/prompuff.db" || { echo "No database in $data"; cat "$RUNNER_TEMP/app.log"; exit 1; }
           ls -la "$data"
           cat "$data"/logs/*.log
