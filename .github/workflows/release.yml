@@ -164,7 +164,9 @@ jobs:
           xvfb-run -a -s "-screen 0 1280x800x24" bash -c '
             "./dist/Prompuff-$RID.AppImage" > "$RUNNER_TEMP/app.log" 2>&1 &
             pid=$!
-            sleep 20
+            # Wait for the hotkey rather than a fixed time: the ARM64 AppImage can take 20 seconds to start.
+            for _ in $(seq 120); do grep -qs "Quick save hotkey" "$XDG_DATA_HOME"/prompuff/logs/*.log && break; sleep 1; done
+            sleep 3
             import -window root "$RUNNER_TEMP/smoke-$RID.png"
             kill -0 $pid || { echo "Prompuff exited early"; cat "$RUNNER_TEMP/app.log"; exit 1; }
             # Capture anywhere: copy text, press the global hotkey, and stash it with Enter.
