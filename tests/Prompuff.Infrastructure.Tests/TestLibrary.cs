@@ -20,7 +20,9 @@ internal sealed class TestLibrary : IAsyncDisposable
         Search = new SqlitePromptSearch(Database);
         PromptService = new PromptService(Prompts, Time, NullLogger<PromptService>.Instance);
         CollectionService = new CollectionService(Collections, Time, NullLogger<CollectionService>.Instance);
-        Transfer = new MarkdownTransferService(PromptService, CollectionService, Collections, NullLogger<MarkdownTransferService>.Instance);
+        Workflows = new SqliteWorkflowRepository(Database);
+        WorkflowService = new WorkflowService(Workflows, new PromptTemplateService(), Time, NullLogger<WorkflowService>.Instance);
+        Transfer = new MarkdownTransferService(PromptService, CollectionService, Collections, WorkflowService, NullLogger<MarkdownTransferService>.Instance);
     }
 
     public string Folder { get; }
@@ -33,6 +35,8 @@ internal sealed class TestLibrary : IAsyncDisposable
     public PromptService PromptService { get; }
     public CollectionService CollectionService { get; }
     public MarkdownTransferService Transfer { get; }
+    public SqliteWorkflowRepository Workflows { get; }
+    public WorkflowService WorkflowService { get; }
 
     public static async Task<TestLibrary> CreateAsync()
     {

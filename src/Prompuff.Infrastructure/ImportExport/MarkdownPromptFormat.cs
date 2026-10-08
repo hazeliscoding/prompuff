@@ -158,7 +158,7 @@ public static partial class MarkdownPromptFormat
         };
     }
 
-    private static void ParseFrontmatter(string[] lines, Dictionary<string, object> fields)
+    internal static void ParseFrontmatter(string[] lines, Dictionary<string, object> fields)
     {
         for (var i = 0; i < lines.Length; i++)
         {
@@ -225,7 +225,7 @@ public static partial class MarkdownPromptFormat
         }
     }
 
-    private static string? GetString(Dictionary<string, object> fields, string key) =>
+    internal static string? GetString(Dictionary<string, object> fields, string key) =>
         fields.TryGetValue(key, out var value) && value is string text && !string.IsNullOrWhiteSpace(text) ? text : null;
 
     private static IReadOnlyList<string> GetList(Dictionary<string, object> fields, string key) => fields.TryGetValue(key, out var value)
@@ -250,7 +250,7 @@ public static partial class MarkdownPromptFormat
             ? time.ToUniversalTime()
             : null;
 
-    private static string Quote(string value)
+    internal static string Quote(string value)
     {
         var single = Normalize(value).Replace('\n', ' ').Trim();
         if (PlainScalar().IsMatch(single) && !IsReservedWord(single) && !single.EndsWith(' '))
@@ -327,5 +327,5 @@ public static partial class MarkdownPromptFormat
     private static string FormatTime(DateTimeOffset value) =>
         value.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
 
-    private static string Normalize(string value) => value.Replace("\r\n", "\n").Replace('\r', '\n');
+    internal static string Normalize(string value) => value.Replace("\r\n", "\n").Replace('\r', '\n');
 }

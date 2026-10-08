@@ -249,7 +249,7 @@ public class MarkdownTransferServiceTests
     [InlineData("Ünïcödé", "n-c-d.md")]
     public void File_names_are_safe_on_every_platform(string title, string expected)
     {
-        var service = new Prompuff.Infrastructure.ImportExport.MarkdownTransferService(null!, null!, null!, null!);
+        var service = new Prompuff.Infrastructure.ImportExport.MarkdownTransferService(null!, null!, null!, null!, null!);
 
         Assert.Equal(expected, service.SuggestFileName(title));
     }

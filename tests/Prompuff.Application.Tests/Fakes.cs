@@ -52,6 +52,16 @@ internal sealed class InMemoryPromptRepository : IPromptRepository
         return Task.FromResult(_prompts.Values.Any(p => p.DeletedAt is null && p.Title == title.Trim() && Normalize(p.Body) == Normalize(body)));
     }
 
+    public Task<Guid?> FindPromptAsync(string title, string body, CancellationToken cancellationToken = default)
+    {
+        static string Normalize(string text) => text.Replace("\r", string.Empty).Trim('\n').TrimEnd();
+        return Task.FromResult(_prompts.Values
+            .Where(p => p.DeletedAt is null && p.Title == title.Trim() && Normalize(p.Body) == Normalize(body))
+            .OrderBy(p => p.CreatedAt)
+            .Select(p => (Guid?)p.Id)
+            .FirstOrDefault());
+    }
+
     public Task<int> PurgeDeletedAsync(DateTimeOffset? deletedBefore, CancellationToken cancellationToken = default)
     {
         var purged = _prompts.Values.Where(p => p.DeletedAt is { } deleted && (deletedBefore is null || deleted < deletedBefore)).Select(p => p.Id).ToList();

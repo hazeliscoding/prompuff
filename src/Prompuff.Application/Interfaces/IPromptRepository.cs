@@ -22,6 +22,9 @@ public interface IPromptRepository
     /// </summary>
     Task<bool> HasPromptAsync(string title, string body, CancellationToken cancellationToken = default);
 
+    /// <summary>The oldest prompt in the library with this title and body, matched as <see cref="HasPromptAsync"/> does, or null.</summary>
+    Task<Guid?> FindPromptAsync(string title, string body, CancellationToken cancellationToken = default);
+
     /// <summary>Removes prompts in Recently deleted for good: those deleted before <paramref name="deletedBefore"/>, or all of them. Returns how many.</summary>
     Task<int> PurgeDeletedAsync(DateTimeOffset? deletedBefore, CancellationToken cancellationToken = default);
 

@@ -4,14 +4,17 @@ public sealed record ImportFailure(string FilePath, string Reason, string? Detai
 
 /// <param name="SkippedCount">Prompts left out because the library already has one with the same title and body.</param>
 /// <param name="OtherFiles">Files in an imported folder that aren't Markdown, relative to the folder, such as images.</param>
+/// <param name="Workflows">Workflows created from workflow documents.</param>
 public sealed record ImportResult(
     IReadOnlyList<Guid> ImportedPromptIds,
     IReadOnlyList<ImportFailure> Failures,
     int SkippedCount = 0,
-    IReadOnlyList<string>? OtherFiles = null)
+    IReadOnlyList<string>? OtherFiles = null,
+    IReadOnlyList<Guid>? Workflows = null)
 {
     public int ImportedCount => ImportedPromptIds.Count;
     public IReadOnlyList<string> SkippedFiles => OtherFiles ?? [];
+    public IReadOnlyList<Guid> ImportedWorkflowIds => Workflows ?? [];
 }
 
 public sealed record ExportResult(int ExportedCount, string FilePath);

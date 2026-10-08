@@ -27,6 +27,10 @@ public sealed class PromptService(IPromptRepository prompts, TimeProvider time, 
     public Task<Prompt?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
         prompts.GetAsync(id, cancellationToken);
 
+    /// <inheritdoc cref="IPromptRepository.FindPromptAsync"/>
+    public Task<Guid?> FindAsync(string title, string body, CancellationToken cancellationToken = default) =>
+        prompts.FindPromptAsync(title, body, cancellationToken);
+
     /// <inheritdoc cref="IPromptRepository.HasPromptAsync"/>
     public Task<bool> HasPromptAsync(string title, string body, CancellationToken cancellationToken = default) =>
         prompts.HasPromptAsync(title, body, cancellationToken);
