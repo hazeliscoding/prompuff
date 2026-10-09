@@ -303,8 +303,8 @@
     });
   }
 
-  // Puff floats and blinks in CSS. Here it squishes when a pointer comes by or a finger taps it, and it rests
-  // while it's off screen, so its loops don't run where nobody sees them.
+  // Puff floats, blinks and glances around in CSS. Here it squishes when a pointer comes by or a finger taps
+  // it, and it rests while it's off screen, so its loops don't run where nobody sees them.
 
   function setupPuff() {
     var puffs = document.querySelectorAll('[data-puff]');

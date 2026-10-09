@@ -2823,14 +2823,14 @@ html:has(.viewer[open]) {
   filter: none;
 }
 
-/* Motion is optional: the opening sequence, Puff's float, blink and reactions, and the blinking carets only
-   play when the system allows it. Puff rests while it's off screen. */
+/* Motion is optional: the opening sequence, Puff's float, blinks, glances and reactions, and the blinking
+   carets only play when the system allows it. Puff rests while it's off screen. */
 
 @media (prefers-reduced-motion: no-preference) {
   .hero-glow { animation: fade-in 1800ms var(--ease-out) both; }
   .puff { animation: puff-in 1000ms var(--ease-spring) 120ms both; }
   .puff-float { animation: puff-float 6s ease-in-out 1.4s infinite; }
-  .puff-eyes { animation: blink 9s ease-in-out 1.2s infinite; }
+  .puff-eyes { animation: puff-look 11s ease-in-out 1.2s infinite; }
   .puff-float.is-resting,
   .is-resting .puff-eyes { animation-play-state: paused; }
   .puff-squish.is-squished { animation: puff-squish 650ms ease-out; }
@@ -2878,10 +2878,11 @@ html:has(.viewer[open]) {
   50% { transform: translateY(-6px); }
 }
 
-/* One blink, then a double one later, so the rhythm doesn't tick like a clock. */
-@keyframes blink {
-  0%, 30%, 32.4%, 84%, 86.2%, 88.4%, 100% { transform: scaleY(1); }
-  31.2%, 85.1%, 87.3% { transform: scaleY(0.1); }
+/* A blink, a glance aside, then a double blink, so the rhythm doesn't tick like a clock. */
+@keyframes puff-look {
+  0%, 24%, 26.2%, 46%, 66%, 80%, 82.2%, 84.4%, 100% { transform: translateX(0) scaleY(1); }
+  25.1%, 81.1%, 83.3% { transform: translateX(0) scaleY(0.1); }
+  50%, 62% { transform: translateX(0.5px) scaleY(1); }
 }
 
 @keyframes puff-squish {
