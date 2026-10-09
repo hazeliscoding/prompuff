@@ -63,7 +63,7 @@
         <Grid ColumnDefinitions="216,*,Auto" Margin="{Binding TitleBarInset}">
           <Button Grid.Column="0" Classes="bare" Margin="14,0,0,0" Command="{Binding GoToLibraryCommand}" ToolTip.Tip="Library" AutomationProperties.Name="Library">
             <StackPanel Orientation="Horizontal" Spacing="10">
-              <c:Puff Classes="bob" Width="22" Height="18" />
+              <c:Puff Width="22" Height="18" GreetWhen="True" SquishOnHover="True" />
               <TextBlock Text="Prompuff" FontSize="14" FontWeight="Bold" LetterSpacing="-0.14" VerticalAlignment="Center" />
               <Border Classes="badge">
                 <TextBlock Text="LOCAL" />
@@ -477,7 +477,7 @@
             IsVisible="{Binding Toasts.Current, Converter={x:Static ObjectConverters.IsNotNull}}">
       <Panel DataContext="{Binding Toasts.Current}">
       <StackPanel Orientation="Horizontal" Spacing="10" x:DataType="vm:ToastViewModel">
-        <c:Puff Width="24" Height="20" Mood="Happy"
+        <c:Puff Width="24" Height="20" Mood="Happy" CheerFor="{Binding}"
                 IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Appearance.ShowMascot}" />
         <StackPanel VerticalAlignment="Center">
           <TextBlock Classes="strong" Text="{Binding Title}" />

@@ -171,7 +171,7 @@ Settings › Appearance:
 - **Theme:** Dark, Light, or System, which follows your computer.
 - **Dark themes:** Prompuff Dark, Darcula, Gruvbox Dark, Dracula, Nord, One Dark, Tokyo Night, Solarized Dark and Catppuccin Mocha. **Light themes:** Prompuff Light, Gruvbox Light, Solarized Light and Catppuccin Latte. Pick one of each; System switches between them.
 - **Density:** how much room each prompt gets in the library. Cozy shows everything, Compact trims the padding and shows one line of description, and Dense drops descriptions to fit the most.
-- **Puff, the mascot:** on or off.
+- **Puff, the mascot:** on or off. Puff says hello in empty states, hops when something's saved, and squishes when you point at it on the About page or in the title bar.
 
 ## Updates and the Beta channel
 

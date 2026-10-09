@@ -226,7 +226,7 @@
     <Panel>
       <!-- Empty states -->
       <StackPanel IsVisible="{Binding IsEmpty}" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Margin="20">
-        <c:Puff Classes="ghost bob" Width="72" Height="56" HorizontalAlignment="Center" IsVisible="{Binding Appearance.ShowMascot}" />
+        <c:Puff Classes="ghost" Width="72" Height="56" HorizontalAlignment="Center" GreetWhen="{Binding IsEmpty}" Blinks="{Binding IsEmpty}" IsVisible="{Binding Appearance.ShowMascot}" />
         <TextBlock Classes="section-title" Text="{Binding EmptyTitle}" HorizontalAlignment="Center" />
         <TextBlock Classes="faint" Text="{Binding EmptyMessage}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="380" />
         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,4,0,0">

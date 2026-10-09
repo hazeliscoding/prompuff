@@ -22,7 +22,7 @@
 
     <Panel>
       <StackPanel IsVisible="{Binding IsEmpty}" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Margin="20">
-        <c:Puff Classes="ghost bob" Width="72" Height="56" HorizontalAlignment="Center" IsVisible="{Binding Appearance.ShowMascot}" />
+        <c:Puff Classes="ghost" Width="72" Height="56" HorizontalAlignment="Center" GreetWhen="{Binding IsEmpty}" Blinks="{Binding IsEmpty}" IsVisible="{Binding Appearance.ShowMascot}" />
         <TextBlock Classes="section-title" Text="Some prompts work best in order." HorizontalAlignment="Center" />
         <TextBlock Classes="faint" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="420"
                    Text="Chain them into a workflow: plan, build, then check. Fill in the shared details once, and copy each step into your model in turn." />
