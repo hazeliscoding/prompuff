@@ -168,6 +168,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
   - `settings-1.0.0.json`: every setting changed from its default, as 1.0 saves it on Windows. A renamed key falls back to its default, and a file that no longer reads resets every setting, so the test compares every value.
   - `cli-1.0.0.json`: 39 cases run against `schema-7.db`, with each exit code, the JSON of every `--json` case and the exact text of `get` and `render`. A later answer passes when everything recorded is still there with the same value, so added fields are fine. Renaming a JSON field, an option and an MCP input failed 15 tests.
   - `mcp-1.0.0.json`: the tools with their input types, required inputs and read-only hints, eight tool calls, the five resources with their Markdown, and the favorites as prompts with two prompt calls. A resource is held to the prompt its Markdown carries, not its exact text, so the Markdown can gain metadata.
+- **The README and the website sign off** with "Made with ♥ by hazeliscoding". On the website the line links to the repository, and the heart uses a new `--heart` token, the pink tone of each mode.
 
 ## v0.1: MVP (tagged 2026-10-07)
 

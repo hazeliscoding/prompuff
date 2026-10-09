@@ -81,6 +81,7 @@
   --focus: #5EEAD4;
 
   --puff: #B48EFF;
+  --heart: #E879A9;
   --lavender-ink: #B48EFF;
   --var: #CDB4FF;
   --var-bg: rgb(180 142 255 / 0.14);
@@ -158,6 +159,7 @@
     --link: #0F766E;
     --focus: #0F766E;
 
+    --heart: #C9407F;
     --lavender-ink: #7C5CD6;
     --var: #5E3FB8;
     --var-bg: rgb(124 92 214 / 0.12);
@@ -2562,6 +2564,40 @@ b {
   font-size: 0.8125rem;
 }
 
+/* The sign-off leads back to the repository. */
+
+.made-with {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+
+.made-with a {
+  color: var(--text-2);
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+
+.made-with a:hover {
+  color: var(--text-strong);
+}
+
+.made-with a:hover .made-with-name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.heart {
+  display: inline-block;
+  width: 1.05em;
+  height: 1.05em;
+  margin-inline: 0.1em;
+  vertical-align: -0.17em;
+  fill: var(--heart);
+}
+
 @media (max-width: 760px) {
   .footer-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -2727,7 +2763,8 @@ html:has(.viewer[open]) {
     gap: 0 20px;
   }
 
-  .footer-links a {
+  .footer-links a,
+  .made-with a {
     display: inline-block;
     padding: 10px 0;
   }

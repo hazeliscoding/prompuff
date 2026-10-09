@@ -249,3 +249,5 @@ Prompuff stores prompts locally and does not upload prompt content.
 ## License
 
 [MIT](LICENSE). Manrope and IBM Plex Mono are under the SIL Open Font License, and the icons are from [Lucide](https://lucide.dev) (ISC). See [`licenses/`](licenses).
+
+<p align="center">Made with ♥ by <a href="https://github.com/hazeliscoding">hazeliscoding</a></p>
