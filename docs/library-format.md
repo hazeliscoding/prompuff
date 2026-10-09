@@ -180,9 +180,13 @@ The normal test run only reads the fixtures. `SchemaFixtures.cs` says what each 
 2. Write its fixture. In PowerShell, set `$env:PROMPUFF_WRITE_FIXTURES = "8"` instead, and remove it afterwards.
 
    ```bash
-   PROMPUFF_WRITE_FIXTURES=8 dotnet test tests/Prompuff.Infrastructure.Tests --filter "FullyQualifiedName~Rewrite_fixtures"
+   PROMPUFF_WRITE_FIXTURES=8 dotnet test tests/Prompuff.Infrastructure.Tests --filter "FullyQualifiedName~Write_fixtures"
    ```
 
-3. Commit the new `schema-7.db` with the migration.
+3. Commit the new `schema-8.db` and its line in `tests/pinned-fixtures.sha256` with the migration.
 
-A test fails while the newest migration has no fixture. A released fixture records what that release left behind, so rewrite one only when the data it should hold changes, never because a migration did.
+A test fails while the newest migration has no fixture.
+
+### Pinned for good
+
+A fixture records what a release left behind, so it never changes. Every file in a test project's `Fixtures` folder is pinned by its SHA-256 in `tests/pinned-fixtures.sha256`, which `sha256sum -c` can check from the `tests` folder too. `PinnedFixtureTests` fails when a pinned file changes or goes missing, or when a fixture isn't pinned. `Write_fixtures` pins each file it writes and refuses to overwrite a pinned one. If a later version can't read an old fixture, the fix goes in the code, never in the fixture.

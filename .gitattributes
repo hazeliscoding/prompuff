@@ -8,3 +8,7 @@
 *.ttf binary
 *.otf binary
 *.db binary
+*.zip binary
+
+# A fixture is what a release wrote, byte for byte, pinned by tests/pinned-fixtures.sha256.
+tests/*/Fixtures/** -text

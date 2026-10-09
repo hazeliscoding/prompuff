@@ -15,7 +15,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Libraries from every released schema version; LibraryFixtureTests opens copies of them. -->
-    <None Update="Fixtures\*.db" CopyToOutputDirectory="PreserveNewest" />
+    <!-- What released versions wrote: a library from every released schema, and more. Pinned by tests/pinned-fixtures.sha256. -->
+    <None Update="Fixtures\**" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="..\Shared\PinnedFixtures.cs" Link="Shared\PinnedFixtures.cs" />
   </ItemGroup>
 </Project>

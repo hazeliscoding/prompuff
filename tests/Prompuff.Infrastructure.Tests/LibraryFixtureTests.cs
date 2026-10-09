@@ -7,6 +7,7 @@ using Prompuff.Application.Services;
 using Prompuff.Domain.ValueObjects;
 using Prompuff.Infrastructure.Persistence;
 using Prompuff.Infrastructure.Repositories;
+using Prompuff.Tests;
 
 namespace Prompuff.Infrastructure.Tests;
 
@@ -52,7 +53,7 @@ public class LibraryFixtureTests
         Assert.True(
             SchemaFixtures.ReleasedVersions.Max() == Migrations.LatestVersion,
             $"Schema {Migrations.LatestVersion} has no fixture. Add it to SchemaFixtures.ReleasedVersions, then run "
-            + $"Rewrite_fixtures with PROMPUFF_WRITE_FIXTURES={Migrations.LatestVersion} and commit the new file.");
+            + $"Write_fixtures with PROMPUFF_WRITE_FIXTURES={Migrations.LatestVersion} and commit the new file with its pin.");
 
     [Theory]
     [MemberData(nameof(ReleasedSchemas))]
@@ -276,24 +277,27 @@ public class LibraryFixtureTests
     }
 
     /// <summary>
-    /// Writes fixtures into the source tree. It's skipped unless <c>PROMPUFF_WRITE_FIXTURES</c> names the schema versions
-    /// to write, such as <c>7</c> or <c>1,4,5,6</c>. A released fixture records what that release left behind, so rewrite
-    /// one only when the data it holds has to change, never because a migration did.
+    /// Writes new fixtures into the source tree and pins them. It's skipped unless <c>PROMPUFF_WRITE_FIXTURES</c> names
+    /// the schema versions to write, such as <c>8</c>. A released fixture records what that release left behind, so it's
+    /// never rewritten: this refuses any version that already has a pinned fixture.
     /// </summary>
     [Fact]
-    public async Task Rewrite_fixtures()
+    public async Task Write_fixtures()
     {
         var requested = Environment.GetEnvironmentVariable("PROMPUFF_WRITE_FIXTURES");
         if (string.IsNullOrWhiteSpace(requested))
         {
-            Assert.Skip("Set PROMPUFF_WRITE_FIXTURES to the schema versions to write, such as 1,4,5,6.");
+            Assert.Skip("Set PROMPUFF_WRITE_FIXTURES to the schema versions to write, such as 8.");
         }
 
         foreach (var version in requested.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
             var schemaVersion = int.Parse(version, CultureInfo.InvariantCulture);
             Assert.Contains(schemaVersion, SchemaFixtures.ReleasedVersions);
-            await SchemaFixtures.WriteAsync(schemaVersion, Path.Combine(SchemaFixtures.SourceFolder, SchemaFixtures.FileName(schemaVersion)));
+            var path = Path.Combine(SchemaFixtures.SourceFolder, SchemaFixtures.FileName(schemaVersion));
+            PinnedFixtures.EnsureUnpinned(path);
+            await SchemaFixtures.WriteAsync(schemaVersion, path);
+            PinnedFixtures.Pin(path);
         }
     }
 

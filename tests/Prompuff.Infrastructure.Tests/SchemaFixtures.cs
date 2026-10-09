@@ -1,9 +1,9 @@
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Data.Sqlite;
 using Prompuff.Infrastructure.Persistence;
+using Prompuff.Tests;
 
 namespace Prompuff.Infrastructure.Tests;
 
@@ -53,8 +53,8 @@ internal sealed record FixtureLibrary(
 /// <summary>
 /// Libraries as each released version of Prompuff left them, committed as <c>Fixtures/schema-N.db</c>. Each one is
 /// built by running the migrations up to N and no further, then filling the file with raw SQL in that schema, with
-/// what that version could store. The normal test run only reads them; <c>LibraryFixtureTests.Rewrite_fixtures</c>
-/// writes them when <c>PROMPUFF_WRITE_FIXTURES</c> is set.
+/// what that version could store. The normal test run only reads them; <c>LibraryFixtureTests.Write_fixtures</c>
+/// writes and pins a new one when <c>PROMPUFF_WRITE_FIXTURES</c> is set, and never rewrites a pinned one.
 /// </summary>
 internal static class SchemaFixtures
 {
@@ -75,8 +75,8 @@ internal static class SchemaFixtures
     /// <summary>A committed fixture, as the build copies it beside the tests.</summary>
     public static string PathFor(int schemaVersion) => Path.Combine(AppContext.BaseDirectory, "Fixtures", FileName(schemaVersion));
 
-    /// <summary>The Fixtures folder in the source tree, where rewritten fixtures go.</summary>
-    public static string SourceFolder => Path.Combine(ThisFolder(), "Fixtures");
+    /// <summary>The Fixtures folder in the source tree, where new fixtures go.</summary>
+    public static string SourceFolder => Path.Combine(PinnedFixtures.TestsFolder, "Prompuff.Infrastructure.Tests", "Fixtures");
 
     /// <summary>What the fixture for <paramref name="schemaVersion"/> holds: each part only once its schema has it.</summary>
     public static FixtureLibrary Library(int schemaVersion)
@@ -402,8 +402,6 @@ internal static class SchemaFixtures
 
         await command.ExecuteNonQueryAsync();
     }
-
-    private static string ThisFolder([CallerFilePath] string thisFile = "") => Path.GetDirectoryName(thisFile)!;
 
     /// <summary>A fixed ID for a key, so a rewritten fixture holds the same IDs.</summary>
     private static Guid Id(string key) => new(MD5.HashData(Encoding.UTF8.GetBytes(key)));
