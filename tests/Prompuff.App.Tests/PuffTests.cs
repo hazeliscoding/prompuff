@@ -18,14 +18,17 @@ namespace Prompuff.App.Tests;
 public class PuffTests
 {
     [AvaloniaFact]
-    public async Task Puff_squishes_and_hops_on_the_About_page()
+    public async Task Puff_floats_squishes_and_hops_on_the_About_page()
     {
         await using var app = await AppHarness.StartAsync();
         await app.ViewModel.OpenSettingsCommand.ExecuteAsync(null);
         var settings = Assert.IsType<SettingsViewModel>(app.ViewModel.CurrentPage);
-        settings.Section = SettingsSection.About;
         await app.SettleAsync();
         var puff = Puffs(app).Single(candidate => candidate.CheerOnPress);
+        Assert.DoesNotContain("bob", puff.Classes);
+        settings.Section = SettingsSection.About;
+        await app.SettleAsync();
+        Assert.Contains("bob", puff.Classes);
 
         puff.Squish();
         var squish = await MotionAsync(puff);

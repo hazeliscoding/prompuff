@@ -478,7 +478,7 @@
           <TextBlock Classes="page-title" Text="About" />
           <Border Classes="panel" CornerRadius="12" Padding="24">
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="24">
-              <c:Puff Classes="bob" Width="110" Height="90" Mood="Happy" SquishOnHover="True" CheerOnPress="True" IsVisible="{Binding Appearance.ShowMascot}" />
+              <c:Puff Classes.bob="{Binding IsAbout}" Width="110" Height="90" Mood="Happy" SquishOnHover="True" CheerOnPress="True" IsVisible="{Binding Appearance.ShowMascot}" />
               <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
                 <TextBlock Text="Prompuff" FontSize="22" FontWeight="Bold" LetterSpacing="-0.44" />
                 <TextBlock Classes="muted" Text="Your good prompts deserve a home." />
