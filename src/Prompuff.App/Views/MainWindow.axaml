@@ -5,6 +5,7 @@
         xmlns:c="using:Prompuff.App.Controls"
         x:Class="Prompuff.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
+        Classes.still="{Binding Appearance.ReduceMotion}"
         Title="Prompuff"
         Icon="/Assets/prompuff-256.png"
         Width="1280" Height="800"

@@ -46,6 +46,12 @@ public sealed record AppSettings
     /// <summary>The theme for Light, and for System while the OS is light.</summary>
     public string LightTheme { get; set; } = "prompuff-light";
     public bool ShowMascot { get; set; } = true;
+
+    /// <summary>
+    /// Holds Puff still and stops switches sliding. Null follows the system where Prompuff can read it, which is
+    /// Windows' "Animation effects"; elsewhere null means motion stays on.
+    /// </summary>
+    public bool? ReduceMotion { get; set; }
     public bool CheckForUpdatesAutomatically { get; set; } = true;
     public UpdateChannel UpdateChannel { get; set; } = UpdateChannel.Stable;
     public LibraryLayout LibraryLayout { get; set; } = LibraryLayout.Cards;

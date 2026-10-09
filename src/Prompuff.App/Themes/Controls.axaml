@@ -644,7 +644,14 @@
     <Setter Property="OutlineBrush" Value="{DynamicResource Border3Brush}" />
     <Setter Property="FaceBrush" Value="{DynamicResource Text2Brush}" />
   </Style>
-  <Style Selector="c|Puff.bob">
+  <!-- Reduce motion: Puff holds still and switches stop sliding. Color fades stay, since they don't move anything. -->
+  <Style Selector=".still c|Puff">
+    <Setter Property="IsStill" Value="True" />
+  </Style>
+  <Style Selector=".still ToggleButton /template/ Border#PART_Thumb">
+    <Setter Property="Transitions" Value="{x:Null}" />
+  </Style>
+  <Style Selector="c|Puff.bob[IsStill=False]">
     <Setter Property="RenderTransform" Value="translateY(0px)" />
     <Style.Animations>
       <Animation Duration="0:0:4" IterationCount="Infinite" Easing="SineEaseInOut">

@@ -131,6 +131,7 @@ public sealed class App : Avalonia.Application
         services.AddSingleton<IFilePickerService, AvaloniaFilePickerService>();
         services.AddSingleton<IPlatformLauncher, AvaloniaLauncher>();
         services.AddSingleton<IGlobalHotkeyService>(_ => GlobalHotkeys.Create());
+        services.AddSingleton<IMotionPreference, SystemMotionPreference>();
         services.AddSingleton<ICommandLineInstaller, CommandLineInstaller>();
         services.AddSingleton<DiagnosticReport>();
 

@@ -58,7 +58,8 @@ internal sealed class AppHarness : IAsyncDisposable
         IUpdateService? updates = null,
         IFilePickerService? files = null,
         FakeGlobalHotkeyService? hotkeys = null,
-        FakeCommandLineInstaller? installer = null)
+        FakeCommandLineInstaller? installer = null,
+        bool systemReducesMotion = false)
     {
         folder ??= Path.Combine(Path.GetTempPath(), "prompuff-ui-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
@@ -75,6 +76,9 @@ internal sealed class AppHarness : IAsyncDisposable
 
             // Nor touch the real PATH.
             collection.AddSingleton<ICommandLineInstaller>(installer ?? new FakeCommandLineInstaller());
+
+            // Nor depend on the machine's animation setting.
+            collection.AddSingleton<IMotionPreference>(new FakeMotionPreference(systemReducesMotion));
 
             if (updates is not null)
             {
@@ -163,6 +167,12 @@ internal sealed class AppHarness : IAsyncDisposable
         await _services.DisposeAsync();
         database.ClearPool();
     }
+}
+
+/// <summary>Stands in for the system's animation setting.</summary>
+internal sealed class FakeMotionPreference(bool reduced) : IMotionPreference
+{
+    public bool SystemPrefersReducedMotion() => reduced;
 }
 
 /// <summary>Stands in for the system-wide hotkey: records what was registered and presses it on request.</summary>

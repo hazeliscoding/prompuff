@@ -125,6 +125,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly DialogService _dialogs;
     private readonly ToastService _toasts;
     private readonly LibraryNotifier _notifier;
+    private readonly IMotionPreference _motion;
     private readonly ILogger<SettingsViewModel> _logger;
     private AvailableUpdate? _availableUpdate;
     private bool _loading;
@@ -149,6 +150,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         ToastService toasts,
         LibraryNotifier notifier,
         AppearanceState appearance,
+        IMotionPreference motion,
         ILogger<SettingsViewModel> logger)
     {
         _settings = settings;
@@ -170,6 +172,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _dialogs = dialogs;
         _toasts = toasts;
         _notifier = notifier;
+        _motion = motion;
         _logger = logger;
         Appearance = appearance;
 
@@ -224,6 +227,13 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _showMascot;
+
+    [ObservableProperty]
+    private bool _reduceMotion;
+
+    public string ReduceMotionNote { get; } = OperatingSystem.IsWindows()
+        ? "Keeps Puff still and switches from sliding. Starts out matching Windows' animation effects."
+        : "Keeps Puff still and switches from sliding.";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsCozyDensity), nameof(IsCompactDensity), nameof(IsDenseDensity))]
@@ -439,6 +449,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         MarkChosenThemes();
         Theme = settings.Theme;
         ShowMascot = settings.ShowMascot;
+        ReduceMotion = settings.ReduceMotion ?? _motion.SystemPrefersReducedMotion();
         Density = settings.Density;
         CheckForUpdatesAutomatically = settings.CheckForUpdatesAutomatically;
         ReleaseChannel = settings.UpdateChannel;
@@ -446,6 +457,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         AllowMcp = settings.AllowMcp;
         Hotkey = Platform.Hotkey.Parse(settings.QuickSaveHotkey);
         Appearance.ShowMascot = settings.ShowMascot;
+        Appearance.ReduceMotion = ReduceMotion;
         Appearance.Density = settings.Density;
         ThemeApplier.Apply(settings.Theme, DarkTheme, LightTheme);
         UpdateStatus = _updates.IsSupported
@@ -794,6 +806,13 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         Appearance.ShowMascot = value;
         Persist(settings => settings with { ShowMascot = value });
+    }
+
+    // Loading leaves the saved value alone, so until the switch is changed it keeps following the system.
+    partial void OnReduceMotionChanged(bool value)
+    {
+        Appearance.ReduceMotion = value;
+        Persist(settings => settings with { ReduceMotion = value });
     }
 
     partial void OnDensityChanged(Density value)

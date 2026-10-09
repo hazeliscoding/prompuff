@@ -18,7 +18,8 @@ public enum PuffMood
 /// <summary>
 /// Puff, the cloud mascot, drawn from the design's 22×18 geometry. Puff moves like a small companion: it can say
 /// hello when it appears, blink now and then, squish when the pointer comes by, and hop for a confirmation. Each
-/// reaction is short and ends at rest, and none of them plays while <see cref="IsStill"/> is set.
+/// reaction is short and ends at rest, and none of them plays while <see cref="IsStill"/> is set, which Reduce motion
+/// does through the <c>still</c> class on the window.
 /// </summary>
 public sealed class Puff : Control
 {

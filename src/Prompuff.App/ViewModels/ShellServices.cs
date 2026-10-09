@@ -155,6 +155,10 @@ public sealed partial class AppearanceState : ObservableObject
     [ObservableProperty]
     private bool _showMascot = true;
 
+    /// <summary>Whether Puff holds still and switches stop sliding, from Settings or, until that's changed, the system.</summary>
+    [ObservableProperty]
+    private bool _reduceMotion;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsCompact), nameof(IsDense))]
     private Density _density = Density.Cozy;

@@ -76,6 +76,7 @@ public sealed partial class DiagnosticReport(
         Item(report, "Density", current.Density.ToString());
         Item(report, "Library view", $"{current.LibraryLayout}, by {current.LibrarySort}");
         Item(report, "Puff", current.ShowMascot ? "shown" : "hidden");
+        Item(report, "Reduce motion", current.ReduceMotion is { } reduce ? OnOff(reduce) : "follows the system");
         Item(report, "Keep running in the tray", OnOff(current.KeepRunningInTray));
         Item(report, "Quick save hotkey", string.IsNullOrWhiteSpace(current.QuickSaveHotkey) ? "off" : $"{current.QuickSaveHotkey}, {facts.Hotkey}");
         Item(report, "MCP", OnOff(current.AllowMcp));

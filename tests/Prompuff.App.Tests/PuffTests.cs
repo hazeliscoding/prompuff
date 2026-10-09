@@ -1,15 +1,19 @@
+using Avalonia.Automation;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Prompuff.App.Controls;
 using Prompuff.App.ViewModels;
+using Prompuff.Application.Interfaces;
 
 namespace Prompuff.App.Tests;
 
 /// <summary>
 /// Puff moves like a small companion: hello in empty states, a hop for confirmations, a squish and a hop on the
-/// About page, and rest the rest of the time. Hiding it holds it still.
+/// About page, and rest the rest of the time. Reduce motion holds it still, and so does hiding it.
 /// </summary>
 public class PuffTests
 {
@@ -67,6 +71,59 @@ public class PuffTests
         var hidden = Puffs(app).Single(candidate => candidate.Blinks && candidate.GreetWhen);
         Assert.False(hidden.IsEffectivelyVisible);
         Assert.Equal(0, await MotionAsync(hidden));
+    }
+
+    [AvaloniaFact]
+    public async Task Reduce_motion_follows_the_system_until_it_is_changed()
+    {
+        await using var app = await AppHarness.StartAsync(systemReducesMotion: true);
+
+        Assert.True(app.ViewModel.Appearance.ReduceMotion);
+        Assert.Contains("still", app.Window.Classes);
+        Assert.All(Puffs(app), puff => Assert.True(puff.IsStill));
+
+        await app.ViewModel.OpenSettingsCommand.ExecuteAsync(null);
+        var settings = Assert.IsType<SettingsViewModel>(app.ViewModel.CurrentPage);
+        Assert.True(settings.ReduceMotion);
+        Assert.Null(app.Get<ISettingsStore>().Load().ReduceMotion);
+
+        settings.ReduceMotion = false;
+        await app.SettleAsync();
+
+        Assert.DoesNotContain("still", app.Window.Classes);
+        Assert.All(Puffs(app), puff => Assert.False(puff.IsStill));
+        Assert.False(app.Get<ISettingsStore>().Load().ReduceMotion);
+    }
+
+    [AvaloniaFact]
+    public async Task Reduce_motion_holds_Puff_still_and_stops_switches_sliding()
+    {
+        await using var app = await AppHarness.StartAsync();
+        await app.ViewModel.OpenSettingsCommand.ExecuteAsync(null);
+        var settings = Assert.IsType<SettingsViewModel>(app.ViewModel.CurrentPage);
+        await app.SettleAsync();
+        var motionSwitch = app.Window.GetVisualDescendants().OfType<ToggleButton>()
+            .Single(toggle => AutomationProperties.GetName(toggle) == "Reduce motion");
+        motionSwitch.BringIntoView();
+        await app.SettleAsync();
+        app.Screenshot("settings-appearance-motion");
+        var thumb = motionSwitch.GetVisualDescendants().OfType<Border>().Single(border => border.Name == "PART_Thumb");
+        Assert.NotEmpty(thumb.Transitions!);
+
+        motionSwitch.IsChecked = true;
+        await app.SettleAsync();
+
+        Assert.True(settings.ReduceMotion);
+        Assert.Contains("still", app.Window.Classes);
+        Assert.True(thumb.Transitions is null || thumb.Transitions.Count == 0);
+        settings.Section = SettingsSection.About;
+        await app.SettleAsync();
+        var puff = Puffs(app).Single(candidate => candidate.CheerOnPress);
+        Assert.True(puff.IsStill);
+        puff.Cheer();
+        puff.Squish();
+        Assert.Equal(0, await MotionAsync(puff));
+        app.Screenshot("about-puff-still");
     }
 
     private static List<Puff> Puffs(AppHarness app) => app.Window.GetVisualDescendants().OfType<Puff>().ToList();

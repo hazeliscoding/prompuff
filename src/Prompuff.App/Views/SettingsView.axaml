@@ -135,6 +135,15 @@
               <ToggleButton Grid.Column="1" Theme="{StaticResource Switch}" AutomationProperties.Name="Show Puff, the mascot" IsChecked="{Binding ShowMascot}" VerticalAlignment="Center" />
             </Grid>
           </Border>
+          <Border Classes="setting-row">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel>
+                <TextBlock Classes="strong" Text="Reduce motion" />
+                <TextBlock Classes="compact faint" Text="{Binding ReduceMotionNote}" TextWrapping="Wrap" />
+              </StackPanel>
+              <ToggleButton Grid.Column="1" Theme="{StaticResource Switch}" AutomationProperties.Name="Reduce motion" IsChecked="{Binding ReduceMotion}" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
         </StackPanel>
 
         <!-- Quick save -->
