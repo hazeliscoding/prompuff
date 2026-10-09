@@ -1,6 +1,6 @@
 # Roadmap
 
-Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Windows and Linux, with macOS coming before 1.0. You save the prompts that worked, fill in their `{{variables}}`, copy the result, and keep the history of how each prompt evolved. This file tracks what gets built, in what order, and the decisions already made.
+Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Windows, macOS and Linux. You save the prompts that worked, fill in their `{{variables}}`, copy the result, and keep the history of how each prompt evolved. This file tracks what gets built, in what order, and the decisions already made.
 
 ## Decisions (2026-10-06)
 
@@ -190,208 +190,23 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **GitFlow was considered and left out.** It suits scheduled releases with several versions maintained at once. Prompuff ships from `main`, every install updates to the newest version, and the beta channel is where a release gets tried first, so a `develop` branch would add merges without catching anything.
 - **GitHub Project boards were considered and left out; this file stays the plan.** The decisions here can't live on a board, this file changes in the same pull request as the code, and agents read it directly. Bugs and requests from people using Prompuff go in GitHub Issues.
 
-## v0.1: MVP (tagged 2026-10-07)
+## Shipped
 
-### M0: Foundation
+Each release's notes say what it brought, and the decisions above say why. The checklists these milestones were built from are in this file as of 1.1: `git show 40fb99d:ROADMAP.md`. The patch releases, 0.1.1, 0.1.2, 0.6.1 and 0.6.2, are on the [releases page](https://github.com/hazeliscoding/prompuff/releases).
 
-- [x] Solution with `Prompuff.App`, `.Domain`, `.Application`, `.Infrastructure` and a test project for each, plus headless UI tests.
-- [x] Avalonia shell with MVVM, dependency injection and logging.
-- [x] `IAppDataPathProvider` for Windows and Linux/XDG, with tests that don't depend on the host machine.
-- [x] SQLite initialization and the migration runner.
-- [x] CI that builds and tests on Windows and Linux for every push and pull request.
-
-**Done when:** the app opens to an empty library on Windows, the database file appears in the platform data folder, and CI is green on both runners.
-
-### M1: Library
-
-- [x] Domain models: prompt, collection, tag, version.
-- [x] Repositories and prompt CRUD: create, edit, delete with confirmation, duplicate, favorite and rating.
-- [x] Collections: create, rename, delete (prompts become uncategorized), and an Uncategorized view.
-- [x] Tags: implicit creation, normalization, remove from a prompt, filter by tag.
-- [x] Search with All, Favorites, Recent, Collection and Tag filters.
-- [x] Library UI from the design: sidebar, cards and list modes, sorting, empty states.
-- [x] Quick save dialog that starts from the clipboard.
-
-**Done when:** you can create, tag, file, favorite, search and delete prompts, close the app, and find them again after reopening.
-
-### M2: Render and versions
-
-- [x] `IPromptTemplateService`: extract and render `{{variables}}`.
-- [x] Render tab: fill variables, live preview with filled and missing values marked, copy.
-- [x] `IClipboardService` on Avalonia's clipboard.
-- [x] Versioning on save, no versions for no-op saves.
-- [x] History tab: version list, line diff and full text, restore, duplicate a version.
-
-**Done when:** a prompt with variables renders and copies, and editing, saving and restoring builds a history you can read.
-
-### M3: Portability and settings
-
-- [x] Markdown export of one prompt, a collection and the whole library.
-- [x] Markdown import of one or more files, with friendly errors for files it can't read.
-- [x] Settings: Appearance (Dark, Light, System; Puff on or off), Storage (data folder, open folder), Import and export, Updates, Keyboard shortcuts, About.
-- [x] Paths checked on Windows: a development run and the Velopack portable build both wrote to the data folder, and the update check ran.
-- [x] Paths checked on Linux under Xvfb in CI: the AppImage created `prompuff.db` in `$XDG_DATA_HOME/prompuff` and its config folder in `$XDG_CONFIG_HOME/prompuff`.
-
-**Done when:** a prompt survives an export, a delete and an import unchanged, and the settings persist across restarts.
-
-### M4: Distribution
-
-- [x] Velopack startup hook and `IUpdateService`.
-- [x] Self-contained `win-x64` and `linux-x64` publishing.
-- [x] `Prompuff-Setup.exe` from Velopack.
-- [x] `Prompuff-linux-x64.AppImage` from Velopack.
-- [x] Release workflow: a pushed `v*` tag builds both platforms and opens a draft GitHub Release with the Velopack update files. The v0.1.0 tag produced all nine assets.
-
-**Done when:** a dry run of the release workflow produces both artifacts. Confirming that an installed copy finds an update moved to v0.2, because it needs a second release.
-
-### M5: Polish
-
-- [x] Keyboard shortcuts and the command palette.
-- [x] Empty states, confirmations and error messages in Prompuff's voice.
-- [x] Tests for template rendering, versioning, tags, import/export and paths.
-- [x] README: build, run, test, package, release, storage and privacy.
-- [x] Automated smoke test on both CI runners: the headless UI tests save a prompt, render and copy it, restart, and find it again.
-
-**Done when:** a fresh clone builds from the README, and the core flow works on both Windows and Linux. The hands-on install checks moved to v0.2.
-
-## v0.2: Safe, searchable and shareable (tagged 2026-10-07)
-
-Trust Prompuff with more than a few prompts: nothing is lost by accident, search scales, and prompts move between machines and people.
-
-- [x] Publish v0.1.0 (2026-10-07).
-- [x] Publish v0.1.1 (2026-10-07): hides the full-screen caption button that covered Quick save on Windows.
-- [x] Publish v0.1.2 (2026-10-07): checks for updates every time Prompuff opens and keeps a found update in the sidebar.
-- [x] Install v0.1.0 from `Prompuff-Setup.exe` on Windows and from the AppImage in WSLg, and run the core flow by hand, real clipboard included. Windows is partly done: an install of 0.1.0 updated itself to 0.1.2 (2026-10-07).
-- [x] Automatic backups: a daily copy of the library in `backups/`, keeping the last 30. Restore one from Settings › Storage, after copying the current library aside.
-- [x] Recently deleted: deleting a prompt keeps it for 30 days with Restore and Empty. This is the first real schema migration (`DeletedAt`), with a test that upgrades a v0.1 database.
-- [x] SQLite FTS5 search behind `IPromptSearch`: ranked results, prefix matches, and case- and accent-insensitive matching for non-ASCII text, which `LIKE` can't do.
-- [x] Remembered variable values per prompt, stored locally, with a Clear values button.
-- [x] Share: an Export button in the library header saves what the library shows (all, a collection, a tag, Favorites, Recent or a search) as one `.zip` of Markdown files. Settings › Import and export saves the whole library the same way.
-- [x] Import a `.zip` as well as `.md` files. Entries are read in memory with the same 5 MB limit per prompt and never unpacked to disk. Prompts whose title and body match one in the library are skipped, and the result says how many.
-- [x] Publish v0.2.0 (2026-10-07).
-- [x] Confirm the installs from the first item update to 0.2.0 with the library intact, on Windows and in WSLg.
-
-**Done when:** an installed 0.1 updates to 0.2 on Windows and Linux with every prompt and version intact, a deleted prompt comes back, searching "cafe" finds "Café", and a `.zip` exported on one machine imports on another with duplicates skipped.
-
-## v0.3: macOS and Linux ARM64 (tagged 2026-10-08)
-
-Ship the remaining platforms early, so every later feature is built for all of them.
-
-- [x] macOS in the CI matrix: build plus the headless UI tests on a macOS runner.
-- [x] Release jobs for `osx-arm64` and `osx-x64`, one Velopack channel each, producing a `.pkg` and a zipped `.app` with an ad-hoc signature, which Apple Silicon needs to run them.
-- [x] macOS conventions: Cmd shortcuts (already in the shortcut table), a native app menu with About, Settings and Quit, and a title bar that keeps the traffic-light buttons.
-- [x] macOS smoke test on the runner: launch the app, take a screenshot, and check that `prompuff.db` lands in `~/Library/Application Support/Prompuff`.
-- [x] `linux-arm64` AppImage, built and smoke-tested under Xvfb on GitHub's ARM runner.
-- [x] Windows signing with Azure Artifact Signing in the release workflow, checked on the runner with `signtool verify /pa`.
-- [x] Signing switches on only when the Azure variables exist; forks and manual runs still build unsigned.
-- [x] README: list macOS as CI-verified, and explain System Settings › Privacy & Security › Open Anyway, since the builds aren't notarized. macOS 15 removed the right-click › Open shortcut.
-- [x] Publish v0.3.0 (2026-10-08). The installer's signature checks out as valid, signed by Hazel Granados.
-- [x] Download the published `Prompuff-Setup.exe` and check SmartScreen (2026-10-08): it names Hazel Granados as the publisher, and still says "unrecognized app" until downloads build reputation.
-
-**Done when:** one tag produces Windows, Linux x64, Linux ARM64 and both macOS packages, each one launches and creates its library on a CI runner, and `Prompuff-Setup.exe` is signed, so SmartScreen names the publisher.
-
-## v0.4: Keyboard-first and lineage (tagged 2026-10-08)
-
-Make daily use fast, and keep track of where prompts came from.
-
-- [x] Library keyboard navigation: arrow keys move through cards and rows, Enter opens, Delete deletes after confirming, and typing jumps to a title.
-- [x] Density modes from the design (Cozy, Compact, Dense).
-- [x] Prompt lineage: Duplicate records `ParentPromptId`, and the detail view shows "Duplicated from" and a list of copies.
-- [x] Multi-select in the library to tag, move, export or delete several prompts.
-- [x] Folder import that walks subfolders, skips `.obsidian` and other dot folders, and reports skipped files.
-- [x] Publish v0.4.0 (2026-10-08).
-
-**Done when:** you can find, open, edit, render and copy a prompt without the mouse, and a duplicate links back to its parent.
-
-## v0.5: Capture anywhere (tagged 2026-10-08)
-
-Stash a good prompt from any app in a few seconds.
-
-- [x] Single instance: launching Prompuff again, or running `Prompuff --quick-save`, hands off to the running copy.
-- [x] Tray icon with Quick save, Open and Quit, and an option to keep running in the tray when the window closes.
-- [x] A configurable system-wide Quick save hotkey behind `IGlobalHotkeyService`, implemented for Windows, X11 and macOS.
-- [x] Wayland: Settings explains how to bind a desktop shortcut to `prompuff quick-save`.
-- [x] Publish v0.5.0 (2026-10-08). The release smoke tests copied text, pressed Ctrl+Alt+P and stashed it on both Linux AppImages, and both Macs logged the Carbon hotkey as ready.
-
-**Done when:** you can copy text in a browser, press the hotkey, and find the prompt stashed in under five seconds on Windows, on Linux under X11, and on macOS (CI-verified).
-
-## v0.6: Workflows (tagged 2026-10-08)
-
-The design's Workflows view: prompts that run in order, with a person copying between steps. Prompuff never runs a model.
-
-- [x] A workflow is a named, ordered list of prompts, with a note per step on what it hands to the next.
-- [x] Shared variables: a variable that appears in several steps is filled once.
-- [x] Render and copy step by step, with progress through the steps.
-- [x] Export a workflow as one Markdown document, and import it back.
-- [x] Publish v0.6.0 (2026-10-08). Every smoke-tested build applied migration 6 and logged the hotkey as ready.
-- [x] Publish v0.6.1 (2026-10-08): Settings › Export everything includes workflows, each as its own document under `workflows/` in the zip, and imports name the workflows they add.
-- [x] Publish v0.6.2 (2026-10-08): imports keep only where workflow files are, not their text, until the prompts are in, so the 5 MB cap per file bounds the whole import again.
-
-**Done when:** the design's "Angular upgrade, start to finish" workflow can be built, filled once and copied step by step.
-
-## v0.7: CLI and MCP server (tagged 2026-10-08)
-
-Let scripts and coding agents use the vault without opening the app.
-
-- [x] `prompuff` CLI: `search`, `list`, `get`, `render` with `--var name=value`, and `quick-save` from stdin.
-- [x] Ship the CLI in every package, and add an "Install command-line tool" button to Settings that puts it on the user's PATH (`~/.local/bin` on Linux and macOS, a user PATH entry on Windows).
-- [x] `prompuff mcp`: a read-only MCP server over stdio with search, get and render tools, every prompt as a resource, and favorites as MCP prompts with their variables as arguments.
-- [x] Settings › Integrations: "Let AI tools read my library (MCP)", off by default; while it's off, `prompuff mcp` serves nothing.
-- [x] "Copy MCP config" in Settings, with a ready-to-paste setup for each client: Claude Code, Claude Desktop, GitHub Copilot CLI and Codex. The README shows the same setups.
-- [x] The app picks up changes the CLI makes without a restart, using SQLite's `data_version`.
-- [x] CI and the release workflow smoke-test the packaged CLI on every platform: quick-save, render, and an MCP session before and after the switch.
-- [x] Publish v0.7.0 (2026-10-08).
-- [x] Copilot CLI checked by hand by the owner: it searched the library and rendered a prompt through MCP (2026-10-08).
-
-**Done when:** Claude Code, GitHub Copilot CLI and Codex can each search the vault and render a prompt with variables through MCP, and `prompuff render "Angular Upgrade Planner" --var repo_name=acme` prints the result on all three platforms.
-
-## v0.8: Beta channel and themes (tagged 2026-10-08)
-
-- [x] A `SHA256SUMS` file with every release.
-- [x] A Beta channel: `-beta` tags publish pre-releases to `*-beta` Velopack channels, and the Beta option in Settings › Updates works.
-- [x] Themes in Settings › Appearance. Prompuff Dark and Light stay the defaults, joined by palettes developers know from their editors: Darcula, Gruvbox Dark and Light, Dracula, Nord, One Dark, Tokyo Night, Solarized Dark and Light, and Catppuccin Mocha and Latte.
-- [x] Pick a dark theme and a light theme, and System switches between them with the OS. Each theme fills the same tokens in `Tokens.axaml` (backgrounds, text, borders, accent and status colors), so views don't change.
-- [x] Each palette's license and authors are credited in `licenses/Themes.md`.
-- [x] The headless UI tests capture the library, the editor and a dialog in every theme.
-- [x] Publish v0.8.0-beta.1 and v0.8.0-beta.2 as pre-releases (2026-10-08).
-- [x] Publish v0.8.0 (2026-10-08).
-
-**Done when:** a beta install updates from the beta channel, every release carries a `SHA256SUMS` file, and switching themes restyles the whole window, dialogs included, without a restart.
-
-## v0.9: Release candidate (tagged 2026-10-08)
-
-- [x] The library and Markdown formats are documented in `docs/`, with a fixture database from every released schema version and a test that opens each one.
-- [x] Accessibility: every icon-only button has an accessible name, focus is visible and in order, and a CI script checks WCAG AA contrast for every theme's tokens.
-- [x] Performance: 10,000 generated prompts load, scroll and search without lag, with search under 100 ms.
-- [x] Settings › About › "Copy diagnostic info" gathers versions, paths and recent log lines for bug reports, still with no telemetry.
-- [x] A user guide and `CONTRIBUTING.md`.
-- [x] Two beta releases in a row with no data-loss or crash reports: 0.9.0-beta.1 and beta.2 (2026-10-08), with no open issues. The betas were hours apart rather than weeks, so this rests on the automated checks and the hand-checked 0.8.0 update more than on user reports.
-- [x] Publish v0.9.0 as the release candidate (2026-10-08). Every stable channel built its delta from the real 0.8.0 package; the update itself was checked by hand on Windows (0.8.0 to 0.9.0-beta.1, the same code).
-
-**Done when:** the release candidate updates cleanly from 0.8 on every platform, and no open issue is labeled data loss or crash.
-
-## v1.0 (tagged 2026-10-08)
-
-- [x] Tag 1.0 from the final release candidate, signed on Windows. 1.0.0 is 0.9.0's code with the version number changed.
-- [x] Update from 0.9 to 1.0 checked by hand on Windows and in WSLg, and on macOS CI runners. An installed 0.9.0 on Windows and the 0.9.0 AppImage in WSLg each downloaded 1.0.0 from Settings › Updates, restarted into it, and kept every prompt, tag and favorite. The update check workflow found 1.0.0 from 0.9.0 on Windows, Ubuntu and macOS.
-- [x] README and the About page state the 1.0 promise: later versions open 1.0 libraries.
-- [x] A short launch video of the 1.0 app, made with the `/brag` skill.
-- [x] A landing page on GitHub Pages: what Prompuff is, the launch video, screenshots, downloads for every platform, and the privacy promise. Fonts, images and the video are served from the site itself.
-- [x] Publish v1.0.0 (2026-10-08), with deltas from 0.9.0 on every channel.
-
-**Done when:** 1.0 is published for Windows, Linux x64 and ARM64, and macOS, every earlier 0.x install updates to it with its library intact, and the landing page is live with the launch video.
-
-## v1.1: Puff comes alive
-
-- [x] On the website, Puff squishes for a pointer or a tap, hops when a swatch is picked and when the finale scrolls in, blinks and glances on an uneven beat, and rests off screen.
-- [x] Reduce motion in Settings › Appearance, starting from Windows' "Animation effects".
-- [x] In the app, Puff says hello in empty states, hops for confirmations, squishes and hops on the About page, and rests in the title bar after two bobs. `PuffTests` covers the motion, Reduce motion and a hidden Puff.
-- [x] Puff glances aside between blinks, on the website and in empty states, and the About Puff floats only while About is open.
-- [x] The launch video re-cut with Puff's squish, hop and glance.
-- [x] Check the app by hand on Windows and in WSLg, and on the macOS CI runners.
-- [x] Publish v1.1.0 (2026-10-09), with deltas from 1.0.0 on every channel.
-
-**Done when:** Puff reacts on the website and in the app, holds still under reduced motion and when it's hidden, and v1.1.0 is published.
+| Version | Released | What it brought |
+|---|---|---|
+| [1.1: Puff comes alive](https://github.com/hazeliscoding/prompuff/releases/tag/v1.1.0) | 2026-10-09 | Puff's reactions in the app, on the website and in the launch video, Reduce motion, and the 1.0 promise pinned by fixtures |
+| [1.0](https://github.com/hazeliscoding/prompuff/releases/tag/v1.0.0) | 2026-10-08 | The release candidate's code, signed on Windows, with the launch video and the website |
+| [0.9: Release candidate](https://github.com/hazeliscoding/prompuff/releases/tag/v0.9.0) | 2026-10-08 | Large libraries, accessibility, diagnostic info, the user guide and the format docs |
+| [0.8: Beta channel and themes](https://github.com/hazeliscoding/prompuff/releases/tag/v0.8.0) | 2026-10-08 | A Beta update channel, `SHA256SUMS` on every release, and thirteen themes |
+| [0.7: CLI and MCP server](https://github.com/hazeliscoding/prompuff/releases/tag/v0.7.0) | 2026-10-08 | The `prompuff` command, and an MCP server for Claude Code, Codex and Copilot CLI |
+| [0.6: Workflows](https://github.com/hazeliscoding/prompuff/releases/tag/v0.6.0) | 2026-10-08 | Prompts chained in order, filled in once and copied step by step |
+| [0.5: Capture anywhere](https://github.com/hazeliscoding/prompuff/releases/tag/v0.5.0) | 2026-10-08 | The Quick save hotkey, the tray, and a desktop shortcut on Wayland |
+| [0.4: Keyboard-first and lineage](https://github.com/hazeliscoding/prompuff/releases/tag/v0.4.0) | 2026-10-08 | Keyboard navigation, density modes, lineage between copies, multi-select and folder import |
+| [0.3: macOS and Linux ARM64](https://github.com/hazeliscoding/prompuff/releases/tag/v0.3.0) | 2026-10-08 | Builds for both Macs and Linux ARM64, and a signed Windows installer |
+| [0.2: Safe, searchable and shareable](https://github.com/hazeliscoding/prompuff/releases/tag/v0.2.0) | 2026-10-07 | Backups, Recently deleted, FTS5 search, remembered values and `.zip` sharing |
+| [0.1: MVP](https://github.com/hazeliscoding/prompuff/releases/tag/v0.1.0) | 2026-10-07 | The library, `{{variables}}`, versions, Markdown import and export, and updates |
 
 ## Later
 
