@@ -22,7 +22,7 @@ internal sealed class CliHarness : IAsyncDisposable
 
     public static async Task<CliHarness> CreateAsync(bool samples = true, bool allowMcp = false)
     {
-        var harness = new CliHarness(Path.Combine(Path.GetTempPath(), "prompuff-cli-tests", Guid.NewGuid().ToString("N")));
+        var harness = new CliHarness(NewFolder());
         await using (var library = await CliLibrary.OpenAsync(harness.Paths))
         {
             if (samples)
@@ -31,6 +31,20 @@ internal sealed class CliHarness : IAsyncDisposable
                 Assert.Empty((await library.Transfer.ImportFilesAsync(files)).Failures);
             }
 
+            library.Settings.Save(library.Settings.Load() with { AllowMcp = allowMcp });
+        }
+
+        return harness;
+    }
+
+    /// <summary>A copy of a library fixture from Prompuff.Infrastructure.Tests, such as <c>schema-7.db</c>, the 1.0 library.</summary>
+    public static async Task<CliHarness> FromLibraryAsync(string fixture, bool allowMcp = false)
+    {
+        var harness = new CliHarness(NewFolder());
+        Directory.CreateDirectory(Path.GetDirectoryName(harness.Paths.GetDatabasePath())!);
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Libraries", fixture), harness.Paths.GetDatabasePath());
+        await using (var library = await CliLibrary.OpenAsync(harness.Paths))
+        {
             library.Settings.Save(library.Settings.Load() with { AllowMcp = allowMcp });
         }
 
@@ -46,6 +60,8 @@ internal sealed class CliHarness : IAsyncDisposable
     }
 
     public Task<(int Exit, string Output, string Error)> RunAsync(params string[] args) => RunWithInputAsync(string.Empty, args);
+
+    private static string NewFolder() => Path.Combine(Path.GetTempPath(), "prompuff-cli-tests", Guid.NewGuid().ToString("N"));
 
     public ValueTask DisposeAsync()
     {

@@ -17,4 +17,10 @@
   <ItemGroup>
     <None Include="..\..\samples\*.md" Link="samples\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- The contract tests run against the library fixtures, and their recordings are pinned by tests/pinned-fixtures.sha256. -->
+    <None Include="..\Prompuff.Infrastructure.Tests\Fixtures\*.db" Link="Libraries\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Fixtures\**" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="..\Shared\PinnedFixtures.cs" Link="Shared\PinnedFixtures.cs" />
+  </ItemGroup>
 </Project>

@@ -1,0 +1,659 @@
+{
+  "release": "1.0.0",
+  "library": "schema-7.db",
+  "cases": [
+    {
+      "args": [
+        "search",
+        "angular",
+        "--json"
+      ],
+      "exit": 0,
+      "json": [
+        {
+          "id": "e1179771-1854-408b-a9b2-2c32e17af48a",
+          "title": "Angular Upgrade Planner",
+          "description": "Produces a phased migration plan from the current Angular version to a target.",
+          "collection": "Engineering",
+          "tags": [
+            "angular",
+            "migration",
+            "copilot"
+          ],
+          "favorite": true,
+          "rating": 5,
+          "updatedAt": "2026-10-07T13:47:58Z"
+        }
+      ]
+    },
+    {
+      "args": [
+        "search",
+        "#日本語",
+        "--json"
+      ],
+      "exit": 0,
+      "json": [
+        {
+          "id": "94b7fe54-05ef-f236-492a-14719ff33bc0",
+          "title": "日本語の要約",
+          "description": "Summarizes Japanese text in plain Japanese.",
+          "collection": null,
+          "tags": [
+            "日本語",
+            "summary"
+          ],
+          "favorite": true,
+          "rating": null,
+          "updatedAt": "2026-10-07T10:19:02Z"
+        }
+      ]
+    },
+    {
+      "args": [
+        "search",
+        "cafe",
+        "--limit",
+        "5",
+        "--json"
+      ],
+      "exit": 0,
+      "json": [
+        {
+          "id": "36cdbb1a-d0f8-58ac-03b7-fc8ef9f02078",
+          "title": "Café menu translator ☕",
+          "description": "Keeps prices, dish names and the café's tone.",
+          "collection": "Writing & docs",
+          "tags": [
+            "i18n",
+            "café"
+          ],
+          "favorite": false,
+          "rating": 4,
+          "updatedAt": "2026-10-07T09:36:20Z"
+        }
+      ]
+    },
+    {
+      "args": [
+        "search",
+        "zzzz",
+        "--json"
+      ],
+      "exit": 0,
+      "json": []
+    },
+    {
+      "args": [
+        "list",
+        "--json"
+      ],
+      "exit": 0,
+      "json": [
+        {
+          "id": "e1179771-1854-408b-a9b2-2c32e17af48a",
+          "title": "Angular Upgrade Planner",
+          "description": "Produces a phased migration plan from the current Angular version to a target.",
+          "collection": "Engineering",
+          "tags": [
+            "angular",
+            "migration",
+            "copilot"
+          ],
+          "favorite": true,
+          "rating": 5,
+          "updatedAt": "2026-10-07T13:47:58Z"
+        },
+        {
+          "id": "8733fa63-aa89-1213-631b-802e224c51aa",
+          "title": "Bug reproduction request \uD83D\uDC1B",
+          "description": null,
+          "collection": "Engineering",
+          "tags": [
+            "review",
+            "bugs"
+          ],
+          "favorite": false,
+          "rating": 2,
+          "updatedAt": "2026-10-07T11:02:36Z"
+        },
+        {
+          "id": "e9e15e96-aa98-e3af-5fac-5e18b98f86e2",
+          "title": "Bug reproduction request \uD83D\uDC1B (copy)",
+          "description": null,
+          "collection": "Engineering",
+          "tags": [
+            "review",
+            "bugs"
+          ],
+          "favorite": false,
+          "rating": 2,
+          "updatedAt": "2026-10-07T11:04:10Z"
+        },
+        {
+          "id": "36cdbb1a-d0f8-58ac-03b7-fc8ef9f02078",
+          "title": "Café menu translator ☕",
+          "description": "Keeps prices, dish names and the café's tone.",
+          "collection": "Writing & docs",
+          "tags": [
+            "i18n",
+            "café"
+          ],
+          "favorite": false,
+          "rating": 4,
+          "updatedAt": "2026-10-07T09:36:20Z"
+        },
+        {
+          "id": "94b7fe54-05ef-f236-492a-14719ff33bc0",
+          "title": "日本語の要約",
+          "description": "Summarizes Japanese text in plain Japanese.",
+          "collection": null,
+          "tags": [
+            "日本語",
+            "summary"
+          ],
+          "favorite": true,
+          "rating": null,
+          "updatedAt": "2026-10-07T10:19:02Z"
+        }
+      ]
+    },
+    {
+      "args": [
+        "list",
+        "--favorites",
+        "--json"
+      ],
+      "exit": 0,
+      "json": [
+        {
+          "id": "e1179771-1854-408b-a9b2-2c32e17af48a",
+          "title": "Angular Upgrade Planner",
+          "description": "Produces a phased migration plan from the current Angular version to a target.",
+          "collection": "Engineering",
+          "tags": [
+            "angular",
+            "migration",
+            "copilot"
+          ],
+          "favorite": true,
+          "rating": 5,
+          "updatedAt": "2026-10-07T13:47:58Z"
+        },
+        {
+          "id": "94b7fe54-05ef-f236-492a-14719ff33bc0",
+          "title": "日本語の要約",
+          "description": "Summarizes Japanese text in plain Japanese.",
+          "collection": null,
+          "tags": [
+            "日本語",
+            "summary"
+          ],
+          "favorite": true,
+          "rating": null,
+          "updatedAt": "2026-10-07T10:19:02Z"
+        }
+      ]
+    },
+    {
+      "args": [
+        "list",
+        "--collection",
+        "engineering",
+        "--json"
+      ],
+      "exit": 0,
+      "json": [
+        {
+          "id": "e1179771-1854-408b-a9b2-2c32e17af48a",
+          "title": "Angular Upgrade Planner",
+          "description": "Produces a phased migration plan from the current Angular version to a target.",
+          "collection": "Engineering",
+          "tags": [
+            "angular",
+            "migration",
+            "copilot"
+          ],
+          "favorite": true,
+          "rating": 5,
+          "updatedAt": "2026-10-07T13:47:58Z"
+        },
+        {
+          "id": "8733fa63-aa89-1213-631b-802e224c51aa",
+          "title": "Bug reproduction request \uD83D\uDC1B",
+          "description": null,
+          "collection": "Engineering",
+          "tags": [
+            "review",
+            "bugs"
+          ],
+          "favorite": false,
+          "rating": 2,
+          "updatedAt": "2026-10-07T11:02:36Z"
+        },
+        {
+          "id": "e9e15e96-aa98-e3af-5fac-5e18b98f86e2",
+          "title": "Bug reproduction request \uD83D\uDC1B (copy)",
+          "description": null,
+          "collection": "Engineering",
+          "tags": [
+            "review",
+            "bugs"
+          ],
+          "favorite": false,
+          "rating": 2,
+          "updatedAt": "2026-10-07T11:04:10Z"
+        }
+      ]
+    },
+    {
+      "args": [
+        "list",
+        "--tag",
+        "bugs",
+        "--json"
+      ],
+      "exit": 0,
+      "json": [
+        {
+          "id": "8733fa63-aa89-1213-631b-802e224c51aa",
+          "title": "Bug reproduction request \uD83D\uDC1B",
+          "description": null,
+          "collection": "Engineering",
+          "tags": [
+            "review",
+            "bugs"
+          ],
+          "favorite": false,
+          "rating": 2,
+          "updatedAt": "2026-10-07T11:02:36Z"
+        },
+        {
+          "id": "e9e15e96-aa98-e3af-5fac-5e18b98f86e2",
+          "title": "Bug reproduction request \uD83D\uDC1B (copy)",
+          "description": null,
+          "collection": "Engineering",
+          "tags": [
+            "review",
+            "bugs"
+          ],
+          "favorite": false,
+          "rating": 2,
+          "updatedAt": "2026-10-07T11:04:10Z"
+        }
+      ]
+    },
+    {
+      "args": [
+        "list",
+        "-t",
+        "café",
+        "--json"
+      ],
+      "exit": 0,
+      "json": [
+        {
+          "id": "36cdbb1a-d0f8-58ac-03b7-fc8ef9f02078",
+          "title": "Café menu translator ☕",
+          "description": "Keeps prices, dish names and the café's tone.",
+          "collection": "Writing & docs",
+          "tags": [
+            "i18n",
+            "café"
+          ],
+          "favorite": false,
+          "rating": 4,
+          "updatedAt": "2026-10-07T09:36:20Z"
+        }
+      ]
+    },
+    {
+      "args": [
+        "list",
+        "--limit",
+        "2",
+        "--json"
+      ],
+      "exit": 0,
+      "json": [
+        {
+          "id": "e1179771-1854-408b-a9b2-2c32e17af48a",
+          "title": "Angular Upgrade Planner",
+          "description": "Produces a phased migration plan from the current Angular version to a target.",
+          "collection": "Engineering",
+          "tags": [
+            "angular",
+            "migration",
+            "copilot"
+          ],
+          "favorite": true,
+          "rating": 5,
+          "updatedAt": "2026-10-07T13:47:58Z"
+        },
+        {
+          "id": "8733fa63-aa89-1213-631b-802e224c51aa",
+          "title": "Bug reproduction request \uD83D\uDC1B",
+          "description": null,
+          "collection": "Engineering",
+          "tags": [
+            "review",
+            "bugs"
+          ],
+          "favorite": false,
+          "rating": 2,
+          "updatedAt": "2026-10-07T11:02:36Z"
+        }
+      ]
+    },
+    {
+      "args": [
+        "list",
+        "--limit=2",
+        "--json"
+      ],
+      "exit": 0,
+      "json": [
+        {
+          "id": "e1179771-1854-408b-a9b2-2c32e17af48a",
+          "title": "Angular Upgrade Planner",
+          "description": "Produces a phased migration plan from the current Angular version to a target.",
+          "collection": "Engineering",
+          "tags": [
+            "angular",
+            "migration",
+            "copilot"
+          ],
+          "favorite": true,
+          "rating": 5,
+          "updatedAt": "2026-10-07T13:47:58Z"
+        },
+        {
+          "id": "8733fa63-aa89-1213-631b-802e224c51aa",
+          "title": "Bug reproduction request \uD83D\uDC1B",
+          "description": null,
+          "collection": "Engineering",
+          "tags": [
+            "review",
+            "bugs"
+          ],
+          "favorite": false,
+          "rating": 2,
+          "updatedAt": "2026-10-07T11:02:36Z"
+        }
+      ]
+    },
+    {
+      "args": [
+        "get",
+        "Angular Upgrade Planner"
+      ],
+      "exit": 0,
+      "stdout": "You are a senior Angular engineer planning an upgrade of {{repo_name}} to Angular {{target_version}}.\n\nList the dependencies that will block the upgrade, then give a phased plan:\n\n1. Pre-flight: tooling, Node and TypeScript versions\n2. Framework bump, one major at a time\n3. Verification: tests, build, bundle size\n"
+    },
+    {
+      "args": [
+        "get",
+        "angular",
+        "upgrade",
+        "planner"
+      ],
+      "exit": 0,
+      "stdout": "You are a senior Angular engineer planning an upgrade of {{repo_name}} to Angular {{target_version}}.\n\nList the dependencies that will block the upgrade, then give a phased plan:\n\n1. Pre-flight: tooling, Node and TypeScript versions\n2. Framework bump, one major at a time\n3. Verification: tests, build, bundle size\n"
+    },
+    {
+      "args": [
+        "get",
+        "8733fa63-aa89-1213-631b-802e224c51aa"
+      ],
+      "exit": 0,
+      "stdout": "Here is a bug report for {{project}}:\n\n{{issue}}\n\nAsk me for anything missing, then write the smallest steps that reproduce it.\n"
+    },
+    {
+      "args": [
+        "get",
+        "--",
+        "Angular Upgrade Planner"
+      ],
+      "exit": 0,
+      "stdout": "You are a senior Angular engineer planning an upgrade of {{repo_name}} to Angular {{target_version}}.\n\nList the dependencies that will block the upgrade, then give a phased plan:\n\n1. Pre-flight: tooling, Node and TypeScript versions\n2. Framework bump, one major at a time\n3. Verification: tests, build, bundle size\n"
+    },
+    {
+      "args": [
+        "get",
+        "Café menu translator ☕",
+        "--json"
+      ],
+      "exit": 0,
+      "json": {
+        "id": "36cdbb1a-d0f8-58ac-03b7-fc8ef9f02078",
+        "title": "Café menu translator ☕",
+        "description": "Keeps prices, dish names and the café's tone.",
+        "body": "Translate the menu of {{cafe_name}} into {{language}}.\n\nKeep prices exactly as written, such as “Café crème — 3,50 €”, and keep a dish's name when it has no common translation.",
+        "notes": "Naming a sample price stopped it from converting currencies. Works in 日本語 too.",
+        "variables": [
+          "cafe_name",
+          "language"
+        ],
+        "collection": "Writing & docs",
+        "tags": [
+          "i18n",
+          "café"
+        ],
+        "favorite": false,
+        "rating": 4,
+        "createdAt": "2026-10-07T09:30:44Z",
+        "updatedAt": "2026-10-07T09:36:20Z"
+      }
+    },
+    {
+      "args": [
+        "get",
+        "36cdbb1a-d0f8-58ac-03b7-fc8ef9f02078",
+        "--json"
+      ],
+      "exit": 0,
+      "json": {
+        "id": "36cdbb1a-d0f8-58ac-03b7-fc8ef9f02078",
+        "title": "Café menu translator ☕",
+        "description": "Keeps prices, dish names and the café's tone.",
+        "body": "Translate the menu of {{cafe_name}} into {{language}}.\n\nKeep prices exactly as written, such as “Café crème — 3,50 €”, and keep a dish's name when it has no common translation.",
+        "notes": "Naming a sample price stopped it from converting currencies. Works in 日本語 too.",
+        "variables": [
+          "cafe_name",
+          "language"
+        ],
+        "collection": "Writing & docs",
+        "tags": [
+          "i18n",
+          "café"
+        ],
+        "favorite": false,
+        "rating": 4,
+        "createdAt": "2026-10-07T09:30:44Z",
+        "updatedAt": "2026-10-07T09:36:20Z"
+      }
+    },
+    {
+      "args": [
+        "render",
+        "Café menu translator ☕",
+        "--var",
+        "cafe_name=Café Sól",
+        "--var=language=日本語"
+      ],
+      "exit": 0,
+      "stdout": "Translate the menu of Café Sól into 日本語.\n\nKeep prices exactly as written, such as “Café crème — 3,50 €”, and keep a dish's name when it has no common translation.\n"
+    },
+    {
+      "args": [
+        "render",
+        "Angular Upgrade Planner"
+      ],
+      "exit": 0,
+      "stdout": "You are a senior Angular engineer planning an upgrade of {{repo_name}} to Angular {{target_version}}.\n\nList the dependencies that will block the upgrade, then give a phased plan:\n\n1. Pre-flight: tooling, Node and TypeScript versions\n2. Framework bump, one major at a time\n3. Verification: tests, build, bundle size\n"
+    },
+    {
+      "args": [
+        "render",
+        "Angular Upgrade Planner",
+        "-v",
+        "repo_name=acme",
+        "--json"
+      ],
+      "exit": 0,
+      "json": {
+        "id": "e1179771-1854-408b-a9b2-2c32e17af48a",
+        "title": "Angular Upgrade Planner",
+        "rendered": "You are a senior Angular engineer planning an upgrade of acme to Angular {{target_version}}.\n\nList the dependencies that will block the upgrade, then give a phased plan:\n\n1. Pre-flight: tooling, Node and TypeScript versions\n2. Framework bump, one major at a time\n3. Verification: tests, build, bundle size",
+        "missing": [
+          "target_version"
+        ]
+      }
+    },
+    {
+      "args": [
+        "quick-save",
+        "--title",
+        "From a script",
+        "--tag",
+        "Slack",
+        "-t",
+        "#triage",
+        "--collection",
+        "Comms",
+        "--json"
+      ],
+      "stdin": "Summarize {{thread}} as three bullets.\n",
+      "exit": 0,
+      "jsonShape": {
+        "id": "0766471b-e166-4178-aa39-0e098d61ff29",
+        "title": "From a script"
+      }
+    },
+    {
+      "args": [
+        "quick-save"
+      ],
+      "stdin": "Summarize {{thread}}.\n",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "No such prompt"
+      ],
+      "exit": 2
+    },
+    {
+      "args": [
+        "render",
+        "No such prompt",
+        "--json"
+      ],
+      "exit": 2
+    },
+    {
+      "args": [
+        "get",
+        "Bug reproduction request"
+      ],
+      "exit": 2
+    },
+    {
+      "args": [
+        "list",
+        "--collection",
+        "No such collection"
+      ],
+      "exit": 2
+    },
+    {
+      "args": [],
+      "exit": 1
+    },
+    {
+      "args": [
+        "frobnicate"
+      ],
+      "exit": 1
+    },
+    {
+      "args": [
+        "list",
+        "--frob"
+      ],
+      "exit": 1
+    },
+    {
+      "args": [
+        "search"
+      ],
+      "exit": 1
+    },
+    {
+      "args": [
+        "search",
+        "angular",
+        "--limit",
+        "0"
+      ],
+      "exit": 1
+    },
+    {
+      "args": [
+        "render",
+        "Angular Upgrade Planner",
+        "--var",
+        "oops"
+      ],
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "Angular Upgrade Planner",
+        "--title"
+      ],
+      "exit": 1
+    },
+    {
+      "args": [
+        "quick-save"
+      ],
+      "stdin": "   \n",
+      "exit": 1
+    },
+    {
+      "args": [
+        "help"
+      ],
+      "exit": 0
+    },
+    {
+      "args": [
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "args": [
+        "-h"
+      ],
+      "exit": 0
+    },
+    {
+      "args": [
+        "--version"
+      ],
+      "exit": 0,
+      "stdoutPrefix": "prompuff "
+    },
+    {
+      "args": [
+        "version"
+      ],
+      "exit": 0,
+      "stdoutPrefix": "prompuff "
+    }
+  ]
+}

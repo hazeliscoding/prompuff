@@ -12,3 +12,5 @@ adaa38010323b7f7a8a5f58faf930bc4b6ef77be7877c19c5a7fd8ec65d44e24  Prompuff.Infra
 67c01d0e0e210fa6288c159210e4df6b05dfb336d4bf51c6ff81c3590f01dfc9  Prompuff.Infrastructure.Tests/Fixtures/markdown-1.0.0/plain.md
 be5af02ee6047d6d7e5d02c708bc2cc0213cd6a94e488c197211f675444fd36a  Prompuff.Infrastructure.Tests/Fixtures/markdown-1.0.0/workflows/angular-upgrade-start-to-finish.md
 39c90bdd5c88145861d7e790c93d2a30220de2bac3040d28e13d6176c0c125e6  Prompuff.Infrastructure.Tests/Fixtures/markdown-1.0.0/library.zip
+0893bbad7156ca0c366b2f95334b63d1fc1d556baa4bc2c75fd73e16cd99840b  Prompuff.Cli.Tests/Fixtures/mcp-1.0.0.json
+f5edd4b6612a17e981cc4b0a117e7015a70caf3e9b0daaab3dabd8406a88df33  Prompuff.Cli.Tests/Fixtures/cli-1.0.0.json

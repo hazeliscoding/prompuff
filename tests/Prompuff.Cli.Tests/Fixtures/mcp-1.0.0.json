@@ -1,0 +1,227 @@
+{
+  "release": "1.0.0",
+  "library": "schema-7.db",
+  "server": "prompuff",
+  "tools": {
+    "search_prompts": {
+      "inputs": {
+        "query": "string",
+        "limit": "integer"
+      },
+      "required": [
+        "query"
+      ],
+      "readOnly": true
+    },
+    "get_prompt": {
+      "inputs": {
+        "prompt": "string"
+      },
+      "required": [
+        "prompt"
+      ],
+      "readOnly": true
+    },
+    "render_prompt": {
+      "inputs": {
+        "prompt": "string",
+        "variables": "object"
+      },
+      "required": [
+        "prompt"
+      ],
+      "readOnly": true
+    }
+  },
+  "toolCalls": [
+    {
+      "tool": "search_prompts",
+      "arguments": {
+        "query": "angular"
+      },
+      "isError": false,
+      "json": [
+        {
+          "id": "e1179771-1854-408b-a9b2-2c32e17af48a",
+          "title": "Angular Upgrade Planner",
+          "description": "Produces a phased migration plan from the current Angular version to a target.",
+          "collection": "Engineering",
+          "tags": [
+            "angular",
+            "migration",
+            "copilot"
+          ],
+          "favorite": true,
+          "rating": 5,
+          "updatedAt": "2026-10-07T13:47:58Z"
+        }
+      ]
+    },
+    {
+      "tool": "search_prompts",
+      "arguments": {
+        "query": "#日本語",
+        "limit": 5
+      },
+      "isError": false,
+      "json": [
+        {
+          "id": "94b7fe54-05ef-f236-492a-14719ff33bc0",
+          "title": "日本語の要約",
+          "description": "Summarizes Japanese text in plain Japanese.",
+          "collection": null,
+          "tags": [
+            "日本語",
+            "summary"
+          ],
+          "favorite": true,
+          "rating": null,
+          "updatedAt": "2026-10-07T10:19:02Z"
+        }
+      ]
+    },
+    {
+      "tool": "get_prompt",
+      "arguments": {
+        "prompt": "Angular Upgrade Planner"
+      },
+      "isError": false,
+      "json": {
+        "id": "e1179771-1854-408b-a9b2-2c32e17af48a",
+        "title": "Angular Upgrade Planner",
+        "description": "Produces a phased migration plan from the current Angular version to a target.",
+        "body": "You are a senior Angular engineer planning an upgrade of {{repo_name}} to Angular {{target_version}}.\n\nList the dependencies that will block the upgrade, then give a phased plan:\n\n1. Pre-flight: tooling, Node and TypeScript versions\n2. Framework bump, one major at a time\n3. Verification: tests, build, bundle size",
+        "notes": "Phasing by major version stopped the model from skipping steps.",
+        "variables": [
+          "repo_name",
+          "target_version"
+        ],
+        "collection": "Engineering",
+        "tags": [
+          "angular",
+          "migration",
+          "copilot"
+        ],
+        "favorite": true,
+        "rating": 5,
+        "createdAt": "2026-10-07T09:05:17Z",
+        "updatedAt": "2026-10-07T13:47:58Z"
+      }
+    },
+    {
+      "tool": "get_prompt",
+      "arguments": {
+        "prompt": "36cdbb1a-d0f8-58ac-03b7-fc8ef9f02078"
+      },
+      "isError": false,
+      "json": {
+        "id": "36cdbb1a-d0f8-58ac-03b7-fc8ef9f02078",
+        "title": "Café menu translator ☕",
+        "description": "Keeps prices, dish names and the café's tone.",
+        "body": "Translate the menu of {{cafe_name}} into {{language}}.\n\nKeep prices exactly as written, such as “Café crème — 3,50 €”, and keep a dish's name when it has no common translation.",
+        "notes": "Naming a sample price stopped it from converting currencies. Works in 日本語 too.",
+        "variables": [
+          "cafe_name",
+          "language"
+        ],
+        "collection": "Writing & docs",
+        "tags": [
+          "i18n",
+          "café"
+        ],
+        "favorite": false,
+        "rating": 4,
+        "createdAt": "2026-10-07T09:30:44Z",
+        "updatedAt": "2026-10-07T09:36:20Z"
+      }
+    },
+    {
+      "tool": "render_prompt",
+      "arguments": {
+        "prompt": "Angular Upgrade Planner",
+        "variables": {
+          "repo_name": "acme",
+          "target_version": "22"
+        }
+      },
+      "isError": false,
+      "text": "You are a senior Angular engineer planning an upgrade of acme to Angular 22.\n\nList the dependencies that will block the upgrade, then give a phased plan:\n\n1. Pre-flight: tooling, Node and TypeScript versions\n2. Framework bump, one major at a time\n3. Verification: tests, build, bundle size"
+    },
+    {
+      "tool": "render_prompt",
+      "arguments": {
+        "prompt": "Café menu translator ☕"
+      },
+      "isError": false,
+      "text": "Translate the menu of {{cafe_name}} into {{language}}.\n\nKeep prices exactly as written, such as “Café crème — 3,50 €”, and keep a dish's name when it has no common translation."
+    },
+    {
+      "tool": "get_prompt",
+      "arguments": {
+        "prompt": "No such prompt"
+      },
+      "isError": true
+    },
+    {
+      "tool": "render_prompt",
+      "arguments": {
+        "prompt": "No such prompt"
+      },
+      "isError": true
+    }
+  ],
+  "resources": {
+    "prompuff://prompts/e1179771-1854-408b-a9b2-2c32e17af48a": {
+      "mimeType": "text/markdown",
+      "text": "---\ntitle: Angular Upgrade Planner\ndescription: Produces a phased migration plan from the current Angular version to a target.\ntags:\n  - angular\n  - migration\n  - copilot\ncollection: Engineering\nfavorite: true\nrating: 5\ncreatedAt: 2026-10-07T09:05:17Z\nupdatedAt: 2026-10-07T13:47:58Z\n---\n\n# Prompt\n\nYou are a senior Angular engineer planning an upgrade of {{repo_name}} to Angular {{target_version}}.\n\nList the dependencies that will block the upgrade, then give a phased plan:\n\n1. Pre-flight: tooling, Node and TypeScript versions\n2. Framework bump, one major at a time\n3. Verification: tests, build, bundle size\n\n# Notes\n\nPhasing by major version stopped the model from skipping steps.\n"
+    },
+    "prompuff://prompts/8733fa63-aa89-1213-631b-802e224c51aa": {
+      "mimeType": "text/markdown",
+      "text": "---\ntitle: \"Bug reproduction request \uD83D\uDC1B\"\ntags:\n  - review\n  - bugs\ncollection: Engineering\nfavorite: false\nrating: 2\ncreatedAt: 2026-10-07T11:02:36Z\nupdatedAt: 2026-10-07T11:02:36Z\n---\n\n# Prompt\n\nHere is a bug report for {{project}}:\n\n{{issue}}\n\nAsk me for anything missing, then write the smallest steps that reproduce it.\n"
+    },
+    "prompuff://prompts/e9e15e96-aa98-e3af-5fac-5e18b98f86e2": {
+      "mimeType": "text/markdown",
+      "text": "---\ntitle: \"Bug reproduction request \uD83D\uDC1B (copy)\"\ntags:\n  - review\n  - bugs\ncollection: Engineering\nfavorite: false\nrating: 2\ncreatedAt: 2026-10-07T11:04:10Z\nupdatedAt: 2026-10-07T11:04:10Z\n---\n\n# Prompt\n\nHere is a bug report for {{project}}:\n\n{{issue}}\n\nAsk me for anything missing, then write the smallest steps that reproduce it.\n"
+    },
+    "prompuff://prompts/36cdbb1a-d0f8-58ac-03b7-fc8ef9f02078": {
+      "mimeType": "text/markdown",
+      "text": "---\ntitle: \"Café menu translator ☕\"\ndescription: \"Keeps prices, dish names and the café's tone.\"\ntags:\n  - i18n\n  - \"café\"\ncollection: Writing & docs\nfavorite: false\nrating: 4\ncreatedAt: 2026-10-07T09:30:44Z\nupdatedAt: 2026-10-07T09:36:20Z\n---\n\n# Prompt\n\nTranslate the menu of {{cafe_name}} into {{language}}.\n\nKeep prices exactly as written, such as “Café crème — 3,50 €”, and keep a dish's name when it has no common translation.\n\n# Notes\n\nNaming a sample price stopped it from converting currencies. Works in 日本語 too.\n"
+    },
+    "prompuff://prompts/94b7fe54-05ef-f236-492a-14719ff33bc0": {
+      "mimeType": "text/markdown",
+      "text": "---\ntitle: \"日本語の要約\"\ndescription: Summarizes Japanese text in plain Japanese.\ntags:\n  - \"日本語\"\n  - summary\nfavorite: true\ncreatedAt: 2026-10-02T11:00:00Z\nupdatedAt: 2026-10-07T10:19:02Z\n---\n\n# Prompt\n\n次の文章を{{length}}で要約してください。\n\n{{text}}\n\n# Notes\n\n敬語を避けると短くなる。\n"
+    }
+  },
+  "prompts": {
+    "angular-upgrade-planner": {
+      "arguments": [
+        "repo_name",
+        "target_version"
+      ],
+      "required": []
+    },
+    "prompt": {
+      "arguments": [
+        "length",
+        "text"
+      ],
+      "required": []
+    }
+  },
+  "promptCalls": [
+    {
+      "prompt": "angular-upgrade-planner",
+      "arguments": {
+        "repo_name": "acme"
+      },
+      "role": "user",
+      "text": "You are a senior Angular engineer planning an upgrade of acme to Angular {{target_version}}.\n\nList the dependencies that will block the upgrade, then give a phased plan:\n\n1. Pre-flight: tooling, Node and TypeScript versions\n2. Framework bump, one major at a time\n3. Verification: tests, build, bundle size"
+    },
+    {
+      "prompt": "angular-upgrade-planner",
+      "arguments": {},
+      "role": "user",
+      "text": "You are a senior Angular engineer planning an upgrade of {{repo_name}} to Angular {{target_version}}.\n\nList the dependencies that will block the upgrade, then give a phased plan:\n\n1. Pre-flight: tooling, Node and TypeScript versions\n2. Framework bump, one major at a time\n3. Verification: tests, build, bundle size"
+    }
+  ]
+}
