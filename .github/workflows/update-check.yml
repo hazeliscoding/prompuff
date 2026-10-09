@@ -9,11 +9,11 @@ on:
       from:
         description: Version to start from
         required: true
-        default: 0.9.0
+        default: 1.0.0
       to:
         description: Version it should find
         required: true
-        default: 1.0.0
+        default: 1.1.0
 
 permissions:
   contents: read
