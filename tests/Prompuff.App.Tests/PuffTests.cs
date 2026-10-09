@@ -47,11 +47,16 @@ public class PuffTests
     public async Task Empty_states_say_hello_and_toasts_cheer_unless_Puff_is_hidden()
     {
         await using var app = await AppHarness.StartAsync(importSamples: false);
-        var empty = Puffs(app).Single(candidate => candidate.Blinks && candidate.IsEffectivelyVisible);
+        var empty = Puffs(app).Single(candidate => candidate.Fidgets && candidate.IsEffectivelyVisible);
         Assert.True(empty.GreetWhen);
         var hello = await MotionAsync(empty);
         Assert.True(hello > 0.3, $"Puff says hello when the library is empty, but it only moved {hello:0.00}.");
         app.Screenshot("library-empty-hello");
+        empty.Glance();
+        await RunAsync(600);
+        app.Screenshot("library-empty-glance");
+        var glance = await MotionAsync(empty, 1400);
+        Assert.True(glance > 0.5, $"Puff glances aside now and then, but its eyes only moved {glance:0.00}.");
 
         app.Get<ToastService>().Show("Saved");
         Dispatcher.UIThread.RunJobs();
@@ -71,7 +76,7 @@ public class PuffTests
         await app.ViewModel.OpenSettingsCommand.ExecuteAsync(null);
         await app.ViewModel.GoToLibraryCommand.ExecuteAsync(null);
         await app.SettleAsync();
-        var hidden = Puffs(app).Single(candidate => candidate.Blinks && candidate.GreetWhen);
+        var hidden = Puffs(app).Single(candidate => candidate.Fidgets && candidate.GreetWhen);
         Assert.False(hidden.IsEffectivelyVisible);
         Assert.Equal(0, await MotionAsync(hidden));
     }
@@ -142,7 +147,7 @@ public class PuffTests
         }
     }
 
-    /// <summary>How far Puff moved while animations ran: its biggest lift, or its biggest squash scaled to match.</summary>
+    /// <summary>How far Puff moved while animations ran: its biggest lift, or its biggest squash or glance scaled to match.</summary>
     private static async Task<double> MotionAsync(Puff puff, int milliseconds = 720)
     {
         var most = 0d;
@@ -150,7 +155,7 @@ public class PuffTests
         {
             Dispatcher.UIThread.RunJobs();
             AvaloniaHeadlessPlatform.ForceRenderTimerTick();
-            most = Math.Max(most, Math.Max(Math.Abs(puff.Lift), Math.Abs(puff.Squash) * 10));
+            most = Math.Max(most, Math.Max(Math.Abs(puff.Lift), Math.Max(Math.Abs(puff.Squash) * 10, Math.Abs(puff.Gaze) * 2)));
             await Task.Delay(40);
         }
 

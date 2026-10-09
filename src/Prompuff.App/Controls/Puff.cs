@@ -17,7 +17,8 @@ public enum PuffMood
 
 /// <summary>
 /// Puff, the cloud mascot, drawn from the design's 22×18 geometry. Puff moves like a small companion: it can say
-/// hello when it appears, blink now and then, squish when the pointer comes by, and hop for a confirmation. Each
+/// hello when it appears, blink and glance around now and then, squish when the pointer comes by, and hop for a
+/// confirmation. Each
 /// reaction is short and ends at rest, and none of them plays while <see cref="IsStill"/> is set, which Reduce motion
 /// does through the <c>still</c> class on the window.
 /// </summary>
@@ -47,7 +48,11 @@ public sealed class Puff : Control
     public static readonly StyledProperty<double> EyesOpenProperty =
         AvaloniaProperty.Register<Puff, double>(nameof(EyesOpen), 1);
 
-    /// <summary>Holds Puff still: no hello, blink, squish or hop, and any that's playing stops at rest.</summary>
+    /// <summary>How far the eyes look aside, in the design's units: above zero to the right, below zero to the left.</summary>
+    public static readonly StyledProperty<double> GazeProperty =
+        AvaloniaProperty.Register<Puff, double>(nameof(Gaze));
+
+    /// <summary>Holds Puff still: no hello, blink, glance, squish or hop, and any that's playing stops at rest.</summary>
     public static readonly StyledProperty<bool> IsStillProperty =
         AvaloniaProperty.Register<Puff, bool>(nameof(IsStill));
 
@@ -55,9 +60,9 @@ public sealed class Puff : Control
     public static readonly StyledProperty<bool> GreetWhenProperty =
         AvaloniaProperty.Register<Puff, bool>(nameof(GreetWhen));
 
-    /// <summary>Puff blinks every few seconds while it's on screen.</summary>
-    public static readonly StyledProperty<bool> BlinksProperty =
-        AvaloniaProperty.Register<Puff, bool>(nameof(Blinks));
+    /// <summary>Puff blinks every few seconds while it's on screen, and now and then glances aside.</summary>
+    public static readonly StyledProperty<bool> FidgetsProperty =
+        AvaloniaProperty.Register<Puff, bool>(nameof(Fidgets));
 
     public static readonly StyledProperty<bool> SquishOnHoverProperty =
         AvaloniaProperty.Register<Puff, bool>(nameof(SquishOnHover));
@@ -99,13 +104,16 @@ public sealed class Puff : Control
     private static readonly Animation BlinkMotion = Keyframes(TimeSpan.FromMilliseconds(180),
         (0, EyesOpenProperty, 1d), (0.45, EyesOpenProperty, 0.1), (1, EyesOpenProperty, 1d));
 
+    private static readonly Animation GlanceRight = GlanceMotion(0.5);
+    private static readonly Animation GlanceLeft = GlanceMotion(-0.5);
+
     private CancellationTokenSource? _bodyMotion;
     private CancellationTokenSource? _eyeMotion;
-    private DispatcherTimer? _blinkTimer;
+    private DispatcherTimer? _fidgetTimer;
 
     static Puff()
     {
-        AffectsRender<Puff>(MoodProperty, BodyBrushProperty, FaceBrushProperty, OutlineBrushProperty, SquashProperty, LiftProperty, EyesOpenProperty);
+        AffectsRender<Puff>(MoodProperty, BodyBrushProperty, FaceBrushProperty, OutlineBrushProperty, SquashProperty, LiftProperty, EyesOpenProperty, GazeProperty);
     }
 
     public PuffMood Mood
@@ -150,6 +158,12 @@ public sealed class Puff : Control
         set => SetValue(EyesOpenProperty, value);
     }
 
+    public double Gaze
+    {
+        get => GetValue(GazeProperty);
+        set => SetValue(GazeProperty, value);
+    }
+
     public bool IsStill
     {
         get => GetValue(IsStillProperty);
@@ -162,10 +176,10 @@ public sealed class Puff : Control
         set => SetValue(GreetWhenProperty, value);
     }
 
-    public bool Blinks
+    public bool Fidgets
     {
-        get => GetValue(BlinksProperty);
-        set => SetValue(BlinksProperty, value);
+        get => GetValue(FidgetsProperty);
+        set => SetValue(FidgetsProperty, value);
     }
 
     public bool SquishOnHover
@@ -197,6 +211,9 @@ public sealed class Puff : Control
 
     public void Blink() => Play(BlinkMotion, ref _eyeMotion);
 
+    /// <summary>A look to one side, a pause, and back.</summary>
+    public void Glance() => Play(Random.Shared.Next(2) == 0 ? GlanceLeft : GlanceRight, ref _eyeMotion);
+
     protected override Size MeasureOverride(Size availableSize)
     {
         var width = double.IsFinite(Width) ? Width : 22;
@@ -226,13 +243,16 @@ public sealed class Puff : Control
             var stroke = new Pen(face, Mood == PuffMood.Happy ? 0.9 : 1.1, lineCap: PenLineCap.Round);
             if (Mood == PuffMood.Happy)
             {
-                context.DrawGeometry(null, new Pen(face, 0.9, lineCap: PenLineCap.Round), HappyEyes);
+                using (context.PushTransform(Matrix.CreateTranslation(Gaze, 0)))
+                {
+                    context.DrawGeometry(null, new Pen(face, 0.9, lineCap: PenLineCap.Round), HappyEyes);
+                }
             }
             else
             {
                 var eyeHeight = Math.Clamp(EyesOpen, 0.12, 1);
-                context.DrawEllipse(face, null, new Point(9, 12), 1, eyeHeight);
-                context.DrawEllipse(face, null, new Point(13.5, 12), 1, eyeHeight);
+                context.DrawEllipse(face, null, new Point(9 + Gaze, 12), 1, eyeHeight);
+                context.DrawEllipse(face, null, new Point(13.5 + Gaze, 12), 1, eyeHeight);
             }
 
             context.DrawGeometry(null, stroke, Mood switch
@@ -261,18 +281,18 @@ public sealed class Puff : Control
         {
             Stop(ref _bodyMotion);
             Stop(ref _eyeMotion);
-            SyncBlinking();
+            SyncFidgeting();
         }
-        else if (change.Property == IsStillProperty || change.Property == BlinksProperty || change.Property == IsVisibleProperty)
+        else if (change.Property == IsStillProperty || change.Property == FidgetsProperty || change.Property == IsVisibleProperty)
         {
-            SyncBlinking();
+            SyncFidgeting();
         }
     }
 
     protected override void OnLoaded(Avalonia.Interactivity.RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        SyncBlinking();
+        SyncFidgeting();
         if (GreetWhen)
         {
             Greet();
@@ -284,7 +304,7 @@ public sealed class Puff : Control
         base.OnDetachedFromVisualTree(e);
         Stop(ref _bodyMotion);
         Stop(ref _eyeMotion);
-        SyncBlinking();
+        SyncFidgeting();
     }
 
     protected override void OnPointerEntered(PointerEventArgs e)
@@ -328,28 +348,42 @@ public sealed class Puff : Control
         current = null;
     }
 
-    /// <summary>A blink every four to nine seconds, so it never ticks like a clock. The timer only runs while it can matter.</summary>
-    private void SyncBlinking()
+    /// <summary>
+    /// A blink, or now and then a glance, every four to nine seconds, so it never ticks like a clock. The timer only
+    /// runs while it can matter.
+    /// </summary>
+    private void SyncFidgeting()
     {
-        var blinking = Blinks && !IsStill && IsVisible && TopLevel.GetTopLevel(this) is not null;
-        if (blinking && _blinkTimer is null)
+        var fidgeting = Fidgets && !IsStill && IsVisible && TopLevel.GetTopLevel(this) is not null;
+        if (fidgeting && _fidgetTimer is null)
         {
-            _blinkTimer = new DispatcherTimer { Interval = NextBlink() };
-            _blinkTimer.Tick += (_, _) =>
+            _fidgetTimer = new DispatcherTimer { Interval = NextFidget() };
+            _fidgetTimer.Tick += (_, _) =>
             {
-                Blink();
-                _blinkTimer!.Interval = NextBlink();
+                if (Random.Shared.Next(4) == 0)
+                {
+                    Glance();
+                }
+                else
+                {
+                    Blink();
+                }
+
+                _fidgetTimer!.Interval = NextFidget();
             };
-            _blinkTimer.Start();
+            _fidgetTimer.Start();
         }
-        else if (!blinking && _blinkTimer is not null)
+        else if (!fidgeting && _fidgetTimer is not null)
         {
-            _blinkTimer.Stop();
-            _blinkTimer = null;
+            _fidgetTimer.Stop();
+            _fidgetTimer = null;
         }
     }
 
-    private static TimeSpan NextBlink() => TimeSpan.FromMilliseconds(Random.Shared.Next(4000, 9000));
+    private static TimeSpan NextFidget() => TimeSpan.FromMilliseconds(Random.Shared.Next(4000, 9000));
+
+    private static Animation GlanceMotion(double distance) => Keyframes(TimeSpan.FromMilliseconds(1800),
+        (0, GazeProperty, 0d), (0.22, GazeProperty, distance), (0.78, GazeProperty, distance), (1, GazeProperty, 0d));
 
     /// <summary>
     /// An animation through the given values. Avalonia eases a whole animation at once, so each step between
