@@ -39,15 +39,19 @@
         <img src="assets/brand/mark.svg" alt="" width="30" height="21">
         <span class="home-name" aria-hidden="true">Prompuff</span>
       </a>
-      <nav aria-label="Sections">
-        <ul class="nav-list">
+      <nav class="site-nav" aria-label="Sections">
+        <ul class="nav-list" id="site-menu">
           <li class="nav-extra"><a href="#features">Features</a></li>
           <li class="nav-extra"><a href="#themes">Themes</a></li>
           <li class="nav-extra"><a href="#terminal">Terminal</a></li>
           <li class="nav-extra"><a href="#privacy">Privacy</a></li>
           <li><a href="https://github.com/hazeliscoding/prompuff">GitHub</a></li>
-          <li><a class="nav-cta" href="#download">Download</a></li>
         </ul>
+        <a class="nav-cta" href="#download" data-desktop-only>Download</a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="menu-toggle-bars" aria-hidden="true"><span></span><span></span></span>
+          <span class="visually-hidden">Menu</span>
+        </button>
       </nav>
     </div>
   </header>
@@ -77,7 +81,7 @@
         </h1>
         <p class="hero-text">Save the prompts that worked, fill in their <code class="var">{{variables}}</code> and copy the result. Every saved change becomes a version you can read back or restore. Your prompts stay on your machine: no account, no cloud, no telemetry.</p>
         <div class="cta">
-          <a class="button button-primary" id="get" href="#download">
+          <a class="button button-primary" id="get" href="#download" data-desktop-only>
             <svg class="icon icon-download" viewBox="0 0 24 24" aria-hidden="true"><path d="M 21 15 v 4 a 2 2 0 0 1 -2 2 H 5 a 2 2 0 0 1 -2 -2 v -4"/><path class="icon-arrow" d="M 7 10 L 12 15 L 17 10 M 12 15 L 12 3"/></svg>
             <span id="get-label">Download Prompuff</span>
           </a>
@@ -85,6 +89,10 @@
             <svg class="icon icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M 7 4.5 v 15 a 1 1 0 0 0 1.5 .86 l 12 -7.5 a 1 1 0 0 0 0 -1.72 l -12 -7.5 A 1 1 0 0 0 7 4.5 Z"/></svg>
             Watch the film
           </a>
+          <button class="button button-quiet share-link" type="button" data-handheld-only hidden>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/></svg>
+            <span class="share-label">Share link</span>
+          </button>
         </div>
         <p class="cta-note"><span id="get-note">Free and open source, for Windows, macOS and Linux.</span> <a id="get-other" href="#download" hidden>Other platforms</a></p>
       </div>
@@ -392,6 +400,14 @@ copilot mcp add prompuff -- prompuff mcp</code></pre>
           <p>Free and MIT-licensed. Every build is self-contained, so there’s no .NET to install, and every build updates itself.</p>
         </div>
 
+        <div class="handheld-note" data-handheld-only hidden>
+          <p>Prompuff lives on computers, not phones or tablets. Send yourself the link and grab it on Windows, macOS or Linux.</p>
+          <button class="button button-primary share-link" type="button">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/></svg>
+            <span class="share-label">Share link</span>
+          </button>
+        </div>
+
         <div class="platforms" data-stagger>
           <section class="platform" data-platform="windows" aria-labelledby="dl-windows" data-reveal>
             <div class="platform-head">
@@ -495,10 +511,14 @@ copilot mcp add prompuff -- prompuff mcp</code></pre>
         <img class="finale-puff" src="assets/brand/mark.svg" alt="" width="96" height="68">
         <h2 id="finale-title">Keep the prompts that worked.</h2>
         <div class="cta">
-          <a class="button button-primary" id="get-again" href="#download">
+          <a class="button button-primary" id="get-again" href="#download" data-desktop-only>
             <svg class="icon icon-download" viewBox="0 0 24 24" aria-hidden="true"><path d="M 21 15 v 4 a 2 2 0 0 1 -2 2 H 5 a 2 2 0 0 1 -2 -2 v -4"/><path class="icon-arrow" d="M 7 10 L 12 15 L 17 10 M 12 15 L 12 3"/></svg>
             <span id="get-again-label">Download Prompuff</span>
           </a>
+          <button class="button button-primary share-link" type="button" data-handheld-only hidden>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/></svg>
+            <span class="share-label">Share link</span>
+          </button>
           <a class="button button-quiet" href="https://github.com/hazeliscoding/prompuff">View on GitHub</a>
         </div>
       </div>
@@ -520,5 +540,20 @@ copilot mcp add prompuff -- prompuff mcp</code></pre>
       <p class="credits">Manrope and IBM Plex Mono are under the SIL Open Font License (<a href="assets/fonts/Manrope-OFL.txt">Manrope</a>, <a href="assets/fonts/IBMPlexMono-OFL.txt">IBM Plex Mono</a>). Icons are from <a href="https://lucide.dev">Lucide</a> (ISC). The theme palettes come from Darcula, gruvbox, Dracula, Nord, One Dark, Tokyo Night, Solarized and Catppuccin, credited with their licenses in <a href="https://github.com/hazeliscoding/prompuff/blob/main/licenses/Themes.md">licenses/Themes.md</a>; their authors don’t endorse Prompuff.</p>
     </div>
   </footer>
+
+  <p class="visually-hidden" id="share-status" role="status"></p>
+
+  <dialog class="viewer" id="viewer" aria-label="Screenshot at full size">
+    <div class="viewer-bar">
+      <p class="viewer-hint">Scroll sideways to see the whole window.</p>
+      <button class="viewer-close" type="button">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Close
+      </button>
+    </div>
+    <div class="viewer-pane" tabindex="0" role="region" aria-label="Screenshot">
+      <img class="viewer-img" src="data:," alt="" width="1280" height="800">
+    </div>
+  </dialog>
 </body>
 </html>

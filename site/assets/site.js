@@ -105,7 +105,72 @@
     return null;
   }
 
+  // Prompuff can't run on a phone or tablet, so those get no download buttons. Windows tablets and
+  // Chromebooks keep them.
+  function isHandheld() {
+    var ua = navigator.userAgent || '';
+    var data = navigator.userAgentData;
+    var platform = (data && data.platform) || navigator.platform || '';
+    if (data && data.mobile) return true;
+    if (/android|iphone|ipad|ipod/i.test(platform + ' ' + ua)) return true;
+    // iPadOS asks for the desktop site and says it's a Mac.
+    if (/mac/i.test(platform) && navigator.maxTouchPoints > 1) return true;
+    if (/win/i.test(platform) || /windows|cros/i.test(ua)) return false;
+    // Android tablets that ask for the desktop site say they're Linux; a touch-only screen gives them away.
+    return window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+  }
+
+  // On a phone or tablet the film leads, and a Share link button lets the visitor send the page to their
+  // computer. Sharing goes through the system's share sheet, or copies the link where there isn't one.
+  function showHandheld() {
+    root.classList.add('is-handheld');
+    each(document.querySelectorAll('[data-desktop-only]'), function (el) { el.hidden = true; });
+    each(document.querySelectorAll('[data-handheld-only]'), function (el) { el.hidden = false; });
+
+    var watch = document.getElementById('watch');
+    if (watch) watch.classList.replace('button-quiet', 'button-primary');
+    var note = document.getElementById('get-note');
+    if (note) note.textContent = 'Prompuff is a desktop app for Windows, macOS and Linux.';
+
+    var canonical = document.querySelector('link[rel="canonical"]');
+    var url = canonical ? canonical.href : window.location.href;
+    var status = document.getElementById('share-status');
+    var canShare = typeof navigator.share === 'function';
+
+    each(document.querySelectorAll('.share-link'), function (button) {
+      var label = button.querySelector('.share-label');
+      var resetTimer = null;
+      if (!canShare && label) label.textContent = 'Copy link';
+
+      function say(text) {
+        if (label) label.textContent = text;
+        if (status) status.textContent = text;
+        window.clearTimeout(resetTimer);
+        resetTimer = window.setTimeout(function () {
+          if (label) label.textContent = canShare ? 'Share link' : 'Copy link';
+        }, 2500);
+      }
+
+      button.addEventListener('click', function () {
+        if (canShare) {
+          navigator.share({ title: 'Prompuff', text: 'A local-first home for prompts worth keeping.', url: url })
+            .catch(function () {});
+          return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(function () { say('Link copied'); }, function () { say(url); });
+        } else {
+          say(url);
+        }
+      });
+    });
+  }
+
   function pickDownload() {
+    if (isHandheld()) {
+      showHandheld();
+      return;
+    }
     var key = detectPlatform();
     var choice = key && PLATFORMS[key];
     if (!choice) return;
@@ -481,6 +546,80 @@
     });
   }
 
+  // On small screens the section links fold into a menu. While it's open the page behind it is inert, so
+  // focus and screen readers stay in the menu; Escape, a link or a wider window closes it.
+
+  function setupMenu() {
+    var toggle = document.querySelector('.menu-toggle');
+    var menu = document.getElementById('site-menu');
+    if (!toggle || !menu) return;
+    var small = window.matchMedia('(max-width: 820px)');
+    var behind = [document.getElementById('main'), document.querySelector('.site-footer')];
+
+    function isOpen() {
+      return toggle.getAttribute('aria-expanded') === 'true';
+    }
+
+    function setOpen(open, focusToggle) {
+      toggle.setAttribute('aria-expanded', String(open));
+      root.classList.toggle('menu-open', open);
+      behind.forEach(function (el) { if (el) el.inert = open; });
+      if (open) {
+        var first = menu.querySelector('a');
+        if (first) first.focus();
+      } else if (focusToggle) {
+        toggle.focus();
+      }
+    }
+
+    toggle.hidden = false;
+    toggle.addEventListener('click', function () { setOpen(!isOpen(), false); });
+
+    document.querySelectorAll('.site-header a').forEach(function (link) {
+      link.addEventListener('click', function () { if (isOpen()) setOpen(false, false); });
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && isOpen()) setOpen(false, true);
+    });
+
+    var onChange = function () { if (!small.matches && isOpen()) setOpen(false, false); };
+    if (small.addEventListener) small.addEventListener('change', onChange);
+  }
+
+  // On small screens the screenshots are too small to read, so each one opens at full size in a viewer
+  // that scrolls sideways.
+
+  function setupViewer() {
+    var viewer = document.getElementById('viewer');
+    if (!viewer || typeof viewer.showModal !== 'function') return;
+    var image = viewer.querySelector('.viewer-img');
+    var pane = viewer.querySelector('.viewer-pane');
+    var close = viewer.querySelector('.viewer-close');
+    if (!image || !pane || !close) return;
+
+    each(document.querySelectorAll('.shot'), function (shot) {
+      var img = shot.querySelector('img');
+      if (!img) return;
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'shot-zoom';
+      button.setAttribute('aria-label', 'Show this screenshot at full size');
+      button.innerHTML = '<span class="shot-zoom-badge" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24">' +
+        '<path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/></svg></span>';
+      button.addEventListener('click', function () {
+        image.src = img.currentSrc || img.src;
+        image.alt = img.alt;
+        viewer.showModal();
+        pane.scrollLeft = 0;
+        pane.scrollTop = 0;
+      });
+      shot.appendChild(button);
+    });
+
+    close.addEventListener('click', function () { viewer.close(); });
+  }
+
   // The section links in the header follow along.
 
   function setupScrollspy() {
@@ -510,6 +649,8 @@
   }
 
   pickDownload();
+  setupMenu();
+  setupViewer();
   setupHeader();
   setupVideo();
   setupReveals();
