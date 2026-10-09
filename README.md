@@ -17,7 +17,7 @@ Your prompts stay on your machine. There is no account, no cloud and no telemetr
 
 The website, [hazeliscoding.github.io/prompuff](https://hazeliscoding.github.io/prompuff/), has the launch video and a download for every platform.
 
-> **Status:** [v0.9.0 is out](https://github.com/hazeliscoding/prompuff/releases/latest) for Windows x64, macOS (Apple Silicon and Intel), and Linux x64 and ARM64. [ROADMAP.md](ROADMAP.md) has the road to 1.0.
+> **Status:** [v1.0.0 is out](https://github.com/hazeliscoding/prompuff/releases/latest) for Windows x64, macOS (Apple Silicon and Intel), and Linux x64 and ARM64. [ROADMAP.md](ROADMAP.md) has what's next.
 
 ![The library: a sidebar with collections and tags, and prompt cards with tags, usefulness and edit times](docs/screenshots/library.png)
 

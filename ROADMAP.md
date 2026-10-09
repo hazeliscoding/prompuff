@@ -335,13 +335,14 @@ Let scripts and coding agents use the vault without opening the app.
 
 **Done when:** the release candidate updates cleanly from 0.8 on every platform, and no open issue is labeled data loss or crash.
 
-## v1.0
+## v1.0 (tagged 2026-10-08)
 
-- [ ] Tag 1.0 from the final release candidate, signed on Windows.
+- [x] Tag 1.0 from the final release candidate, signed on Windows. 1.0.0 is 0.9.0's code with the version number changed.
 - [ ] Update from 0.9 to 1.0 checked by hand on Windows and in WSLg, and on macOS CI runners.
 - [x] README and the About page state the 1.0 promise: later versions open 1.0 libraries.
 - [x] A short launch video of the 1.0 app, made with the `/brag` skill.
 - [x] A landing page on GitHub Pages: what Prompuff is, the launch video, screenshots, downloads for every platform, and the privacy promise. Fonts, images and the video are served from the site itself.
+- [x] Publish v1.0.0 (2026-10-08), with deltas from 0.9.0 on every channel.
 
 **Done when:** 1.0 is published for Windows, Linux x64 and ARM64, and macOS, every earlier 0.x install updates to it with its library intact, and the landing page is live with the launch video.
 
