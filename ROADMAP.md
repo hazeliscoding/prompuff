@@ -170,6 +170,12 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
   - `mcp-1.0.0.json`: the tools with their input types, required inputs and read-only hints, eight tool calls, the five resources with their Markdown, and the favorites as prompts with two prompt calls. A resource is held to the prompt its Markdown carries, not its exact text, so the Markdown can gain metadata.
 - **The README and the website sign off** with "Made with ♥ by hazeliscoding". On the website the line links to the repository, and the heart uses a new `--heart` token, the pink tone of each mode.
 
+## Decisions: Puff comes alive (2026-10-08)
+
+- **Puff moves like a small companion, not an ad.** It reacts to people, and otherwise floats, blinks and rests. The artwork stays as it is: the body, both eyes and the smile are already separate shapes, so none of the motion needs a redraw.
+- **On the website,** the hero Puff squishes when a pointer comes by or a finger taps it. The finale Puff, now inline SVG with the same paths, hops hello when it scrolls in and squishes too. The Puff in the showroom's mock title bar hops when the visitor picks a swatch, but not during the automatic tour, which would keep it jumping every 2.6 seconds. The blink became one blink and a later double on a 9-second loop, instead of one every 5.5 seconds. Puff's loops pause while it's off screen. It's still CSS keyframes and a few lines of `site.js`, and everything new sits behind the reduced-motion gate, where Puff stays still with its eyes open.
+- **The launch video already floats Puff in, bobs it and blinks it twice.** A later re-cut could add the squish when a feature appears and the hop on the theme flick; the video stays as it is for now.
+
 ## v0.1: MVP (tagged 2026-10-07)
 
 ### M0: Foundation
