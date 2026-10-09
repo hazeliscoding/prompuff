@@ -96,6 +96,8 @@ Match the code around you: `.editorconfig` sets file-scoped namespaces, four-spa
 - Keep each commit atomic: one logical change.
 - Run `dotnet build` and `dotnet test` before every commit that touches code.
 - Commit messages read like a person wrote them: no `Co-Authored-By` trailers or "Generated with" lines for AI tools.
+- Work on a branch and open a pull request into `main`, which takes no direct pushes. A pull request merges once CI passes on Windows, Linux and macOS with the branch up to date with `main`. It lands by rebase, so every commit in it ends up on `main` as you wrote it.
+- Bugs and requests go in [GitHub Issues](https://github.com/hazeliscoding/prompuff/issues).
 
 [CI](.github/workflows/ci.yml) builds and tests every push to `main` and every pull request on Windows, Linux and macOS, smoke-tests the `prompuff` command, and uploads the UI screenshots as an artifact.
 
@@ -107,8 +109,8 @@ Match the code around you: `.editorconfig` sets file-scoped namespaces, four-spa
 
 The owner cuts releases. In short:
 
-1. The version goes in `Directory.Build.props`.
-2. A `v*` tag starts [the release workflow](.github/workflows/release.yml). A tag with a pre-release suffix, such as `v0.9.0-beta.1`, makes a beta on the `-beta` channels.
+1. The version goes in `Directory.Build.props`, through a pull request like any other change.
+2. Once that's merged, a `v*` tag on the merged commit starts [the release workflow](.github/workflows/release.yml). A tag with a pre-release suffix, such as `v0.9.0-beta.1`, makes a beta on the `-beta` channels.
 3. The workflow packs Windows, Linux x64 and ARM64, and both Macs with Velopack, smoke-tests the app and the `prompuff` command from each package, signs the Windows build when the signing variables exist, and opens a draft GitHub Release with `SHA256SUMS`.
 4. The owner reads the draft and publishes it. Installed copies only see published releases.
 
