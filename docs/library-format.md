@@ -162,7 +162,7 @@ So a library left by a release is at one of five schemas: 1 (v0.1.0 to v0.1.2), 
 
 ## Compatibility
 
-The 1.0 promise is format stability:
+From 1.0 on, Prompuff grows by adding and extending, never by changing what's there ([the README](../README.md#the-10-promise) has the whole promise). For the library, that means:
 
 - Every later version opens a 1.0 library, and a library from any release since v0.1.0, by migrating it forward after a backup.
 - Every migration is tested from every released schema version, using the fixtures below.

@@ -66,6 +66,12 @@ These come from [AGENTS.md](AGENTS.md), and reviews hold every change to them.
 - The CLI keeps SQLite's native library beside it. `scripts/smoke-cli.sh` fails the build if one gets unpacked into `~/.net`.
 - The Velopack pack ID stays `Prompuff.Desktop`, because Velopack deletes `%LocalAppData%\{packId}` on uninstall.
 
+**Growth and the 1.0 promise**
+
+- Prompuff grows by adding and extending, never by shifting: nothing people rely on is removed, renamed or given a new meaning.
+- That holds for 1.0 libraries, Markdown exports and settings, the `prompuff` command's commands, options, exit codes and JSON, and the MCP server's tools, resources and prompts. Anything new in them is optional.
+- Files in `tests/*/Fixtures` record what releases wrote and answered, pinned by `tests/pinned-fixtures.sha256`. Never change one; when a test against one fails, fix the code.
+
 **Database**
 
 - Never edit a migration that has shipped. Add a new one to `Migrations.cs`.

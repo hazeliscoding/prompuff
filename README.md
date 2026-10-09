@@ -228,11 +228,14 @@ Running the workflow by hand from the Actions tab builds the same artifacts with
 
 ## The 1.0 promise
 
-From 1.0 on, Prompuff's formats stay stable:
+From 1.0 on, Prompuff grows by adding features and extending the ones it has. Nothing you rely on is taken away or changes meaning:
 
 - Every later version opens a 1.0 library, and a library from any earlier release, by migrating it forward after a backup.
-- Markdown exported from 1.0 imports into every later version.
-- Every migration is tested from every released schema version, using a fixture library for each. [`docs/library-format.md`](docs/library-format.md) describes the library and [`docs/markdown-format.md`](docs/markdown-format.md) the files.
+- Markdown exported from 1.0 imports into every later version, and your settings carry over.
+- The `prompuff` command keeps its commands, options, exit codes and JSON fields, and `get` and `render` print the same text.
+- The MCP server keeps its tools, what they take and what they answer, every prompt as a `prompuff://prompts/` resource, and your favorites as prompts.
+
+Only what's written for people, such as messages and the plain-text lists, can read differently. Each promise is a test: libraries from every released schema, and the Markdown, settings and command and MCP answers from 1.0, are committed as fixtures, pinned by checksum so they never change, and every build checks the current version against them. [`docs/library-format.md`](docs/library-format.md) describes the library and [`docs/markdown-format.md`](docs/markdown-format.md) the files.
 
 ## Privacy
 

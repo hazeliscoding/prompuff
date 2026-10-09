@@ -26,6 +26,13 @@ These are the working rules for agents in this repo. Prompuff is a local-first d
 - The CLI keeps SQLite's native library beside it instead of bundling it. A bundled native library gets unpacked into `~/.net`, and `scripts/smoke-cli.sh` fails the build if that happens.
 - The Velopack pack ID stays `Prompuff.Desktop`. Velopack deletes `%LocalAppData%\{packId}` on uninstall, and the data folder is `%LocalAppData%\Prompuff`.
 
+## Growth and the 1.0 promise (hard rules)
+
+- Prompuff grows by adding and extending, never by shifting. New features join and existing ones gain options, fields and abilities, but nothing people rely on is removed, renamed or given a new meaning. A change that would break this is a bug to fix, not a reason for 2.0.
+- 1.0 promised: later versions open a 1.0 library and any older one; Markdown exported by 1.0 imports; settings carry over; the `prompuff` command keeps its commands, options, exit codes and JSON fields, and `get` and `render` print the same text; the MCP server keeps its tools, their inputs and answers, its `prompuff://prompts/` resources and favorites as prompts; the app keeps its `--quick-save` launch argument, which desktop shortcuts call.
+- Anything new in a promised format is optional and defaults to the old behavior: a Markdown key, a JSON field, a settings key, an option, a tool input. Wording for people can change: messages, the plain-text lists, and MCP titles, descriptions and instructions.
+- `tests/*/Fixtures` record what releases wrote and answered, pinned by `tests/pinned-fixtures.sha256`. Never edit, regenerate or delete a pinned fixture; when a later version can't read one, fix the code. A release that stores or answers something new adds a fixture beside the old ones.
+
 ## Architecture
 
 - `Prompuff.Domain`: entities and pure rules. No dependencies.

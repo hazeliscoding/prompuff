@@ -494,11 +494,12 @@ copilot mcp add prompuff -- prompuff mcp</code></pre>
           <section class="promise" id="promise" aria-labelledby="promise-title" data-reveal>
             <svg class="promise-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg>
             <h3 id="promise-title">The 1.0 promise</h3>
-            <p class="promise-lead">From 1.0 on, Prompuff’s formats stay stable.</p>
+            <p class="promise-lead">From 1.0 on, Prompuff only grows: new features, and more from the ones it has.</p>
             <ul class="promise-list">
               <li>Every later version opens a 1.0 library, and a library from any earlier release, by migrating it forward after a backup.</li>
-              <li>Markdown exported from 1.0 imports into every later version.</li>
-              <li>Every migration is tested from every released schema version, using a fixture library for each.</li>
+              <li>Markdown exported from 1.0 imports into every later version, and your settings carry over.</li>
+              <li>The <code>prompuff</code> command and its MCP server keep working the way your scripts and AI tools use them.</li>
+              <li>Each promise is a test: every build checks the new version against libraries, files and answers from earlier releases.</li>
             </ul>
             <p class="site-promise">The <a href="https://github.com/hazeliscoding/prompuff/blob/main/docs/library-format.md">library format</a> and the <a href="https://github.com/hazeliscoding/prompuff/blob/main/docs/markdown-format.md">Markdown format</a> are written down, for anyone reading them with other tools.</p>
           </section>

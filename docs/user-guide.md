@@ -179,7 +179,7 @@ Installed copies check GitHub Releases each time Prompuff opens. When an update 
 
 The **Beta** channel in Settings › Updates gets new versions early, as GitHub pre-releases, and every stable release too. Updates never move to an older version, so switching back to **Stable** keeps the beta until a newer stable release comes out.
 
-Updates replace the app, never your library. When a new version changes how the library is stored, Prompuff copies it to the backups folder first. From 1.0 on, every later version opens a 1.0 library and imports the Markdown 1.0 exports; Settings › About states this promise.
+Updates replace the app, never your library. When a new version changes how the library is stored, Prompuff copies it to the backups folder first. From 1.0 on, Prompuff only grows. Every later version opens a 1.0 library and imports the Markdown 1.0 exports, as Settings › About promises, keeps your settings, and keeps the `prompuff` command and MCP server working the way scripts and AI tools use them.
 
 ## The prompuff command and MCP
 
@@ -193,7 +193,7 @@ prompuff render "Angular Upgrade Planner" --var repo_name=acme --var target_vers
 git diff | prompuff quick-save --title "Review this diff" --tag review
 ```
 
-Name a prompt by its title, a few words only it matches, or its ID. `render` leaves unfilled variables as `{{tokens}}` and lists them on stderr. Add `--json` for scripts, and run `prompuff help` for the rest. The app picks up changes within two seconds.
+Name a prompt by its title, a few words only it matches, or its ID. `render` leaves unfilled variables as `{{tokens}}` and lists them on stderr. Add `--json` for scripts: the commands, options, exit codes and JSON fields stay the same in every later version, which can only add more. Run `prompuff help` for the rest. The app picks up changes within two seconds.
 
 **MCP** lets AI tools such as Claude Code, Claude Desktop, GitHub Copilot CLI and Codex use your library. They can search, read and render your prompts, and use your favorites as prompts with their variables as arguments, such as slash commands in Claude Code. They can't change or delete anything.
 
