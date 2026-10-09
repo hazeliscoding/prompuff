@@ -145,3 +145,9 @@ prompuff-library-2026-10-08.zip
 - Prompts sit at the top level, one file each, and those in Recently deleted are left out. Workflows go in `workflows/`, and only Settings › Export everything includes them. The library's Export button and collection exports hold prompts only, because a workflow can span collections.
 - A file is named after its title: lowercase ASCII letters and digits, with every other run of characters turned into one `-`, at most 60 characters. A title with no ASCII letters or digits, such as 日本語の要約, becomes `prompt.md`. A name that's already taken, ignoring case, gets `-2`, `-3` and so on.
 - Import reads the Markdown files anywhere in the zip, in memory and never unpacked to disk, with the same 5 MB limit for each. It imports every prompt before any workflow, so steps find the prompts from the same zip with their tags, notes and collection. It tells workflows apart by their metadata block, not their folder.
+
+## Compatibility
+
+A file exported by 1.0 imports into every later version with everything it held. A later version can extend the format, such as with a new metadata key, but a new key is optional, and an existing key, heading or section keeps its name and meaning.
+
+`tests/Prompuff.Infrastructure.Tests/Fixtures/markdown-1.0.0/` holds what 1.0's export wrote: seven prompts, one file each, the workflow above under `workflows/`, and all of them in `library.zip`. Between them they use every metadata key, Unicode and emoji, values that need quoting, a body with its own `# Notes` heading and a code fence, and a prompt with only a title and a body. `MarkdownFixtures.cs` says what each one holds, and `MarkdownFixtureTests` imports each file and the zip and checks every field. Like the library fixtures, they're pinned in `tests/pinned-fixtures.sha256` and never change; a release that adds to the format adds its own folder beside this one.
