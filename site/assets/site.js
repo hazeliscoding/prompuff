@@ -25,6 +25,13 @@
     Array.prototype.forEach.call(list, fn);
   }
 
+  // Plays a one-off CSS animation from the start, even if it's still running.
+  function replay(el, className) {
+    el.classList.remove(className);
+    void el.getBoundingClientRect();
+    el.classList.add(className);
+  }
+
   function onceVisible(elements, threshold, fn) {
     if (!('IntersectionObserver' in window)) {
       each(elements, fn);
@@ -296,6 +303,35 @@
     });
   }
 
+  // Puff floats and blinks in CSS. Here it squishes when a pointer comes by or a finger taps it, and it rests
+  // while it's off screen, so its loops don't run where nobody sees them.
+
+  function setupPuff() {
+    var puffs = document.querySelectorAll('[data-puff]');
+    each(puffs, function (puff) {
+      var body = puff.querySelector('.puff-squish');
+      if (!body) return;
+      function squish() {
+        if (motionAllowed()) replay(body, 'is-squished');
+      }
+      puff.addEventListener('pointerenter', function (event) {
+        if (event.pointerType === 'mouse') squish();
+      });
+      puff.addEventListener('pointerdown', squish);
+      body.addEventListener('animationend', function (event) {
+        if (event.target === body) body.classList.remove('is-squished');
+      });
+    });
+
+    if (!('IntersectionObserver' in window)) return;
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        entry.target.classList.toggle('is-resting', !entry.isIntersecting);
+      });
+    });
+    each(puffs, function (puff) { observer.observe(puff); });
+  }
+
   // The bento tiles play their small demo once: the search types its query, the keys press, the zip unpacks.
 
   function setupDemos() {
@@ -363,7 +399,8 @@
 
   // The themes showroom. Each swatch re-dresses the prompt; the registered colors in site.css make the
   // change glide. While it's on screen it tours the themes by itself, until a swatch is picked or the tour
-  // is paused.
+  // is paused. Puff in the mock title bar hops when the visitor picks one, but not for the tour, which
+  // would keep it jumping.
 
   function setupThemes() {
     var stage = document.getElementById('theme-stage');
@@ -375,6 +412,10 @@
     if (!stage || !picker || !nameEl) return;
     var dots = picker.querySelectorAll('.dot');
     if (!dots.length) return;
+    var mark = stage.querySelector('.ts-mark');
+    if (mark) {
+      mark.addEventListener('animationend', function () { mark.classList.remove('is-cheering'); });
+    }
 
     var current = 0;
     var timer = null;
@@ -426,6 +467,7 @@
         stopped = true;
         show(index);
         syncTour();
+        if (mark && motionAllowed()) replay(mark, 'is-cheering');
       });
     });
 
@@ -654,6 +696,7 @@
   setupHeader();
   setupVideo();
   setupReveals();
+  setupPuff();
   setupDemos();
   setupTour();
   setupThemes();

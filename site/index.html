@@ -67,11 +67,13 @@
             </blockquote>
             <figcaption>Puff, with apologies to Linus Torvalds</figcaption>
           </figure>
-          <div class="puff-float">
+          <div class="puff-float" data-puff>
             <svg class="puff" viewBox="1.713 3.356 19.257 13.644" width="132" height="94" aria-hidden="true">
-              <path class="puff-body" d="M6 16.5h10.5a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 6.6 7.2 4.7 4.7 0 0 0 6 16.5Z"/>
-              <g class="puff-eyes"><circle cx="9" cy="12" r="1"/><circle cx="13.5" cy="12" r="1"/></g>
-              <path class="puff-smile" d="M10 13.9q1.25 1.1 2.5 0"/>
+              <g class="puff-squish">
+                <path class="puff-body" d="M6 16.5h10.5a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 6.6 7.2 4.7 4.7 0 0 0 6 16.5Z"/>
+                <g class="puff-eyes"><circle cx="9" cy="12" r="1"/><circle cx="13.5" cy="12" r="1"/></g>
+                <path class="puff-smile" d="M10 13.9q1.25 1.1 2.5 0"/>
+              </g>
             </svg>
           </div>
         </div>
@@ -509,7 +511,13 @@ copilot mcp add prompuff -- prompuff mcp</code></pre>
 
     <section class="finale" aria-labelledby="finale-title">
       <div class="wrap finale-inner" data-reveal="text">
-        <img class="finale-puff" src="assets/brand/mark.svg" alt="" width="96" height="68">
+        <svg class="finale-puff" data-puff viewBox="1.713 3.356 19.257 13.644" width="96" height="68" aria-hidden="true">
+          <g class="puff-squish">
+            <path class="puff-body" d="M6 16.5h10.5a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 6.6 7.2 4.7 4.7 0 0 0 6 16.5Z"/>
+            <g class="puff-eyes"><circle cx="9" cy="12" r="1"/><circle cx="13.5" cy="12" r="1"/></g>
+            <path class="puff-smile" d="M10 13.9q1.25 1.1 2.5 0"/>
+          </g>
+        </svg>
         <h2 id="finale-title">Keep the prompts that worked.</h2>
         <div class="cta">
           <a class="button button-primary" id="get-again" href="#download" data-desktop-only>

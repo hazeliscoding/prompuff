@@ -784,6 +784,12 @@ b {
   stroke-linecap: round;
 }
 
+/* Puff squishes from where it sits, like a jelly settling. */
+.puff-squish {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
 .hero-title {
   display: flex;
   flex-direction: column;
@@ -1475,6 +1481,7 @@ b {
 .ts-mark {
   width: 24px;
   height: auto;
+  transform-origin: 50% 100%;
 }
 
 .ts-app {
@@ -2495,7 +2502,9 @@ b {
 .finale-puff {
   width: clamp(72px, 7vw, 96px);
   height: auto;
+  overflow: visible;
   filter: drop-shadow(0 16px 26px rgb(180 142 255 / 0.32));
+  transform-origin: 50% 100%;
 }
 
 .finale h2 {
@@ -2814,14 +2823,19 @@ html:has(.viewer[open]) {
   filter: none;
 }
 
-/* Motion is optional: the opening sequence, Puff's float and blink, and the blinking carets only play when
-   the system allows it. */
+/* Motion is optional: the opening sequence, Puff's float, blink and reactions, and the blinking carets only
+   play when the system allows it. Puff rests while it's off screen. */
 
 @media (prefers-reduced-motion: no-preference) {
   .hero-glow { animation: fade-in 1800ms var(--ease-out) both; }
   .puff { animation: puff-in 1000ms var(--ease-spring) 120ms both; }
   .puff-float { animation: puff-float 6s ease-in-out 1.4s infinite; }
-  .puff-eyes { animation: blink 5.5s ease-in-out 2.4s infinite; }
+  .puff-eyes { animation: blink 9s ease-in-out 1.2s infinite; }
+  .puff-float.is-resting,
+  .is-resting .puff-eyes { animation-play-state: paused; }
+  .puff-squish.is-squished { animation: puff-squish 650ms ease-out; }
+  .ts-mark.is-cheering { animation: puff-cheer 620ms ease-out; }
+  .finale-inner.is-in .finale-puff { animation: puff-hello 900ms ease-out 700ms; }
   .bubble { animation: bubble-in 700ms var(--ease-spring) 650ms both; }
   .hero-name { animation: rise 900ms var(--ease-out) 260ms both; }
   .hero-pitch { animation: rise-blur 1200ms var(--ease-out) 360ms both; }
@@ -2864,10 +2878,33 @@ html:has(.viewer[open]) {
   50% { transform: translateY(-6px); }
 }
 
+/* One blink, then a double one later, so the rhythm doesn't tick like a clock. */
 @keyframes blink {
-  0%, 93%, 100% { transform: scaleY(1); }
-  95% { transform: scaleY(0.1); }
-  97% { transform: scaleY(1); }
+  0%, 30%, 32.4%, 84%, 86.2%, 88.4%, 100% { transform: scaleY(1); }
+  31.2%, 85.1%, 87.3% { transform: scaleY(0.1); }
+}
+
+@keyframes puff-squish {
+  0%, 100% { transform: none; }
+  18% { transform: scale(1.14, 0.84); }
+  42% { transform: scale(0.93, 1.09); }
+  66% { transform: scale(1.04, 0.97); }
+  84% { transform: scale(0.99, 1.01); }
+}
+
+@keyframes puff-cheer {
+  0%, 100% { transform: none; }
+  30% { transform: translateY(-5px) scale(0.92, 1.1); }
+  58% { transform: translateY(0) scale(1.14, 0.86); }
+  78% { transform: translateY(-1px) scale(0.97, 1.03); }
+}
+
+@keyframes puff-hello {
+  0%, 100% { transform: none; }
+  25% { transform: translateY(-10px) scale(0.94, 1.07); }
+  50% { transform: translateY(0) scale(1.08, 0.92); }
+  68% { transform: translateY(-3px) scale(0.98, 1.02); }
+  84% { transform: translateY(0); }
 }
 
 @keyframes bubble-in {
