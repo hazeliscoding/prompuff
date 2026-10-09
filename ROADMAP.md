@@ -153,7 +153,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **1.0 is the release candidate's code.** Nothing under `src/` changed after 0.9.0; 1.0 adds only the version number. The 1.0 promise went into Settings › About, the README and the user guide before the release candidate, so the candidate shipped it.
 - **The launch video** was made with `/brag` in Hyperframes: 21.5 seconds at 1080p, built from Prompuff's own tokens, fonts and copy. It shows Puff's "Talk is cheap. Show me the prompts.", Quick save from any app, `{{variables}}` filling in, `prompuff render` in a terminal with Claude Code, Codex and Copilot CLI over MCP, and a flick through the themes. The working files live in the gitignored `brag-output/`; the video and its poster are in `site/assets/video/`.
 - **The website** is `site/`, plain HTML and CSS with a little JavaScript, deployed by `.github/workflows/pages.yml` to hazeliscoding.github.io/prompuff. It loads nothing from another site: a Content-Security-Policy enforces it, and the workflow refuses to deploy a page that would. Fonts are the app's own TTFs, and downloads link to `releases/latest/download/<asset>`.
-- **Update check workflow:** `.github/workflows/update-check.yml`, run by hand after a release, starts the previous stable release on Windows, Ubuntu and macOS runners with a scratch library and checks that it finds the new one. It's the macOS part of checking an update, since there's no Mac to click through one; installing is checked by hand on Windows and in WSLg. Its first run found 0.9.0 from 0.8.0 on all three.
+- **Update check workflow:** `.github/workflows/update-check.yml`, run by hand after a release, starts the previous stable release on Windows, Ubuntu and macOS runners with a scratch library and checks that it finds the new one. It's the macOS part of checking an update, since there's no Mac to click through one; installing is checked by hand on Windows and in WSLg. Its first run found 0.9.0 from 0.8.0 on all three. GitHub allows 60 unauthenticated API calls an hour per address and macOS runners share theirs, so a check of 1.0.0 failed twice with "rate limit exceeded"; each attempt now waits for the allowance to reset when it's used up.
 
 ## v0.1: MVP (tagged 2026-10-07)
 
@@ -338,7 +338,7 @@ Let scripts and coding agents use the vault without opening the app.
 ## v1.0 (tagged 2026-10-08)
 
 - [x] Tag 1.0 from the final release candidate, signed on Windows. 1.0.0 is 0.9.0's code with the version number changed.
-- [ ] Update from 0.9 to 1.0 checked by hand on Windows and in WSLg, and on macOS CI runners.
+- [x] Update from 0.9 to 1.0 checked by hand on Windows and in WSLg, and on macOS CI runners. An installed 0.9.0 on Windows and the 0.9.0 AppImage in WSLg each downloaded 1.0.0 from Settings › Updates, restarted into it, and kept every prompt, tag and favorite. The update check workflow found 1.0.0 from 0.9.0 on Windows, Ubuntu and macOS.
 - [x] README and the About page state the 1.0 promise: later versions open 1.0 libraries.
 - [x] A short launch video of the 1.0 app, made with the `/brag` skill.
 - [x] A landing page on GitHub Pages: what Prompuff is, the launch video, screenshots, downloads for every platform, and the privacy promise. Fonts, images and the video are served from the site itself.
