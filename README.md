@@ -219,8 +219,8 @@ This writes the `.AppImage` and its update files (`*-full.nupkg`, `releases.linu
 
 ## Releases
 
-1. Set the version in `Directory.Build.props` and commit.
-2. Tag and push: `git tag v0.1.0 && git push origin v0.1.0`. A tag with a pre-release suffix, such as `v0.8.0-beta.1`, makes a beta: it packs to the `-beta` Velopack channels and becomes a GitHub pre-release.
+1. Set the version in `Directory.Build.props` in a pull request, as `chore(release): x.y.z`, and merge it once CI passes. `main` takes changes only through pull requests.
+2. Tag the merged commit on `main` and push the tag: `git tag v1.2.0 && git push origin v1.2.0`. Release tags can't be moved or deleted afterwards. A tag with a pre-release suffix, such as `v0.8.0-beta.1`, makes a beta: it packs to the `-beta` Velopack channels and becomes a GitHub pre-release.
 3. The [Release workflow](.github/workflows/release.yml) tests and packs every platform, smoke-tests the app and the `prompuff` command from each package, and opens a **draft** GitHub Release with the installers, the Velopack update files and `SHA256SUMS`.
 4. Read the draft and publish it. Installed copies only see published releases.
 

@@ -7,7 +7,8 @@ These are the working rules for agents in this repo. Prompuff is a local-first d
 - `README.md`: what Prompuff is, how to build, run, test and package it, and the privacy promise.
 - `ROADMAP.md`: decisions already made, the milestones, and what is out of scope. Check it before proposing features, and respect its decisions unless the owner reopens them.
 - `docs/user-guide.md`: how Prompuff works, for the people using it. Update it in the same change whenever behavior or a label it mentions changes. `CONTRIBUTING.md` is the short version of these rules for human contributors.
-- Work from the next unchecked item in `ROADMAP.md`. Tick items off as they land and record new decisions there under a dated heading. Don't create separate plan, spec or backlog documents.
+- Work from the next unchecked item in `ROADMAP.md`. Tick items off as they land and record new decisions there under a dated heading. Don't create separate plan, spec or backlog documents, or GitHub Project boards.
+- GitHub Issues hold bugs and requests from people using Prompuff. The plan stays in `ROADMAP.md`.
 
 ## Privacy (hard rules)
 
@@ -72,5 +73,8 @@ These are the working rules for agents in this repo. Prompuff is a local-first d
 
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `chore:`, `test:`, `ci:`, `build:`, `refactor:`). Keep each commit atomic, and use a scope when it helps (`feat(library): …`).
 - **No AI attribution** in commits or PRs: no `Co-Authored-By` trailers, no "Generated with" lines, no session links.
+- **Pull requests:** `main` is protected, so nothing is pushed to it directly. Branch from `main`, named like the commit types (`feat/…`, `fix/…`, `docs/…`), push, and open a pull request with `gh pr create`. It merges once the three "Build and test" jobs pass on a branch that's up to date with `main`, by rebase (`gh pr merge --rebase --delete-branch`), so each atomic commit lands as it is. Keep a pull request to one milestone item or fix, and never bypass the checks or force-push `main`.
+- Renaming a job in `ci.yml` means updating the required checks in the `main` ruleset in the same change, or every pull request waits for a check that never comes.
+- **Releases:** the version bump in `Directory.Build.props` goes through a pull request as `chore(release): x.y.z`. Once it's merged, tag that commit on `main` and push the tag. `v*` tags can't be moved or deleted.
 - Run `dotnet build` and `dotnet test` before every commit that touches code.
 - **Docs:** short and plain. Prefer editing `ROADMAP.md` over adding planning documents.
