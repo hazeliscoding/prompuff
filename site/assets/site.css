@@ -480,6 +480,10 @@ b {
   text-align: center;
 }
 
+.video-missing[hidden] {
+  display: none;
+}
+
 .video-missing p {
   max-width: 26em;
   color: #E8ECF1;
