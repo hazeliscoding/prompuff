@@ -190,6 +190,11 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **GitFlow was considered and left out.** It suits scheduled releases with several versions maintained at once. Prompuff ships from `main`, every install updates to the newest version, and the beta channel is where a release gets tried first, so a `develop` branch would add merges without catching anything.
 - **GitHub Project boards were considered and left out; this file stays the plan.** The decisions here can't live on a board, this file changes in the same pull request as the code, and agents read it directly. Bugs and requests from people using Prompuff go in GitHub Issues.
 
+## Decisions: after 1.1 (2026-10-09)
+
+- **Integrations come next (the owner's choice).** v1.2 brings `prompuff://` links and MCP tools that save prompts, v1.3 a Markdown mirror, v1.4 the browser extension, and v1.5 Flatpak and `.deb` packages. The small steps extend what 1.0's command line and MCP server already do, and the biggest job, the extension, waits until the rest is settled. Encrypted sync, prompt relationships and recipes, evaluation notes and translations stay in Later.
+- **The plans keep the hard rules.** Registering `prompuff://` and connecting a browser write outside Prompuff's folders, so each is a step you start in Settings, like installing the command-line tool. New commands and tools get contract recordings of their own, since whatever ships joins the promise.
+
 ## Shipped
 
 Each release's notes say what it brought, and the decisions above say why. The checklists these milestones were built from are in this file as of 1.1: `git show 40fb99d:ROADMAP.md`. The patch releases, 0.1.1, 0.1.2, 0.6.1 and 0.6.2, are on the [releases page](https://github.com/hazeliscoding/prompuff/releases).
@@ -208,17 +213,58 @@ Each release's notes say what it brought, and the decisions above say why. The c
 | [0.2: Safe, searchable and shareable](https://github.com/hazeliscoding/prompuff/releases/tag/v0.2.0) | 2026-10-07 | Backups, Recently deleted, FTS5 search, remembered values and `.zip` sharing |
 | [0.1: MVP](https://github.com/hazeliscoding/prompuff/releases/tag/v0.1.0) | 2026-10-07 | The library, `{{variables}}`, versions, Markdown import and export, and updates |
 
+## v1.2: Links and agents that save
+
+Put a prompt one click away from anywhere, and let AI tools add to the library when you allow it.
+
+- [ ] `prompuff://` links that open, copy or render a prompt by its ID, with **Copy link** in a prompt's menu and `prompuff link <prompt>` on the command line.
+- [ ] Registering the link scheme is a step you start in Settings › Integrations on Windows and Linux, like installing the command-line tool. On macOS the app bundle declares it.
+- [ ] MCP tools that save a new prompt, off until **Let AI tools add prompts** is turned on in Settings › Integrations, apart from read access. Each saved prompt's first version names the tool that saved it.
+- [ ] `cli-1.2.0.json` and `mcp-1.2.0.json` record the new command and tools beside 1.0's recordings, so later versions keep them too.
+- [ ] Check that a fresh download of `Prompuff-Setup.exe` no longer gets SmartScreen's "unrecognized app" warning, now that the certificate has had time to build reputation.
+- [ ] Publish v1.2.0.
+
+**Done when:** a `prompuff://` link in a browser opens, copies or renders its prompt on Windows and Linux, and on macOS on CI, Claude Code can save a prompt over MCP only once the setting allows it, and the 1.0 and 1.2 contract tests both pass.
+
+## v1.3: A Markdown mirror
+
+Keep the library as plain files too, for Git, Syncthing or any editor.
+
+- [ ] A mirror folder, chosen in Settings › Storage, that Prompuff keeps in step with the library: one Markdown file per prompt in the 1.0 format, and workflows in `workflows/`.
+- [ ] Saving a prompt rewrites its file, removing it for good deletes the file, and a file keeps its name when the prompt's title changes, so Git sees an edit rather than a new file.
+- [ ] The mirror is one-way: Prompuff writes it, and Import stays the way files come in. A two-way mirror stays in Later.
+- [ ] Publish v1.3.0.
+
+**Done when:** a mirror folder under Git shows each saved change as a readable diff, a renamed prompt keeps its file, and importing the folder into a fresh library brings back the same prompts.
+
+## v1.4: Capture from the browser
+
+Save a prompt from ChatGPT, Claude or any page without leaving the browser.
+
+- [ ] A browser extension for Chrome, Edge and Firefox, in `extension/`: **Save to Prompuff** on a selection, or on a prompt in ChatGPT or Claude, hands the text to Quick save through native messaging.
+- [ ] The native messaging host is the `prompuff` command. Connecting a browser is a step you start in Settings › Integrations, like installing the command-line tool, since it writes a manifest into the browser's own folders.
+- [ ] The extension and its host make no network requests, and the extension asks only for the permissions saving needs.
+- [ ] Listings on the Chrome Web Store (a one-time $5 developer fee), Microsoft Edge Add-ons and Firefox Add-ons.
+- [ ] Publish v1.4.0.
+
+**Done when:** a selection on any page, or a prompt in ChatGPT or Claude, lands in the library through Save to Prompuff on Windows, Linux and macOS, with no network traffic from the extension or its host.
+
+## v1.5: More ways to install on Linux
+
+- [ ] A Flatpak, submitted to Flathub, and a `.deb`, both built by the release workflow beside the AppImage.
+- [ ] Prompuff knows how it was installed: a Flatpak leaves updates to Flathub, and a `.deb` copy points to the new download instead of updating itself.
+- [ ] The `prompuff` command and the MCP setups in Settings › Integrations work from each package.
+- [ ] Publish v1.5.0.
+
+**Done when:** Prompuff installs from Flathub and from a `.deb` on Ubuntu, keeps its library across an update, and each copy says how it updates.
+
 ## Later
 
-- Check that a fresh download of `Prompuff-Setup.exe` no longer gets SmartScreen's "unrecognized app" warning, once the certificate has built reputation.
-- A browser extension for capturing from ChatGPT and Claude through native messaging.
-- `prompuff://` links to open, copy or render a prompt.
-- A Markdown mirror folder: a live export you can keep in Git or Syncthing.
 - Optional end-to-end encrypted sync.
-- MCP write tools, such as saving a prompt from an agent, behind a setting.
+- A two-way Markdown mirror.
 - Prompt relationships beyond lineage, and recipe templates.
 - Model evaluation notes.
-- Flatpak and `.deb` packages, and translations.
+- Translations.
 
 ## Not planned
 
