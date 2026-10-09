@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Prompuff.Application.DTOs;
 using Prompuff.Application.Settings;
 using Prompuff.Infrastructure.Storage;
+using Prompuff.Tests;
 
 namespace Prompuff.Infrastructure.Tests;
 
@@ -61,6 +62,57 @@ public sealed class JsonSettingsStoreTests : IDisposable
         Assert.Equal(UpdateChannel.Beta, settings.UpdateChannel);
         Assert.Equal(AppSettings.Default with { UpdateChannel = UpdateChannel.Beta }, settings);
         Assert.Equal("Ctrl+Alt+P", settings.QuickSaveHotkey);
+    }
+
+    /// <summary>Every setting changed from its default, as 1.0 saved them in <c>Fixtures/settings-1.0.0.json</c>.</summary>
+    private static readonly AppSettings SavedBy1_0 = new()
+    {
+        Theme = ThemePreference.System,
+        DarkTheme = "tokyo-night",
+        LightTheme = "solarized-light",
+        ShowMascot = false,
+        CheckForUpdatesAutomatically = false,
+        UpdateChannel = UpdateChannel.Beta,
+        LibraryLayout = LibraryLayout.List,
+        Density = Density.Dense,
+        KeepRunningInTray = true,
+        QuickSaveHotkey = "Ctrl+Shift+Space",
+        AllowMcp = true,
+        InstalledCommandLineTool = "/home/puff/.local/share/prompuff/bin/prompuff",
+        LibrarySort = PromptSort.RecentActivity,
+        Window = new WindowPlacement(1440, 900, true),
+    };
+
+    /// <summary>
+    /// An update keeps every choice: a renamed key or value would quietly reset it, and a file that no longer reads
+    /// would reset them all.
+    /// </summary>
+    [Fact]
+    public void Settings_saved_by_1_0_keep_every_choice()
+    {
+        Directory.CreateDirectory(_folder);
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Fixtures", "settings-1.0.0.json"), Path.Combine(_folder, "settings.json"));
+
+        Assert.Equal(SavedBy1_0, _store.Load());
+    }
+
+    /// <summary>
+    /// Writes <c>Fixtures/settings-1.0.0.json</c> with this version's store and pins it. It's skipped unless
+    /// <c>PROMPUFF_WRITE_SETTINGS_FIXTURE</c> is set, and refuses to overwrite the pinned file.
+    /// </summary>
+    [Fact]
+    public void Write_fixture()
+    {
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PROMPUFF_WRITE_SETTINGS_FIXTURE")))
+        {
+            Assert.Skip("Set PROMPUFF_WRITE_SETTINGS_FIXTURE to write the settings fixture.");
+        }
+
+        var fixture = Path.Combine(SchemaFixtures.SourceFolder, "settings-1.0.0.json");
+        PinnedFixtures.EnsureUnpinned(fixture);
+        _store.Save(SavedBy1_0);
+        File.Copy(Path.Combine(_folder, "settings.json"), fixture);
+        PinnedFixtures.Pin(fixture);
     }
 
     [Fact]

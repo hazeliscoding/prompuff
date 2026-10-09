@@ -1,0 +1,20 @@
+{
+  "theme": "system",
+  "darkTheme": "tokyo-night",
+  "lightTheme": "solarized-light",
+  "showMascot": false,
+  "checkForUpdatesAutomatically": false,
+  "updateChannel": "beta",
+  "libraryLayout": "list",
+  "density": "dense",
+  "keepRunningInTray": true,
+  "quickSaveHotkey": "Ctrl\u002BShift\u002BSpace",
+  "allowMcp": true,
+  "installedCommandLineTool": "/home/puff/.local/share/prompuff/bin/prompuff",
+  "librarySort": "recentActivity",
+  "window": {
+    "width": 1440,
+    "height": 900,
+    "isMaximized": true
+  }
+}
