@@ -175,6 +175,10 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Puff moves like a small companion, not an ad.** It reacts to people, and otherwise floats, blinks and rests. The artwork stays as it is: the body, both eyes and the smile are already separate shapes, so none of the motion needs a redraw.
 - **On the website,** the hero Puff squishes when a pointer comes by or a finger taps it. The finale Puff, now inline SVG with the same paths, hops hello when it scrolls in and squishes too. The Puff in the showroom's mock title bar hops when the visitor picks a swatch, but not during the automatic tour, which would keep it jumping every 2.6 seconds. The blink became one blink and a later double on a 9-second loop, instead of one every 5.5 seconds. Puff's loops pause while it's off screen. It's still CSS keyframes and a few lines of `site.js`, and everything new sits behind the reduced-motion gate, where Puff stays still with its eyes open.
 - **The launch video already floats Puff in, bobs it and blinks it twice.** A later re-cut could add the squish when a feature appears and the hop on the theme flick; the video stays as it is for now.
+- **Reduce motion** is a switch in Settings › Appearance (the owner's choice), stored as `reduceMotion`. Avalonia 12.1.3 has no reduced-motion API, so Prompuff reads Windows' "Animation effects" (`SPI_GETCLIENTAREAANIMATION`, in `Platform/MotionPreference.cs`). Until the switch is changed the setting stays unset and follows Windows each time Prompuff opens. Linux and macOS give no signal Prompuff can read reliably, so motion starts on there. It holds Puff still and stops the switch thumb sliding; color fades on buttons and switches stay, since they don't move anything. The window carries a `still` class, and `.still c|Puff` sets `Puff.IsStill`.
+- **Puff moves inside its control.** Squash, lift and how open the eyes are, are properties `Puff` draws itself, so a reaction never fights the `bob` on its render transform. Each reaction is a short keyframe animation that ends at rest, and it's skipped while Puff is still, hidden or outside a window. Avalonia eases a whole animation at once, so each step between keyframes gets its own key spline.
+- **Where Puff moves in the app:** the title bar logo bobs twice when Prompuff opens, then rests and squishes when the pointer passes over it (the owner's choice). It used to bob forever, which kept the app redrawing even in the tray. Empty states say hello with two bobs each time they appear, and blink every four to nine seconds on a timer that only runs while that Puff is shown. A toast's Puff hops for each new confirmation. The About page keeps its float and adds a squish on hover and a hop on click. Quick save and the startup error stay still, and Show Puff hides Puff, motion and all, where it did before.
+- **Happy eyes don't blink.** Puff's happy face has closed arcs for eyes, so only the round eyes of the idle and sleepy faces blink.
 
 ## v0.1: MVP (tagged 2026-10-07)
 
@@ -366,6 +370,16 @@ Let scripts and coding agents use the vault without opening the app.
 - [x] Publish v1.0.0 (2026-10-08), with deltas from 0.9.0 on every channel.
 
 **Done when:** 1.0 is published for Windows, Linux x64 and ARM64, and macOS, every earlier 0.x install updates to it with its library intact, and the landing page is live with the launch video.
+
+## v1.1: Puff comes alive
+
+- [x] On the website, Puff squishes for a pointer or a tap, hops when a swatch is picked and when the finale scrolls in, blinks on an uneven beat, and rests off screen.
+- [x] Reduce motion in Settings › Appearance, starting from Windows' "Animation effects".
+- [x] In the app, Puff says hello in empty states, hops for confirmations, squishes and hops on the About page, and rests in the title bar after two bobs. `PuffTests` covers the motion, Reduce motion and a hidden Puff.
+- [ ] Check the app by hand on Windows and in WSLg, and on the macOS CI runners.
+- [ ] Publish v1.1.0.
+
+**Done when:** Puff reacts on the website and in the app, holds still under reduced motion and when it's hidden, and v1.1.0 is published.
 
 ## Later
 
