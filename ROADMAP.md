@@ -179,6 +179,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Puff moves inside its control.** Squash, lift and how open the eyes are, are properties `Puff` draws itself, so a reaction never fights the `bob` on its render transform. Each reaction is a short keyframe animation that ends at rest, and it's skipped while Puff is still, hidden or outside a window. Avalonia eases a whole animation at once, so each step between keyframes gets its own key spline.
 - **Where Puff moves in the app:** the title bar logo bobs twice when Prompuff opens, then rests and squishes when the pointer passes over it (the owner's choice). It used to bob forever, which kept the app redrawing even in the tray. Empty states say hello with two bobs each time they appear, and blink every four to nine seconds on a timer that only runs while that Puff is shown; about one tick in four is a glance aside instead, half a unit and back. A toast's Puff hops for each new confirmation. The About page floats Puff only while About is open, where it used to float whenever Settings was, and adds a squish on hover and a hop on click. Quick save and the startup error stay still, and Show Puff hides Puff, motion and all, where it did before.
 - **Happy eyes don't blink.** Puff's happy face has closed arcs for eyes, so only the round eyes of the idle and sleepy faces blink.
+- **Checked for 1.1.0 (2026-10-09):** the release's AppImage, in WSLg with scratch folders, opened with Reduce motion off and saved `"reduceMotion": true` when the switch was flipped from the keyboard. A portable 1.0.0 on Windows found 1.1.0 in Settings › Updates, downloaded it, restarted into it and kept its prompt; its bundled `prompuff` moved to 1.1.0 too. CI passed on all three runners, the macOS UI tests included, after one fix: on the first run a slow macOS runner let the empty state's fidget timer cancel the glance a test was measuring, so the test now stops the timer and measures from the start. The update check workflow found 1.1.0 from 1.0.0 on Windows and Ubuntu, and on macOS after waiting about half an hour for the runners' shared API allowance to reset.
 - **Checked by hand on Windows (2026-10-08):** a scratch copy opened with Reduce motion off, matching this machine's Animation effects, and saved nothing until the switch was flipped through UI Automation, which saved `"reduceMotion": true`. Windows' setting wasn't turned off to try the other side, since it's the owner's machine; `PuffTests` covers it with a stand-in. WSLg and the macOS runners come with the next push.
 
 ## v0.1: MVP (tagged 2026-10-07)
@@ -379,8 +380,8 @@ Let scripts and coding agents use the vault without opening the app.
 - [x] In the app, Puff says hello in empty states, hops for confirmations, squishes and hops on the About page, and rests in the title bar after two bobs. `PuffTests` covers the motion, Reduce motion and a hidden Puff.
 - [x] Puff glances aside between blinks, on the website and in empty states, and the About Puff floats only while About is open.
 - [x] The launch video re-cut with Puff's squish, hop and glance.
-- [ ] Check the app by hand on Windows and in WSLg, and on the macOS CI runners.
-- [ ] Publish v1.1.0.
+- [x] Check the app by hand on Windows and in WSLg, and on the macOS CI runners.
+- [x] Publish v1.1.0 (2026-10-09), with deltas from 1.0.0 on every channel.
 
 **Done when:** Puff reacts on the website and in the app, holds still under reduced motion and when it's hidden, and v1.1.0 is published.
 
