@@ -47,16 +47,26 @@ public class PuffTests
     public async Task Empty_states_say_hello_and_toasts_cheer_unless_Puff_is_hidden()
     {
         await using var app = await AppHarness.StartAsync(importSamples: false);
+
+        // Coming back to the empty library builds its empty state again, and Puff says hello as it appears. Measuring
+        // from there, rather than after startup, keeps a slow machine from missing the hello.
+        await app.ViewModel.OpenSettingsCommand.ExecuteAsync(null);
+        await app.ViewModel.GoToLibraryCommand.ExecuteAsync(null);
+        Dispatcher.UIThread.RunJobs();
         var empty = Puffs(app).Single(candidate => candidate.Fidgets && candidate.IsEffectivelyVisible);
         Assert.True(empty.GreetWhen);
-        var hello = await MotionAsync(empty);
+        var hello = await MotionAsync(empty, 1600);
         Assert.True(hello > 0.3, $"Puff says hello when the library is empty, but it only moved {hello:0.00}.");
         app.Screenshot("library-empty-hello");
+
+        // The fidget timer would cut in with a blink at a random moment, so it stops while the glance is measured.
+        empty.Fidgets = false;
+        empty.Glance();
+        var glance = await MotionAsync(empty, 1400);
+        Assert.True(glance > 0.5, $"Puff glances aside now and then, but its eyes only moved {glance:0.00}.");
         empty.Glance();
         await RunAsync(600);
         app.Screenshot("library-empty-glance");
-        var glance = await MotionAsync(empty, 1400);
-        Assert.True(glance > 0.5, $"Puff glances aside now and then, but its eyes only moved {glance:0.00}.");
 
         app.Get<ToastService>().Show("Saved");
         Dispatcher.UIThread.RunJobs();
