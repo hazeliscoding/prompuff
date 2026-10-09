@@ -54,10 +54,16 @@ jobs:
               run=(xvfb-run -a -s "-screen 0 1280x800x24" "app/$ASSET") ;;
             macOS) ditto -x -k "app/$ASSET" app/unpacked; run=("$(ls -d app/unpacked/*.app)/Contents/MacOS/Prompuff") ;;
           esac
-          # GitHub limits unauthenticated API calls per address, and runners share addresses, so a rate-limited check
-          # is retried. Each attempt gets its own library: Prompuff runs one copy per library, and an earlier copy
-          # may still be running.
+          # GitHub allows 60 unauthenticated API calls an hour per address, and runners share addresses, so each
+          # attempt first waits for the allowance to reset if it's used up. Each attempt gets its own library:
+          # Prompuff runs one copy per library, and an earlier copy may still be running.
           for attempt in 1 2 3; do
+            read -r remaining reset < <(curl -s https://api.github.com/rate_limit | jq -r '"\(.resources.core.remaining) \(.resources.core.reset)"') || true
+            echo "This address has ${remaining:-unknown} GitHub API calls left this hour."
+            if [ "$remaining" = 0 ]; then
+              wait=$(( reset - $(date +%s) + 5 ))
+              if [ "$wait" -gt 0 ] && [ "$wait" -le 3700 ]; then echo "Waiting ${wait}s for it to reset."; sleep "$wait"; fi
+            fi
             data="$RUNNER_TEMP/data-$attempt"
             mkdir -p "$data"
             echo '{ "checkForUpdatesAutomatically": true }' > "$data/settings.json"
@@ -70,8 +76,8 @@ jobs:
             cat "$data"/logs/*.log || true
             if grep -qs "update available: True" "$data"/logs/*.log; then echo "$FROM found an update; $TO is the latest stable release."; exit 0; fi
             if grep -qs "update available: False" "$data"/logs/*.log; then echo "::error::$FROM found no update"; exit 1; fi
-            echo "Attempt $attempt: the update check didn't finish; trying again in a minute."
-            sleep 60
+            echo "Attempt $attempt: the update check didn't finish; trying again."
+            sleep 10
           done
           echo "::error::$FROM never finished an update check"
           exit 1
