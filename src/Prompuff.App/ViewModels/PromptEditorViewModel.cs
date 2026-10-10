@@ -158,6 +158,7 @@ public sealed partial class PromptEditorViewModel : ObservableObject
     private string _notes = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FavoriteLabel))]
     private bool _isFavorite;
 
     [ObservableProperty]
@@ -242,6 +243,7 @@ public sealed partial class PromptEditorViewModel : ObservableObject
     public string VariableCountLabel => Format.Count(Variables.Count, "variable") + " detected";
     public string CharsLabel => $"{Body.Length.ToString("N0", CultureInfo.InvariantCulture)} chars · ~{(Body.Length / 4).ToString("N0", CultureInfo.InvariantCulture)} tokens";
     public string RatingLabel => Format.Rating(Rating);
+    public string FavoriteLabel => Format.Favorite(IsFavorite) + " (Ctrl D)";
     public string CollectionLabel => SelectedCollection.Name;
     public string CollectionTone => SelectedCollection.Tone;
     public string VersionLabel => IsNew ? "Not saved yet" : $"v{CurrentVersion} · edited {Format.Relative(UpdatedAt, _time.GetUtcNow())}";

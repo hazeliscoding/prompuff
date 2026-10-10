@@ -53,7 +53,7 @@
                    Text="{Binding Title}"
                    PlaceholderText="Untitled prompt" />
           <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-            <Button Classes="ghost icon" Classes.active="{Binding IsFavorite}" Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="Favorite (Ctrl D)">
+            <Button Classes="ghost icon" Classes.active="{Binding IsFavorite}" Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="{Binding FavoriteLabel}">
               <c:Icon Kind="Heart" Size="15" IsFilled="{Binding IsFavorite}" />
             </Button>
             <Button Command="{Binding DuplicateCommand}" IsEnabled="{Binding !IsNew}" ToolTip.Tip="Make a copy with its own history">

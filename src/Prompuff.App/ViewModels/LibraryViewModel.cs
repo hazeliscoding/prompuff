@@ -71,7 +71,10 @@ public sealed partial class PromptCardViewModel : ObservableObject
     public bool IsDeleted => _summary.DeletedAt is not null;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FavoriteLabel))]
     private bool _isFavorite;
+
+    public string FavoriteLabel => Format.Favorite(IsFavorite);
 
     /// <summary>The card the arrow keys are on.</summary>
     [ObservableProperty]

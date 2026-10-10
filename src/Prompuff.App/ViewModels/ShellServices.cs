@@ -393,6 +393,9 @@ internal static class Format
 
     public static string Rating(int? rating) => RatingLabels[Math.Clamp(rating ?? 0, 0, 5)];
 
+    /// <summary>The heart's tooltip, which is also what screen readers call it, so it says whether the prompt is a favorite.</summary>
+    public static string Favorite(bool isFavorite) => isFavorite ? "Remove from favorites" : "Add to favorites";
+
     public static string Count(int count, string singular, string? plural = null) =>
         $"{count.ToString(CultureInfo.InvariantCulture)} {(count == 1 ? singular : plural ?? singular + "s")}";
 

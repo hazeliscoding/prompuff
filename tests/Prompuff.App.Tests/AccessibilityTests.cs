@@ -199,4 +199,28 @@ public class AccessibilityTests
         await app.SettleAsync();
         Assert.Equal("Paste or type the prompt first.", errorPeer.GetName());
     }
+
+    /// <summary>A heart is read as what it will do, so a screen reader can tell a favorite from one that isn't.</summary>
+    [AvaloniaFact]
+    public async Task A_heart_says_whether_its_prompt_is_a_favorite()
+    {
+        await using var app = await AppHarness.StartAsync();
+        var id = app.ViewModel.Library.Items.First().Id;
+        // A favorite change refreshes the library, which makes new cards, so look the card up each time.
+        PromptCardViewModel Card() => app.ViewModel.Library.Items.Single(card => card.Id == id);
+        string Heart() => ControlAutomationPeer.CreatePeerForElement(app.Window.GetVisualDescendants().OfType<Button>()
+            .First(button => button.DataContext == Card() && button.Command == Card().ToggleFavoriteCommand)).GetName();
+
+        var was = Card().IsFavorite;
+        Assert.Equal(was ? "Remove from favorites" : "Add to favorites", Heart());
+        await Card().ToggleFavoriteCommand.ExecuteAsync(null);
+        await app.SettleAsync();
+        Assert.Equal(was ? "Add to favorites" : "Remove from favorites", Heart());
+
+        await Card().OpenCommand.ExecuteAsync(null);
+        await app.SettleAsync();
+        var editor = Assert.IsType<PromptEditorViewModel>(app.ViewModel.CurrentPage);
+        var heart = app.Window.GetVisualDescendants().OfType<Button>().First(button => button.Command == editor.ToggleFavoriteCommand);
+        Assert.Equal(was ? "Add to favorites (Ctrl D)" : "Remove from favorites (Ctrl D)", ControlAutomationPeer.CreatePeerForElement(heart).GetName());
+    }
 }
