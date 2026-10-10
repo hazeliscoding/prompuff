@@ -475,11 +475,12 @@
       </Panel>
     </Grid>
 
-    <!-- Toast. The outer panel stays in the window, so screen readers hear its name change as a toast appears. -->
+    <!-- Toast. The outer panel stays in the window, so screen readers hear its name change as a toast appears.
+         It floats above the footer bars, so it never covers their buttons, such as a workflow's Start over. -->
     <Panel x:Name="ToastAnnouncer"
            HorizontalAlignment="Right"
            VerticalAlignment="Bottom"
-           Margin="20"
+           Margin="20,20,20,56"
            IsHitTestVisible="False"
            AutomationProperties.LiveSetting="Polite" AutomationProperties.AccessibilityView="Content" AutomationProperties.ControlTypeOverride="Text"
            AutomationProperties.Name="{Binding Toasts.Current.Announcement}">
