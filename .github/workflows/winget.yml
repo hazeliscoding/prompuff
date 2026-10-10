@@ -1,0 +1,36 @@
+name: winget
+
+# Runs when a stable release is published (betas don't fire "released"): Komac adds the version to winget-pkgs
+# through a pull request from the owner's fork. The first version, 1.1.0, went in by hand, since Komac can only
+# update a package winget already has. WINGET_TOKEN is a classic token with public_repo; until it exists, this
+# does nothing.
+on:
+  release:
+    types: [released]
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    name: Submit to winget
+    runs-on: ubuntu-latest
+    env:
+      KOMAC_VERSION: 2.16.0
+      KOMAC_SHA256: 7d2707fa6210f2789a3702de49fbd150b736dbf426ee0b9bc8e098736f9fd82d
+    steps:
+      - name: Submit the release
+        env:
+          GITHUB_TOKEN: ${{ secrets.WINGET_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo "::notice::WINGET_TOKEN isn't set, so nothing went to winget."
+            exit 0
+          fi
+          archive="komac-$KOMAC_VERSION-x86_64-unknown-linux-gnu.tar.gz"
+          curl -fsSL -o "$archive" "https://github.com/russellbanks/Komac/releases/download/v$KOMAC_VERSION/$archive"
+          echo "$KOMAC_SHA256  $archive" | sha256sum --check
+          tar -xzf "$archive" komac
+          ./komac update hazeliscoding.Prompuff --version "${TAG#v}" \
+            --urls "https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/Prompuff-Setup.exe" --submit
