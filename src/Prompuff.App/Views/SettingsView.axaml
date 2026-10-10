@@ -85,7 +85,7 @@
 
         <!-- Appearance -->
         <StackPanel Spacing="4" IsVisible="{Binding IsAppearance}">
-          <TextBlock Classes="page-title" Text="Appearance" Margin="0,0,0,8" />
+          <TextBlock Classes="page-title" Text="Appearance" Margin="0,0,0,12" />
           <Border Classes="setting-row">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
               <StackPanel>
@@ -148,7 +148,7 @@
 
         <!-- Quick save -->
         <StackPanel Spacing="4" IsVisible="{Binding IsQuickSave}">
-          <TextBlock Classes="page-title" Text="Quick save" Margin="0,0,0,4" />
+          <TextBlock Classes="page-title" Text="Quick save" Margin="0,0,0,12" />
           <TextBlock Classes="muted" TextWrapping="Wrap" LineHeight="19.5" Margin="0,0,0,8"
                      Text="Stash a prompt from any app: copy it, then press the hotkey or use Prompuff's tray icon. Quick save opens with the clipboard, and Enter stashes it." />
           <Border Classes="setting-row" IsVisible="{Binding IsHotkeySupported}">
@@ -323,7 +323,7 @@
 
         <!-- Integrations -->
         <StackPanel Spacing="4" IsVisible="{Binding IsIntegrations}">
-          <TextBlock Classes="page-title" Text="Integrations" Margin="0,0,0,4" />
+          <TextBlock Classes="page-title" Text="Integrations" Margin="0,0,0,12" />
           <TextBlock Classes="muted" TextWrapping="Wrap" LineHeight="19.5" Margin="0,0,0,8"
                      Text="Use your library from a terminal or an AI tool. It all runs on this machine, and nothing here is on until you turn it on." />
           <Border Classes="setting-row">
@@ -394,7 +394,7 @@
 
         <!-- Updates -->
         <StackPanel Spacing="4" IsVisible="{Binding IsUpdates}">
-          <TextBlock Classes="page-title" Text="Updates" Margin="0,0,0,8" />
+          <TextBlock Classes="page-title" Text="Updates" Margin="0,0,0,12" />
           <Border Classes="setting-row">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
               <StackPanel>
@@ -474,7 +474,7 @@
         </StackPanel>
 
         <!-- About -->
-        <StackPanel Spacing="20" IsVisible="{Binding IsAbout}">
+        <StackPanel Spacing="16" IsVisible="{Binding IsAbout}">
           <TextBlock Classes="page-title" Text="About" />
           <Border Classes="panel" CornerRadius="12" Padding="24">
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="24">
