@@ -99,8 +99,9 @@
       <!-- Selection mode: bulk actions for the picked prompts -->
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" IsVisible="{Binding IsSelecting}">
         <StackPanel VerticalAlignment="Center" Spacing="1">
-          <TextBlock Classes="section-title" Text="{Binding SelectionLabel}" />
-          <TextBlock Classes="compact faint" Text="Click prompts to pick them. Shift picks a range, Esc stops." />
+          <TextBlock Classes="section-title" Text="{Binding SelectionLabel}" TextTrimming="CharacterEllipsis" />
+          <TextBlock Classes="compact faint" Text="Click prompts to pick them. Shift picks a range, Esc stops." TextTrimming="CharacterEllipsis"
+                     ToolTip.Tip="Click prompts to pick them. Shift picks a range, Esc stops." />
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
           <Button Classes="ghost sm" Command="{Binding SelectAllCommand}" Content="Select all" />
