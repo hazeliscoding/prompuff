@@ -232,7 +232,7 @@ An audit on 2026-10-10 went through the UI tests' screenshots, the themes and th
 - [x] Screen readers and the keyboard: the rating takes the keyboard and reads out as "Usefulness, Solid", toasts and Quick save's error are announced, a heart says whether its prompt is a favorite, Show details says when it's open, and the workflow's Previous and Next buttons point left and right like its step strip.
 - [x] Contrast and focus: danger buttons on hover, the focused list row against a picked one, the picked option in segmented controls, control edges at 3:1 (the editor's empty rating pips too), counts on the active sidebar row and tags on their tinted fill, and focus outlines that follow each control's corners. `ThemeTests` holds every theme to the new pairs.
 - [x] Layout: long dialog titles wrap, the library and Settings fit the 960-pixel minimum width with a test at that size, toasts stay clear of the buttons beneath them, the Render tab scrolls once, the data folder's path wraps instead of being cut off, and Settings pages share one spacing under their titles.
-- [ ] Copy and polish: Quick save's button says Save, the list view shows the rating's word, and small icon buttons use one icon size.
+- [x] Copy and polish: Quick save's button says Save, the list view shows the rating's word, and small icon buttons use one icon size.
 - [ ] Publish v1.1.1.
 
 **Done when:** a screen reader reads a prompt's rating and favorite and announces a toast, the library and Settings fit a 960 × 600 window, and `ThemeTests` holds all thirteen themes to the new pairs.
