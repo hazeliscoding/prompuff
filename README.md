@@ -13,7 +13,9 @@
 
 Prompuff is a small desktop app for the prompts that actually worked. Save them, tag them, fill in their `{{variables}}`, copy the result, and keep a note on why each one worked. Every saved change becomes a version you can read back or restore.
 
-Your prompts stay on your machine. There is no account, no cloud and no telemetry.
+Your prompts stay on your machine. There is no account, no cloud and no telemetry, and the only thing Prompuff asks the internet is whether there's a new version.
+
+Your library outlasts every update. Prompuff backs it up before an update changes it and once a day, and every later version opens a library from any earlier release.
 
 The website, [hazeliscoding.github.io/prompuff](https://hazeliscoding.github.io/prompuff/), has the launch video and a download for every platform.
 

@@ -233,7 +233,7 @@ These need no release. Each lands as its own pull request whenever it's ready, a
 - [ ] A Microsoft Store listing for the signed `Prompuff-Setup.exe`. The owner registers the free individual developer account.
 - [ ] The official MCP Registry lists the server as `io.github.hazeliscoding/prompuff`, with whatever package entry the registry needs, and says it comes with the Prompuff app. Glama and awesome-mcp-servers follow.
 - [ ] Submissions to awesome-claude-code (open to repos 14 days old, so from 2026-10-21), awesome-avalonia, Awesome-Prompt-Engineering and awesome-privacy.
-- [ ] The README and the website lead with what rival apps got wrong: a backup before every update, a library every later version opens, and no network beyond the update check.
+- [x] The README and the website lead with what rival apps got wrong: a backup before an update changes the library, a library every later version opens, and no network beyond the update check.
 - [ ] Check that a fresh download of `Prompuff-Setup.exe` no longer gets SmartScreen's "unrecognized app" warning, now that the certificate has had time to build reputation.
 
 **Done when:** `winget install Prompuff` installs the signed build, and Prompuff is listed in the Microsoft Store and the MCP Registry.
