@@ -1,8 +1,12 @@
 using Avalonia.Automation.Peers;
+using Avalonia.Automation.Provider;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.VisualTree;
+using Prompuff.App.Controls;
 using Prompuff.App.ViewModels;
 using Prompuff.Application.Settings;
 
@@ -114,5 +118,50 @@ public class AccessibilityTests
         }
 
         Assert.True(failures.Count == 0, $"{failures.Count} controls a screen reader can't name:\n" + string.Join("\n", failures.Distinct()));
+    }
+
+    /// <summary>The editor's rating takes the keyboard, shows focus, and reads as "Usefulness" with its word as the value.</summary>
+    [AvaloniaFact]
+    public async Task The_rating_takes_the_keyboard_and_reads_out_its_word()
+    {
+        await using var app = await AppHarness.StartAsync();
+        await app.ViewModel.Library.Items.First().OpenCommand.ExecuteAsync(null);
+        await app.SettleAsync();
+        var editor = Assert.IsType<PromptEditorViewModel>(app.ViewModel.CurrentPage);
+        var pips = app.Window.GetVisualDescendants().OfType<RatingPips>().Single(pips => pips.IsInteractive);
+
+        Assert.True(pips.Focusable);
+        pips.Focus(NavigationMethod.Tab);
+        await app.SettleAsync(30);
+        Assert.Contains(":focus-visible", pips.Classes);
+        Assert.NotNull(pips.FocusBrush);
+
+        async Task Press(PhysicalKey key)
+        {
+            app.Window.KeyPressQwerty(key, RawInputModifiers.None);
+            await app.SettleAsync(30);
+        }
+
+        await Press(PhysicalKey.Digit3);
+        Assert.Equal(3, editor.Rating);
+        await Press(PhysicalKey.ArrowRight);
+        Assert.Equal(4, editor.Rating);
+        app.Screenshot("editor-rating-keyboard");
+
+        var peer = ControlAutomationPeer.CreatePeerForElement(pips);
+        Assert.Equal("Usefulness", peer.GetName());
+        Assert.Equal(AutomationControlType.Slider, peer.GetAutomationControlType());
+        var value = Assert.IsAssignableFrom<IValueProvider>(peer);
+        Assert.Equal("Great", value.Value);
+        value.SetValue("Meh");
+        Assert.Equal(1, editor.Rating);
+
+        await Press(PhysicalKey.ArrowLeft);
+        Assert.Null(editor.Rating);
+        Assert.Equal("Unrated", value.Value);
+        await Press(PhysicalKey.End);
+        Assert.Equal(5, editor.Rating);
+        await Press(PhysicalKey.Delete);
+        Assert.Null(editor.Rating);
     }
 }

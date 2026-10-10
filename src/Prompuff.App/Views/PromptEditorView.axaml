@@ -206,7 +206,8 @@
               <TextBlock DockPanel.Dock="Top" Classes="label" Text="WHY THIS WORKED" Margin="0,0,0,8" />
               <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8" Margin="0,10,0,0">
                 <TextBlock Classes="compact faint" Text="Usefulness" VerticalAlignment="Center" />
-                <c:RatingPips Value="{Binding Rating}" IsInteractive="True" PipSize="14" Spacing="4" ToolTip.Tip="Click to rate; click again to clear" />
+                <c:RatingPips Value="{Binding Rating}" IsInteractive="True" PipSize="14" Spacing="4" AutomationProperties.Name="Usefulness"
+                              ToolTip.Tip="Click or use the arrow keys to rate; click again to clear" />
                 <TextBlock Classes="compact faint" Text="{Binding RatingLabel}" VerticalAlignment="Center" />
               </StackPanel>
               <TextBox Classes="notes" MinHeight="140" Text="{Binding Notes}" PlaceholderText="Why did this work? Notes to your future self." />

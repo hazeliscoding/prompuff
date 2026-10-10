@@ -1,4 +1,7 @@
 using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Automation.Peers;
+using Avalonia.Automation.Provider;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -94,7 +97,8 @@ public sealed class TagChip : TemplatedControl
 }
 
 /// <summary>Five small squares showing usefulness from 1 to 5. Clicking a square sets the rating;
-/// clicking the current rating clears it.</summary>
+/// clicking the current rating clears it. When it's interactive it also takes the keyboard, and screen
+/// readers read it as a slider whose value is the rating's word, such as "Solid".</summary>
 public sealed class RatingPips : Control
 {
     public static readonly StyledProperty<int?> ValueProperty =
@@ -115,12 +119,21 @@ public sealed class RatingPips : Control
     public static readonly StyledProperty<Avalonia.Media.IBrush?> EmptyBrushProperty =
         AvaloniaProperty.Register<RatingPips, Avalonia.Media.IBrush?>(nameof(EmptyBrush));
 
+    /// <summary>The ring drawn around the pips while they have keyboard focus; styles set it on :focus-visible.</summary>
+    public static readonly StyledProperty<Avalonia.Media.IBrush?> FocusBrushProperty =
+        AvaloniaProperty.Register<RatingPips, Avalonia.Media.IBrush?>(nameof(FocusBrush));
+
+    private const double FocusInset = 3;
+
     private int? _hover;
 
     static RatingPips()
     {
-        AffectsRender<RatingPips>(ValueProperty, FilledBrushProperty, EmptyBrushProperty);
+        AffectsRender<RatingPips>(ValueProperty, FilledBrushProperty, EmptyBrushProperty, FocusBrushProperty);
         AffectsMeasure<RatingPips>(PipSizeProperty, SpacingProperty);
+        IsInteractiveProperty.Changed.AddClassHandler<RatingPips>((pips, _) => pips.Focusable = pips.IsInteractive);
+        ValueProperty.Changed.AddClassHandler<RatingPips>((pips, e) =>
+            (ControlAutomationPeer.FromElement(pips) as RatingPipsAutomationPeer)?.RaiseValueChanged(e.OldValue as int?, e.NewValue as int?));
     }
 
     public int? Value
@@ -159,6 +172,12 @@ public sealed class RatingPips : Control
         set => SetValue(EmptyBrushProperty, value);
     }
 
+    public Avalonia.Media.IBrush? FocusBrush
+    {
+        get => GetValue(FocusBrushProperty);
+        set => SetValue(FocusBrushProperty, value);
+    }
+
     protected override Size MeasureOverride(Size availableSize) => new(PipSize * 5 + Spacing * 4, PipSize);
 
     public override void Render(Avalonia.Media.DrawingContext context)
@@ -170,7 +189,41 @@ public sealed class RatingPips : Control
             var rect = new Rect(i * (PipSize + Spacing), (Bounds.Height - PipSize) / 2, PipSize, PipSize);
             context.DrawRectangle(i < shown ? FilledBrush : EmptyBrush, null, rect, radius, radius);
         }
+
+        if (FocusBrush is { } focus)
+        {
+            var ring = new Rect(Bounds.Size).Inflate(FocusInset);
+            context.DrawRectangle(null, new Avalonia.Media.Pen(focus, 1.5), ring, radius + FocusInset, radius + FocusInset);
+        }
     }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (!IsInteractive || e.Handled || e.KeyModifiers != KeyModifiers.None || RatingForKey(e.Key, Value ?? 0) is not { } next)
+        {
+            return;
+        }
+
+        Value = next == 0 ? null : next;
+        e.Handled = true;
+    }
+
+    /// <summary>The rating a key moves to, where 0 clears it: arrows step, Home and End jump to the ends, and 0 to 5
+    /// pick one. Other keys return null.</summary>
+    public static int? RatingForKey(Key key, int current) => key switch
+    {
+        Key.Right or Key.Up => Math.Min(current + 1, 5),
+        Key.Left or Key.Down => Math.Max(current - 1, 0),
+        Key.Home => 1,
+        Key.End => 5,
+        Key.Delete or Key.Back => 0,
+        >= Key.D0 and <= Key.D5 => key - Key.D0,
+        >= Key.NumPad0 and <= Key.NumPad5 => key - Key.NumPad0,
+        _ => null,
+    };
+
+    protected override AutomationPeer OnCreateAutomationPeer() => new RatingPipsAutomationPeer(this);
 
     protected override void OnPointerMoved(PointerEventArgs e)
     {
@@ -208,4 +261,35 @@ public sealed class RatingPips : Control
         var index = (int)(point.X / (PipSize + Spacing)) + 1;
         return index is >= 1 and <= 5 ? index : null;
     }
+}
+
+/// <summary>Reads the rating as a slider whose value is its word ("Solid"), which screen readers say aloud, and
+/// lets them set it by word or number.</summary>
+public sealed class RatingPipsAutomationPeer(RatingPips owner) : ControlAutomationPeer(owner), IValueProvider
+{
+    private RatingPips Pips => (RatingPips)Owner;
+
+    public bool IsReadOnly => !Pips.IsInteractive;
+
+    public string? Value => ViewModels.Format.Rating(Pips.Value);
+
+    public void SetValue(string? value)
+    {
+        var rating = int.TryParse(value, out var number)
+            ? number
+            : Enumerable.Range(0, 6).FirstOrDefault(i => string.Equals(ViewModels.Format.Rating(i), value?.Trim(), StringComparison.OrdinalIgnoreCase), -1);
+        if (!IsReadOnly && rating is >= 0 and <= 5)
+        {
+            Pips.Value = rating == 0 ? null : rating;
+        }
+    }
+
+    internal void RaiseValueChanged(int? oldValue, int? newValue) =>
+        RaisePropertyChangedEvent(ValuePatternIdentifiers.ValueProperty, ViewModels.Format.Rating(oldValue), ViewModels.Format.Rating(newValue));
+
+    protected override AutomationControlType GetAutomationControlTypeCore() => AutomationControlType.Slider;
+
+    protected override bool IsContentElementCore() => Pips.IsInteractive;
+
+    protected override bool IsControlElementCore() => Pips.IsInteractive;
 }
