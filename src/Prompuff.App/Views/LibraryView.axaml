@@ -328,7 +328,10 @@
                         <TextBlock Classes="compact faint row-desc" Text="{Binding Description}" TextTrimming="CharacterEllipsis" IsVisible="{Binding HasDescription}" />
                       </StackPanel>
                       <c:TagChipStrip Grid.Column="2" Names="{Binding TagNames}" Wrap="False" VerticalAlignment="Center" ClipToBounds="True" />
-                      <c:RatingPips Grid.Column="3" Value="{Binding Rating, Mode=OneWay}" ToolTip.Tip="{Binding RatingLabel}" HorizontalAlignment="Left" />
+                      <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <c:RatingPips Value="{Binding Rating, Mode=OneWay}" />
+                        <TextBlock Classes="compact faint" Text="{Binding RatingLabel}" VerticalAlignment="Center" />
+                      </StackPanel>
                       <TextBlock Grid.Column="4" Classes="data faint" Text="{Binding EditedLabel}" ToolTip.Tip="{Binding EditedTooltip}" VerticalAlignment="Center" />
                       <Button Grid.Column="5" Classes="ghost icon sm" Classes.active="{Binding IsFavorite}" Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="{Binding FavoriteLabel}" IsVisible="{Binding !IsDeleted}">
                         <c:Icon Kind="Heart" Size="14" IsFilled="{Binding IsFavorite}" />
