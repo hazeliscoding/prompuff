@@ -49,6 +49,48 @@ public sealed record ThemePalette(
     public Color AccentText => Color.Parse(Accent[3]);
     public Color Inverse => Color.Parse(TextInverse);
 
+    /// <summary>
+    /// The edge of a text box, dropdown or checkbox: the faintest step from Border3 toward Text3 that reaches 3:1
+    /// (WCAG's bar for the parts of a control) on every background a control sits on.
+    /// </summary>
+    public Color ControlBorder
+    {
+        get
+        {
+            Color[] surfaces = [Bg(0), Bg(1), Bg(2), Bg(3), Inset];
+            for (var step = 0; step <= 100; step++)
+            {
+                var color = Mix(Border(3), Text(3), step / 100.0);
+                if (surfaces.All(surface => Contrast(color, surface) >= 3))
+                {
+                    return color;
+                }
+            }
+
+            return Text(3);
+        }
+    }
+
+    /// <summary>WCAG contrast ratio, as in https://www.w3.org/TR/WCAG21/#dfn-contrast-ratio.</summary>
+    public static double Contrast(Color a, Color b)
+    {
+        static double Channel(byte value)
+        {
+            var c = value / 255.0;
+            return c <= 0.04045 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4);
+        }
+
+        static double Luminance(Color color) => (0.2126 * Channel(color.R)) + (0.7152 * Channel(color.G)) + (0.0722 * Channel(color.B));
+
+        var (first, second) = (Luminance(a), Luminance(b));
+        return (Math.Max(first, second) + 0.05) / (Math.Min(first, second) + 0.05);
+    }
+
+    private static Color Mix(Color from, Color to, double amount) => Color.FromRgb(
+        (byte)Math.Round(from.R + ((to.R - from.R) * amount)),
+        (byte)Math.Round(from.G + ((to.G - from.G) * amount)),
+        (byte)Math.Round(from.B + ((to.B - from.B) * amount)));
+
     /// <summary>Prompuff's own themes live in <c>Tokens.axaml</c>; these entries only describe them for the picker.</summary>
     public bool IsBuiltIn => Id is ThemeCatalog.PrompuffDark or ThemeCatalog.PrompuffLight;
 }
@@ -76,18 +118,18 @@ public static class ThemeCatalog
         new("darcula", "Darcula", true,
             ["#232525", "#2B2B2B", "#313335", "#3C3F41", "#45494A", "#1E2020"],
             ["#373A3C", "#4B4F51", "#5E6264"],
-            ["#D4D4D4", "#A9B7C6", "#A0AAB5", "#5E6060"],
+            ["#D4D4D4", "#ACB9C7", "#A0AAB5", "#5E6060"],
             ["#589DF6", "#78B0F8", "#3C7FD8", "#8FBEFA"], "#1E2020",
-            new("#9876AA", "#B9A0C9"), new("#6897BB", "#92B6D5"), new("#C77DBB", "#DCA3D2"), new("#CC7832", "#E09A5F"),
+            new("#9876AA", "#C1AFCC"), new("#6897BB", "#9FBCD5"), new("#C77DBB", "#DBA9D2"), new("#CC7832", "#DCAD84"),
             new("#6A8759", "#9CBF87"), new("#589DF6", "#8FBEFA"), new("#FFC66D", "#FFD899"), new("#FF6B68", "#FF9C99")),
 
         new("gruvbox-dark", "Gruvbox Dark", true,
             ["#1D2021", "#282828", "#32302F", "#3C3836", "#504945", "#161819"],
             ["#3C3836", "#504945", "#665C54"],
-            ["#EBDBB2", "#BDAE93", "#AFA089", "#665C54"],
+            ["#EBDBB2", "#C8B99A", "#AFA089", "#665C54"],
             ["#8EC07C", "#A6D18F", "#689D6A", "#A9D19B"], "#1D2021",
-            new("#D3869B", "#E5B0BE"), new("#83A598", "#A7C0B6"), new("#B16286", "#D3869B"), new("#FE8019", "#FEAB6B"),
-            new("#B8BB26", "#CFD16B"), new("#458588", "#83A598"), new("#FABD2F", "#FCD36F"), new("#FB4934", "#FC7A6A")),
+            new("#D3869B", "#E5B0BE"), new("#83A598", "#A7C0B6"), new("#B16286", "#D99DA1"), new("#FE8019", "#FEAB6B"),
+            new("#B8BB26", "#CFD16B"), new("#458588", "#9CB29E"), new("#FABD2F", "#FCD36F"), new("#FB4934", "#F8907B")),
 
         new("dracula", "Dracula", true,
             ["#191A21", "#21222C", "#282A36", "#343746", "#44475A", "#14151B"],
@@ -95,15 +137,15 @@ public static class ThemeCatalog
             ["#F8F8F2", "#C5C8D6", "#949FC7", "#6272A4"],
             ["#BD93F9", "#D0B0FB", "#A275F2", "#CFB2FB"], "#191A21",
             new("#BD93F9", "#D4B8FB"), new("#8BE9FD", "#B0F1FE"), new("#FF79C6", "#FFA3D7"), new("#FFB86C", "#FFCD98"),
-            new("#50FA7B", "#8CFCA7"), new("#6C7BD8", "#9BA6E8"), new("#F1FA8C", "#F6FBB3"), new("#FF5555", "#FF8888")),
+            new("#50FA7B", "#8CFCA7"), new("#6C7BD8", "#9FA9E8"), new("#F1FA8C", "#F6FBB3"), new("#FF5555", "#FF8B8B")),
 
         new("nord", "Nord", true,
             ["#242933", "#2E3440", "#3B4252", "#434C5E", "#4C566A", "#20242C"],
             ["#3B4252", "#4C566A", "#616E88"],
             ["#ECEFF4", "#D8DEE9", "#B3BCCB", "#616E88"],
             ["#88C0D0", "#9FCFDC", "#6FAFC2", "#A3D2DE"], "#2E3440",
-            new("#B48EAD", "#CBAEC6"), new("#88C0D0", "#ACD5E0"), new("#C48BB5", "#D9B0CF"), new("#D08770", "#E0A891"),
-            new("#A3BE8C", "#BED3AD"), new("#81A1C1", "#A5BDD5"), new("#EBCB8B", "#F2DCAE"), new("#BF616A", "#E8AEB3")),
+            new("#B48EAD", "#D7C5D6"), new("#88C0D0", "#B0D7E1"), new("#C48BB5", "#DFC3DA"), new("#D08770", "#E4C2B5"),
+            new("#A3BE8C", "#C2D6B3"), new("#81A1C1", "#BCCDDF"), new("#EBCB8B", "#F2DCAE"), new("#BF616A", "#E9B8BD")),
 
         new("one-dark", "One Dark", true,
             ["#1B1D23", "#21252B", "#282C34", "#2F343E", "#3A3F4B", "#181A1F"],
@@ -124,10 +166,10 @@ public static class ThemeCatalog
         new("solarized-dark", "Solarized Dark", true,
             ["#00212B", "#002B36", "#073642", "#0A3D4A", "#104653", "#001B23"],
             ["#0E3F4C", "#284F59", "#3C626B"],
-            ["#EEE8D5", "#9EACAC", "#93A3A3", "#586E75"],
+            ["#EEE8D5", "#A2AFAE", "#93A3A3", "#586E75"],
             ["#2AA198", "#3CB8AD", "#1F8A82", "#4CC2B7"], "#002B36",
-            new("#6C71C4", "#9A9EE0"), new("#2AA198", "#4CC2B7"), new("#D33682", "#EC85B8"), new("#CB4B16", "#EA8C64"),
-            new("#859900", "#A8BD2E"), new("#268BD2", "#5CA6E0"), new("#B58900", "#D6A92A"), new("#DC322F", "#F2807D")),
+            new("#6C71C4", "#A3A6DF"), new("#2AA198", "#4CC2B7"), new("#D33682", "#EC85B8"), new("#CB4B16", "#EA8C64"),
+            new("#859900", "#A8BD2E"), new("#268BD2", "#78B3DE"), new("#B58900", "#D6A92A"), new("#DC322F", "#F2807D")),
 
         new("catppuccin-mocha", "Catppuccin Mocha", true,
             ["#11111B", "#181825", "#1E1E2E", "#282839", "#313244", "#0E0E16"],
@@ -143,7 +185,7 @@ public static class ThemeCatalog
             ["#171B22", "#525C6B", "#66707F", "#B3BAC5"],
             ["#0F766E", "#115E59", "#134E4A", "#0B7A70"], "#FFFFFF",
             new("#7C5CD6", "#5E3FB8"), new("#0A8FCB", "#0A6F9D"), new("#C9407F", "#A3305F"), new("#C4681F", "#94500F"),
-            new("#1E9E5E", "#177A49"), new("#3B6FE0", "#2A55B5"), new("#C98A12", "#8F6100"), new("#D7343E", "#B0232C")),
+            new("#1E9E5E", "#177848"), new("#3B6FE0", "#2A55B5"), new("#C98A12", "#8F6100"), new("#D7343E", "#B0232C")),
 
         new("gruvbox-light", "Gruvbox Light", false,
             ["#F2E5BC", "#F7ECC4", "#FBF1C7", "#F5E9C0", "#EBDBB2", "#F9F5D7"],
@@ -159,15 +201,15 @@ public static class ThemeCatalog
             ["#073642", "#4C5F66", "#586C73", "#93A1A1"],
             ["#2075B5", "#1A6399", "#155280", "#1A6399"], "#FFFFFF",
             new("#6C71C4", "#4F54A8"), new("#2AA198", "#177068"), new("#D33682", "#A8246A"), new("#CB4B16", "#A33A0F"),
-            new("#859900", "#5F6E00"), new("#268BD2", "#1A6399"), new("#B58900", "#8A6800"), new("#DC322F", "#B02623")),
+            new("#859900", "#5D6D01"), new("#268BD2", "#1A6399"), new("#B58900", "#7D6307"), new("#DC322F", "#B02623")),
 
         new("catppuccin-latte", "Catppuccin Latte", false,
             ["#E6E9EF", "#EAEDF2", "#EFF1F5", "#E9EBF1", "#DCE0E8", "#F4F5F8"],
             ["#DCE0E8", "#CCD0DA", "#ACB0BE"],
             ["#4C4F69", "#5C5F77", "#64677E", "#9CA0B0"],
             ["#8839EF", "#7A2EE0", "#6B25C9", "#7A2EE0"], "#FFFFFF",
-            new("#7287FD", "#3D50C8"), new("#04A5E5", "#036A93"), new("#EA76CB", "#B03A92"), new("#FE640B", "#B84804"),
-            new("#40A02B", "#2F7A1F"), new("#1E66F5", "#1550C7"), new("#DF8E1D", "#8A570A"), new("#D20F39", "#B00D30")),
+            new("#7287FD", "#3D50C8"), new("#04A5E5", "#036A93"), new("#EA76CB", "#A13D8C"), new("#FE640B", "#A14919"),
+            new("#40A02B", "#366F32"), new("#1E66F5", "#1550C7"), new("#DF8E1D", "#8A570A"), new("#D20F39", "#B00D30")),
     ];
 
     public static IReadOnlyList<ThemePalette> Dark { get; } = All.Where(theme => theme.IsDark).ToList();

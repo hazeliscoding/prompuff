@@ -72,6 +72,7 @@ public static class ThemeBuilder
         resources["Shadow4"] = Shadow(0, 24, 64, WithAlpha(shadow, dark ? (byte)0x99 : (byte)0x2E));
         resources["FocusRing"] = new BoxShadows(new BoxShadow { Spread = 3, Color = WithAlpha(p.AccentColor, 0x1A) });
         resources["FocusOutline"] = new BoxShadows(new BoxShadow { Spread = 2, IsInset = true, Color = p.AccentColor });
+        Brush("ControlBorderBrush", p.ControlBorder);
 
         Brush("AccentBrush", p.AccentColor);
         Brush("AccentHoverBrush", p.AccentHover);
@@ -95,8 +96,8 @@ public static class ThemeBuilder
         Brush("TextControlBackground", dark ? p.Inset : p.Bg(2));
         Brush("TextControlBackgroundPointerOver", dark ? p.Inset : p.Bg(2));
         Brush("TextControlBackgroundFocused", dark ? p.Inset : p.Bg(2));
-        Brush("TextControlBorderBrush", p.Border(2));
-        Brush("TextControlBorderBrushPointerOver", p.Border(3));
+        Brush("TextControlBorderBrush", p.ControlBorder);
+        Brush("TextControlBorderBrushPointerOver", p.Text(3));
         Brush("TextControlBorderBrushFocused", p.AccentColor);
         Brush("TextControlForeground", p.Text(1));
         Brush("TextControlForegroundPointerOver", p.Text(1));
@@ -109,9 +110,9 @@ public static class ThemeBuilder
         Brush("ComboBoxBackgroundPointerOver", dark ? p.Bg(4) : p.Bg(3));
         Brush("ComboBoxBackgroundPressed", p.Bg(4));
         Brush("ComboBoxBackgroundFocused", raised);
-        Brush("ComboBoxBorderBrush", p.Border(2));
-        Brush("ComboBoxBorderBrushPointerOver", p.Border(3));
-        Brush("ComboBoxBorderBrushPressed", p.Border(3));
+        Brush("ComboBoxBorderBrush", p.ControlBorder);
+        Brush("ComboBoxBorderBrushPointerOver", p.Text(3));
+        Brush("ComboBoxBorderBrushPressed", p.Text(3));
         Brush("ComboBoxForeground", p.Text(1));
         Brush("ComboBoxDropDownBackground", raised);
         Brush("ComboBoxDropDownBorderBrush", p.Border(2));

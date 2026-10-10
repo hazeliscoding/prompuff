@@ -27,6 +27,7 @@
       <SolidColorBrush x:Key="Border1Brush" Color="#1E242E" />
       <SolidColorBrush x:Key="Border2Brush" Color="#2A3240" />
       <SolidColorBrush x:Key="Border3Brush" Color="#3A4453" />
+      <SolidColorBrush x:Key="ControlBorderBrush" Color="#606B7A" />
       <SolidColorBrush x:Key="Text1Brush" Color="#E8ECF1" />
       <SolidColorBrush x:Key="Text2Brush" Color="#98A2B3" />
       <SolidColorBrush x:Key="Text3Brush" Color="#7D8898" />
@@ -86,8 +87,8 @@
       <SolidColorBrush x:Key="TextControlBackground" Color="#07090C" />
       <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#07090C" />
       <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#07090C" />
-      <SolidColorBrush x:Key="TextControlBorderBrush" Color="#2A3240" />
-      <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#3A4453" />
+      <SolidColorBrush x:Key="TextControlBorderBrush" Color="#606B7A" />
+      <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#7D8898" />
       <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#2DD4BF" />
       <SolidColorBrush x:Key="TextControlForeground" Color="#E8ECF1" />
       <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#E8ECF1" />
@@ -100,9 +101,9 @@
       <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#222834" />
       <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#222834" />
       <SolidColorBrush x:Key="ComboBoxBackgroundFocused" Color="#1B2029" />
-      <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#2A3240" />
-      <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#3A4453" />
-      <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="#3A4453" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#606B7A" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#7D8898" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="#7D8898" />
       <SolidColorBrush x:Key="ComboBoxForeground" Color="#E8ECF1" />
       <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#1B2029" />
       <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#2A3240" />
@@ -129,6 +130,7 @@
       <SolidColorBrush x:Key="Border1Brush" Color="#E6E8EC" />
       <SolidColorBrush x:Key="Border2Brush" Color="#D7DBE2" />
       <SolidColorBrush x:Key="Border3Brush" Color="#BCC3CE" />
+      <SolidColorBrush x:Key="ControlBorderBrush" Color="#858E9B" />
       <SolidColorBrush x:Key="Text1Brush" Color="#171B22" />
       <SolidColorBrush x:Key="Text2Brush" Color="#525C6B" />
       <SolidColorBrush x:Key="Text3Brush" Color="#66707F" />
@@ -166,7 +168,7 @@
       <SolidColorBrush x:Key="PeachSubtleBrush" Color="#1AC4681F" />
       <SolidColorBrush x:Key="PeachBorderBrush" Color="#59C4681F" />
       <SolidColorBrush x:Key="MintBrush" Color="#1E9E5E" />
-      <SolidColorBrush x:Key="MintTextBrush" Color="#177A49" />
+      <SolidColorBrush x:Key="MintTextBrush" Color="#177848" />
       <SolidColorBrush x:Key="MintSubtleBrush" Color="#1A1E9E5E" />
       <SolidColorBrush x:Key="MintBorderBrush" Color="#591E9E5E" />
       <SolidColorBrush x:Key="BlueBrush" Color="#3B6FE0" />
@@ -185,8 +187,8 @@
       <SolidColorBrush x:Key="TextControlBackground" Color="#FFFFFF" />
       <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#FFFFFF" />
       <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF" />
-      <SolidColorBrush x:Key="TextControlBorderBrush" Color="#D7DBE2" />
-      <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#BCC3CE" />
+      <SolidColorBrush x:Key="TextControlBorderBrush" Color="#858E9B" />
+      <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#66707F" />
       <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#0F766E" />
       <SolidColorBrush x:Key="TextControlForeground" Color="#171B22" />
       <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#171B22" />
@@ -199,9 +201,9 @@
       <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#F6F7F9" />
       <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#EDEFF3" />
       <SolidColorBrush x:Key="ComboBoxBackgroundFocused" Color="#FFFFFF" />
-      <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#D7DBE2" />
-      <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#BCC3CE" />
-      <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="#BCC3CE" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#858E9B" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#66707F" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="#66707F" />
       <SolidColorBrush x:Key="ComboBoxForeground" Color="#171B22" />
       <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FFFFFF" />
       <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#D7DBE2" />

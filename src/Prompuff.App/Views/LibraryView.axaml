@@ -29,7 +29,7 @@
       <Setter Property="Height" Value="15" />
       <Setter Property="CornerRadius" Value="4" />
       <Setter Property="BorderThickness" Value="1.5" />
-      <Setter Property="BorderBrush" Value="{DynamicResource Border3Brush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
       <Setter Property="Background" Value="{DynamicResource Bg1Brush}" />
     </Style>
     <Style Selector="Border.check.checked">

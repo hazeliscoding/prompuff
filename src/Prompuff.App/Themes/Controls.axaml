@@ -99,8 +99,7 @@
           <Setter Property="BorderBrush" Value="{DynamicResource CriticalBorderBrush}" />
         </Style>
         <Style Selector="^.danger:pointerover">
-          <Setter Property="Background" Value="{DynamicResource CriticalBrush}" />
-          <Setter Property="Foreground" Value="White" />
+          <Setter Property="BorderBrush" Value="{DynamicResource CriticalBrush}" />
         </Style>
 
         <Style Selector="^.sm">
@@ -307,11 +306,14 @@
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Padding" Value="9,0" />
         <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="FocusAdorner" Value="{x:Null}" />
         <Setter Property="Template">
           <ControlTemplate>
             <Border x:Name="PART_Border"
                     Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="1"
                     CornerRadius="3"
                     Padding="{TemplateBinding Padding}">
               <ContentPresenter VerticalAlignment="Center"
@@ -325,11 +327,9 @@
           <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
         </Style>
         <Style Selector="^:checked">
-          <Setter Property="Background" Value="{DynamicResource Bg3Brush}" />
+          <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
           <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
-        </Style>
-        <Style Selector="^:checked /template/ Border#PART_Border">
-          <Setter Property="BoxShadow" Value="{DynamicResource Shadow1}" />
         </Style>
         <Style Selector="^:focus-visible /template/ Border#PART_Border">
           <Setter Property="BoxShadow" Value="{DynamicResource FocusOutline}" />
@@ -557,6 +557,9 @@
   <Style Selector="TextBlock.faint">
     <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
   </Style>
+  <Style Selector="Button.nav.active TextBlock.faint">
+    <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+  </Style>
   <Style Selector="TextBlock.variable">
     <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
     <Setter Property="FontSize" Value="12" />
@@ -653,9 +656,12 @@
   <!-- Rating pips and Puff -->
   <Style Selector="c|RatingPips">
     <Setter Property="FilledBrush" Value="{DynamicResource LavenderBrush}" />
-    <Setter Property="EmptyBrush" Value="{DynamicResource Bg4Brush}" />
+    <Setter Property="EmptyBrush" Value="{DynamicResource Border3Brush}" />
     <Setter Property="VerticalAlignment" Value="Center" />
     <Setter Property="FocusAdorner" Value="{x:Null}" />
+  </Style>
+  <Style Selector="c|RatingPips[IsInteractive=True]">
+    <Setter Property="EmptyBrush" Value="{DynamicResource ControlBorderBrush}" />
   </Style>
   <Style Selector="c|RatingPips:focus-visible">
     <Setter Property="FocusBrush" Value="{DynamicResource AccentBrush}" />

@@ -62,7 +62,9 @@ public class ThemeTests
             Assert.Equal(palette.AccentColor, Resolve("AccentBrush", variant));
             Assert.Equal(palette.AccentText, Resolve("AccentTextBrush", variant));
             Assert.Equal(palette.Lavender.Text, Resolve("LavenderTextBrush", variant));
+            Assert.Equal(palette.Mint.Text, Resolve("MintTextBrush", variant));
             Assert.Equal(palette.Critical.Base, Resolve("CriticalBrush", variant));
+            Assert.Equal(palette.ControlBorder, Resolve("ControlBorderBrush", variant));
         }
     }
 
@@ -141,6 +143,61 @@ public class ThemeTests
 
         Check("TextInverse", theme.Inverse, theme.AccentColor, "Accent", 4.5);
         Assert.True(failures.Count == 0, $"{theme.Name}:\n" + string.Join("\n", failures));
+    }
+
+    /// <summary>
+    /// The pairs the 2026-10-10 audit found below the bar, read from the resources each theme actually resolves: control edges
+    /// and the accent at 3:1 against every background, tags and danger buttons on their own tint, the counts on the active
+    /// sidebar row, and the picked option in a segmented control at 4.5:1.
+    /// </summary>
+    [AvaloniaTheory]
+    [MemberData(nameof(ThemeIds))]
+    public void Controls_states_and_tints_reach_the_bar(string id)
+    {
+        var theme = ThemeCatalog.All.Single(palette => palette.Id == id);
+        var variant = ThemeBuilder.Variant(theme);
+        Color Key(string key) => Resolve(key, variant);
+        var failures = new List<string>();
+
+        void Check(string what, Color foreground, Color background, string on, double minimum)
+        {
+            var ratio = Contrast(foreground, background);
+            if (ratio < minimum)
+            {
+                failures.Add($"{what} on {on}: {ratio:0.00} < {minimum}");
+            }
+        }
+
+        var surfaces = new[] { "Bg0Brush", "Bg1Brush", "Bg2Brush", "Bg3Brush", "BgInsetBrush" };
+        foreach (var surface in surfaces)
+        {
+            Check("ControlBorder", Key("ControlBorderBrush"), Key(surface), surface, 3);
+            Check("Accent", Key("AccentBrush"), Key(surface), surface, 3);
+        }
+
+        foreach (var tone in new[] { "Lavender", "Sky", "Pink", "Peach", "Mint", "Blue", "Amber", "Critical" })
+        {
+            foreach (var surface in new[] { "Bg1Brush", "Bg2Brush", "Bg3Brush" })
+            {
+                Check($"{tone}Text", Key($"{tone}TextBrush"), Over(Key($"{tone}SubtleBrush"), Key(surface)), $"{tone}Subtle over {surface}", 4.5);
+            }
+        }
+
+        Check("Text2", Key("Text2Brush"), Key("Bg4Brush"), "Bg4", 4.5);
+        foreach (var surface in new[] { "BgInsetBrush", "Bg1Brush", "Bg2Brush" })
+        {
+            Check("Text1", Key("Text1Brush"), Over(Key("AccentSubtleBrush"), Key(surface)), $"AccentSubtle over {surface}", 4.5);
+        }
+
+        Assert.True(failures.Count == 0, $"{theme.Name}:\n" + string.Join("\n", failures));
+    }
+
+    /// <summary>A translucent color laid over an opaque one.</summary>
+    private static Color Over(Color top, Color bottom)
+    {
+        var alpha = top.A / 255.0;
+        byte Blend(byte front, byte back) => (byte)Math.Round((front * alpha) + (back * (1 - alpha)));
+        return Color.FromRgb(Blend(top.R, bottom.R), Blend(top.G, bottom.G), Blend(top.B, bottom.B));
     }
 
     [AvaloniaFact]
