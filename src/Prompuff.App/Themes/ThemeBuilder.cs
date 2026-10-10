@@ -71,6 +71,7 @@ public static class ThemeBuilder
         resources["Shadow3"] = Shadow(0, 8, 24, WithAlpha(shadow, dark ? (byte)0x80 : (byte)0x1F));
         resources["Shadow4"] = Shadow(0, 24, 64, WithAlpha(shadow, dark ? (byte)0x99 : (byte)0x2E));
         resources["FocusRing"] = new BoxShadows(new BoxShadow { Spread = 3, Color = WithAlpha(p.AccentColor, 0x1A) });
+        resources["FocusOutline"] = new BoxShadows(new BoxShadow { Spread = 2, IsInset = true, Color = p.AccentColor });
 
         Brush("AccentBrush", p.AccentColor);
         Brush("AccentHoverBrush", p.AccentHover);

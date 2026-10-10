@@ -38,6 +38,7 @@
       <BoxShadows x:Key="Shadow3">0 8 24 0 #80000000</BoxShadows>
       <BoxShadows x:Key="Shadow4">0 24 64 0 #99000000</BoxShadows>
       <BoxShadows x:Key="FocusRing">0 0 0 3 #1A2DD4BF</BoxShadows>
+      <BoxShadows x:Key="FocusOutline">inset 0 0 0 2 #2DD4BF</BoxShadows>
 
       <!-- Accent (interactive) -->
       <SolidColorBrush x:Key="AccentBrush" Color="#2DD4BF" />
@@ -139,6 +140,7 @@
       <BoxShadows x:Key="Shadow3">0 8 24 0 #1F171B22</BoxShadows>
       <BoxShadows x:Key="Shadow4">0 24 64 0 #2E171B22</BoxShadows>
       <BoxShadows x:Key="FocusRing">0 0 0 3 #1A0F766E</BoxShadows>
+      <BoxShadows x:Key="FocusOutline">inset 0 0 0 2 #0F766E</BoxShadows>
 
       <SolidColorBrush x:Key="AccentBrush" Color="#0F766E" />
       <SolidColorBrush x:Key="AccentHoverBrush" Color="#115E59" />
