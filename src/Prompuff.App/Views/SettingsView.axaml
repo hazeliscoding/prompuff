@@ -213,7 +213,7 @@
               <TextBlock Classes="label" Text="DATA FOLDER" />
               <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                 <Border Classes="well" CornerRadius="4" Padding="10,7">
-                  <SelectableTextBlock Text="{Binding DataDirectory}" FontFamily="{StaticResource MonoFont}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                  <SelectableTextBlock Text="{Binding DataDirectory}" FontFamily="{StaticResource MonoFont}" FontSize="12" TextWrapping="Wrap" />
                 </Border>
                 <Button Grid.Column="1" Command="{Binding OpenDataFolderCommand}">
                   <StackPanel Orientation="Horizontal" Spacing="6">
