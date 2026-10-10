@@ -164,7 +164,7 @@
                 <Grid ColumnDefinitions="*,Auto" Margin="8,0,2,4">
                   <TextBlock Classes="label" Text="COLLECTIONS" VerticalAlignment="Center" />
                   <Button Grid.Column="1" Classes="ghost icon sm" Command="{Binding NewCollectionCommand}" ToolTip.Tip="New collection">
-                    <c:Icon Kind="Plus" Size="12" />
+                    <c:Icon Kind="Plus" Size="13" />
                   </Button>
                 </Grid>
                 <ItemsControl ItemsSource="{Binding Collections}">
