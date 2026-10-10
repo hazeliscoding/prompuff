@@ -223,4 +223,26 @@ public class AccessibilityTests
         var heart = app.Window.GetVisualDescendants().OfType<Button>().First(button => button.Command == editor.ToggleFavoriteCommand);
         Assert.Equal(was ? "Add to favorites (Ctrl D)" : "Remove from favorites (Ctrl D)", ControlAutomationPeer.CreatePeerForElement(heart).GetName());
     }
+
+    /// <summary>Show details says when the details are open, in words and with its chevron.</summary>
+    [AvaloniaFact]
+    public async Task Show_details_says_when_the_details_are_open()
+    {
+        await using var app = await AppHarness.StartAsync();
+        var showing = app.ViewModel.Dialogs.ShowErrorAsync("Couldn't import that file.", "Your library is safe.", "System.IO.IOException: locked");
+        await app.SettleAsync();
+        var dialog = app.ViewModel.Dialogs.Current!;
+        var toggle = app.Window.GetVisualDescendants().OfType<Button>().Single(button => button.Command == dialog.ToggleDetailsCommand);
+        string Name() => ControlAutomationPeer.CreatePeerForElement(toggle).GetName();
+
+        Assert.Equal("Show details", Name());
+        dialog.ToggleDetailsCommand.Execute(null);
+        await app.SettleAsync();
+        Assert.Equal("Hide details", Name());
+        Assert.Contains(toggle.GetVisualDescendants().OfType<Icon>(), icon => icon.IsEffectivelyVisible && icon.Kind == "ChevronDown");
+        app.Screenshot("dialog-details-open");
+
+        app.ViewModel.Dialogs.CancelCurrent();
+        await showing;
+    }
 }

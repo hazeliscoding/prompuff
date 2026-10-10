@@ -41,7 +41,12 @@
               <TextBlock Text="Open data folder" />
             </StackPanel>
           </Button>
-          <Button Classes="ghost" Content="Show details" IsVisible="{Binding HasDetails}" Command="{Binding ToggleDetailsCommand}" />
+          <Button Classes="ghost" IsVisible="{Binding HasDetails}" Command="{Binding ToggleDetailsCommand}">
+            <Panel>
+              <TextBlock Text="Show details" IsVisible="{Binding !ShowDetails}" />
+              <TextBlock Text="Hide details" IsVisible="{Binding ShowDetails}" />
+            </Panel>
+          </Button>
         </StackPanel>
         <Border Classes="well" Padding="10" IsVisible="{Binding ShowDetails}" MaxHeight="220">
           <ScrollViewer>
@@ -450,8 +455,10 @@
           <TextBox x:Name="DialogInput" IsVisible="{Binding HasInput}" Text="{Binding InputText}" PlaceholderText="{Binding InputPlaceholder}" Height="32" />
           <Button Classes="ghost sm" HorizontalAlignment="Left" IsVisible="{Binding HasDetails}" Command="{Binding ToggleDetailsCommand}" Margin="-8,0,0,0">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <c:Icon Kind="ChevronRight" Size="12" />
-              <TextBlock Text="Show details" />
+              <c:Icon Kind="ChevronRight" Size="12" IsVisible="{Binding !ShowDetails}" />
+              <c:Icon Kind="ChevronDown" Size="12" IsVisible="{Binding ShowDetails}" />
+              <TextBlock Text="Show details" IsVisible="{Binding !ShowDetails}" />
+              <TextBlock Text="Hide details" IsVisible="{Binding ShowDetails}" />
             </StackPanel>
           </Button>
           <Border Classes="well" Padding="10" MaxHeight="200" IsVisible="{Binding ShowDetails}">
