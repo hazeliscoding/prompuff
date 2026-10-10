@@ -74,7 +74,7 @@ A prompt lives in one collection, or none, and can have any number of tags.
 
 A prompt has a **title**, a one-line **description**, the **prompt** itself (Markdown), and **Why this worked**, notes to your future self.
 
-**Saving:** changes to those four fields wait for **Save** (Ctrl+S), and each save makes a new version. Prompuff also saves when you leave the prompt or close the window. The favorite heart (Ctrl+D), the usefulness rating (Meh, Okay, Solid, Great, Cooked), the collection and the tags save as soon as you change them, and don't make versions.
+**Saving:** changes to those four fields wait for **Save** (Ctrl+S), and each save makes a new version. Prompuff also saves when you leave the prompt or close the window. The favorite heart (Ctrl+D), the usefulness rating (Meh, Okay, Solid, Great, Cooked; Tab to it and use the arrow keys or 0 to 5), the collection and the tags save as soon as you change them, and don't make versions.
 
 **Copying:** **Copy** copies the prompt with your variable values filled in. The **…** menu has **Copy template with variables** (Ctrl+Shift+C), which copies it as written.
 
