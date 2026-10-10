@@ -447,10 +447,10 @@
           <KeyBinding Gesture="Enter" Command="{Binding ConfirmCommand}" />
         </Border.KeyBindings>
         <StackPanel Margin="20,18" Spacing="12">
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <c:Icon Kind="TriangleAlert" Size="16" Foreground="{DynamicResource AmberBrush}" IsVisible="{Binding IsError}" />
-            <TextBlock Classes="section-title" Text="{Binding Title}" TextWrapping="Wrap" />
-          </StackPanel>
+          <Grid ColumnDefinitions="Auto,*">
+            <c:Icon Kind="TriangleAlert" Size="16" Foreground="{DynamicResource AmberBrush}" IsVisible="{Binding IsError}" VerticalAlignment="Top" Margin="0,2,10,0" />
+            <TextBlock Grid.Column="1" Classes="section-title" Text="{Binding Title}" TextWrapping="Wrap" />
+          </Grid>
           <TextBlock Classes="muted" Text="{Binding Message}" TextWrapping="Wrap" LineHeight="19.5" />
           <TextBox x:Name="DialogInput" IsVisible="{Binding HasInput}" Text="{Binding InputText}" PlaceholderText="{Binding InputPlaceholder}" Height="32" />
           <Button Classes="ghost sm" HorizontalAlignment="Left" IsVisible="{Binding HasDetails}" Command="{Binding ToggleDetailsCommand}" Margin="-8,0,0,0">
