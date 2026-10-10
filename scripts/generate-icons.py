@@ -89,6 +89,7 @@ ICONS: list[tuple[str, str]] = [
     ("ArrowUp", "arrow-up"),
     ("ArrowDown", "arrow-down"),
     ("ArrowRight", "arrow-right"),
+    ("ArrowLeft", "arrow-left"),
     ("CircleCheck", "circle-check"),
     ("Plug", "plug"),
     ("Terminal", "terminal"),

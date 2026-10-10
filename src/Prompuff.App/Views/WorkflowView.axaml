@@ -290,10 +290,10 @@
                 <TextBlock Grid.Column="1" Classes="data" Text="{Binding FillLabel}" VerticalAlignment="Center"
                            Foreground="{DynamicResource MintTextBrush}" IsVisible="{Binding IsFullyFilled}" />
                 <Button Grid.Column="3" Classes="ghost sm" Command="{Binding PreviousStepCommand}" IsEnabled="{Binding CanGoBack}" VerticalAlignment="Center" ToolTip.Tip="Previous step">
-                  <c:Icon Kind="ArrowUp" Size="12" />
+                  <c:Icon Kind="ArrowLeft" Size="12" />
                 </Button>
                 <Button Grid.Column="4" Classes="ghost sm" Command="{Binding NextStepCommand}" IsEnabled="{Binding CanGoForward}" VerticalAlignment="Center" ToolTip.Tip="Next step">
-                  <c:Icon Kind="ArrowDown" Size="12" />
+                  <c:Icon Kind="ArrowRight" Size="12" />
                 </Button>
                 <Button Grid.Column="5" Classes="primary sm" Command="{Binding CopyStepCommand}" VerticalAlignment="Center" ToolTip.Tip="Copy, then move to the next step (Ctrl Enter)">
                   <StackPanel Orientation="Horizontal" Spacing="6">
