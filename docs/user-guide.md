@@ -101,7 +101,7 @@ Quick save stashes a prompt in a few seconds:
 1. Copy the prompt in any app.
 2. Press **Ctrl+Alt+P** (⌃⌥P on macOS) from anywhere, or Ctrl+Shift+S inside Prompuff, or choose **Quick save** at the top of the window.
 3. Quick save opens with what you copied and a title guessed from it. Pick a collection and tags if you like, and **Worked well** (rates it Great), **Template** or **Idea** (add those tags). The **Why save this?** line becomes its notes.
-4. Choose **Stash it**. After a hotkey Quick save, Prompuff goes back to the tray or the taskbar if that's where it was, so you land back in your app.
+4. Choose **Save**. After a hotkey Quick save, Prompuff goes back to the tray or the taskbar if that's where it was, so you land back in your app.
 
 **Change the hotkey** in Settings › Quick save: choose **Change** and press the new keys, which need Ctrl, Alt or the Windows, Super or ⌘ key, plus a letter, digit, F1–F12 or Space. Settings says when another app already owns a combination. **Turn off** turns it off.
 

@@ -352,7 +352,7 @@
               <Button Grid.Column="2" Classes="primary" Command="{Binding SaveCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <c:Icon Kind="Check" Size="13" StrokeWidth="2" />
-                  <TextBlock Text="Stash it" />
+                  <TextBlock Text="Save" />
                 </StackPanel>
               </Button>
             </Grid>
