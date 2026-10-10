@@ -1,3 +1,4 @@
+using Avalonia.Automation;
 using Avalonia.Automation.Peers;
 using Avalonia.Automation.Provider;
 using Avalonia.Controls;
@@ -163,5 +164,39 @@ public class AccessibilityTests
         Assert.Equal(5, editor.Rating);
         await Press(PhysicalKey.Delete);
         Assert.Null(editor.Rating);
+    }
+
+    /// <summary>
+    /// Toasts and Quick save's error are live regions. Windows tells screen readers about one when its name changes, and only
+    /// for an element already in the window, so each one stays there and takes the message as its name.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Toasts_and_quick_save_errors_are_announced()
+    {
+        await using var app = await AppHarness.StartAsync();
+        Control Named(string name) => app.Window.GetVisualDescendants().OfType<Control>().Single(control => control.Name == name);
+
+        var toast = Named("ToastAnnouncer");
+        Assert.True(toast.IsEffectivelyVisible, "The toast's announcer is in the window before any toast");
+        var toastPeer = ControlAutomationPeer.CreatePeerForElement(toast);
+        Assert.Equal(AutomationLiveSetting.Polite, toastPeer.GetLiveSetting());
+        var renamed = 0;
+        toastPeer.PropertyChanged += (_, e) => renamed += e.Property == AutomationElementIdentifiers.NameProperty ? 1 : 0;
+
+        app.ViewModel.Toasts.Show("Moved to Recently deleted.", "UI Mockup Generator", isHappy: false);
+        await app.SettleAsync();
+        Assert.Equal("Moved to Recently deleted. UI Mockup Generator", toastPeer.GetName());
+        Assert.True(renamed > 0, "Changing the name raises the event screen readers listen for");
+
+        await app.ViewModel.QuickSave.OpenAsync();
+        await app.SettleAsync();
+        app.ViewModel.QuickSave.Text = string.Empty;
+        var error = Named("QuickSaveErrorAnnouncer");
+        Assert.True(error.IsEffectivelyVisible, "Quick save's announcer is in the window before any error");
+        var errorPeer = ControlAutomationPeer.CreatePeerForElement(error);
+        Assert.Equal(AutomationLiveSetting.Assertive, errorPeer.GetLiveSetting());
+        await app.ViewModel.QuickSave.SaveCommand.ExecuteAsync(null);
+        await app.SettleAsync();
+        Assert.Equal("Paste or type the prompt first.", errorPeer.GetName());
     }
 }

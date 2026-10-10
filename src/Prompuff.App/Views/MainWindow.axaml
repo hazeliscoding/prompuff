@@ -353,6 +353,10 @@
             </Grid>
           </Border>
 
+          <!-- Stays in the window with no size, so screen readers hear its name change when an error appears. -->
+          <Panel x:Name="QuickSaveErrorAnnouncer" DockPanel.Dock="Bottom" Height="0"
+                 AutomationProperties.LiveSetting="Assertive" AutomationProperties.AccessibilityView="Content" AutomationProperties.ControlTypeOverride="Text" AutomationProperties.Name="{Binding Error}" />
+
           <StackPanel Margin="18,14" Spacing="12">
             <TextBox Classes="mono"
                      Height="110"
@@ -464,17 +468,20 @@
       </Panel>
     </Grid>
 
-    <!-- Toast -->
-    <Border HorizontalAlignment="Right"
-            VerticalAlignment="Bottom"
-            Margin="20"
-            Padding="12,10,16,10"
+    <!-- Toast. The outer panel stays in the window, so screen readers hear its name change as a toast appears. -->
+    <Panel x:Name="ToastAnnouncer"
+           HorizontalAlignment="Right"
+           VerticalAlignment="Bottom"
+           Margin="20"
+           IsHitTestVisible="False"
+           AutomationProperties.LiveSetting="Polite" AutomationProperties.AccessibilityView="Content" AutomationProperties.ControlTypeOverride="Text"
+           AutomationProperties.Name="{Binding Toasts.Current.Announcement}">
+    <Border Padding="12,10,16,10"
             CornerRadius="8"
             Background="{DynamicResource Bg3Brush}"
             BorderBrush="{DynamicResource Border2Brush}"
             BorderThickness="1"
             BoxShadow="{DynamicResource Shadow3}"
-            IsHitTestVisible="False"
             IsVisible="{Binding Toasts.Current, Converter={x:Static ObjectConverters.IsNotNull}}">
       <Panel DataContext="{Binding Toasts.Current}">
       <StackPanel Orientation="Horizontal" Spacing="10" x:DataType="vm:ToastViewModel">
@@ -487,5 +494,6 @@
       </StackPanel>
       </Panel>
     </Border>
+    </Panel>
   </Panel>
 </Window>

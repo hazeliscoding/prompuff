@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Automation;
+using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.LogicalTree;
@@ -25,6 +26,15 @@ public static class AccessibleNames
         Control.UnloadedEvent.AddClassHandler<Button>((button, _) => Stop(button));
         Control.LoadedEvent.AddClassHandler<TextBox>((box, _) => Follow(box));
         Control.UnloadedEvent.AddClassHandler<TextBox>((box, _) => Stop(box));
+
+        // Windows announces a live region when its name changes, but Avalonia's peers don't report that change, so report it here.
+        AutomationProperties.NameProperty.Changed.AddClassHandler<Control>((control, e) =>
+        {
+            if (AutomationProperties.GetLiveSetting(control) != AutomationLiveSetting.Off)
+            {
+                ControlAutomationPeer.FromElement(control)?.RaisePropertyChangedEvent(AutomationElementIdentifiers.NameProperty, e.OldValue, e.NewValue);
+            }
+        });
     }
 
     /// <summary>The name this control's own content gives it: its text, its tooltip, or its placeholder.</summary>

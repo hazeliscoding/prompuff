@@ -245,6 +245,9 @@ public sealed partial class ToastViewModel(string title, string? subtitle, bool 
     public string? Subtitle { get; } = subtitle;
     public bool HasSubtitle => !string.IsNullOrEmpty(Subtitle);
     public bool IsHappy { get; } = isHappy;
+
+    /// <summary>What a screen reader says when the toast appears. Titles end with a full stop, so the subtitle follows on.</summary>
+    public string Announcement => HasSubtitle ? $"{Title} {Subtitle}" : Title;
 }
 
 public sealed partial class ToastService(AppearanceState appearance) : ObservableObject
