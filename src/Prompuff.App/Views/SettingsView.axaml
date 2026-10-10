@@ -276,7 +276,7 @@
                 <TextBlock Classes="strong" Text="Import" />
                 <TextBlock Classes="compact faint" TextWrapping="Wrap"
                            Text="Pick .md files, a .zip export, or a whole folder such as an Obsidian vault. Workflows come in too. Prompts and workflows you already have are skipped, and anything that can't be read is reported." />
-                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,6,0,0">
+                <WrapPanel ItemSpacing="8" LineSpacing="8" Margin="0,6,0,0">
                   <Button Command="{Binding ImportCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                       <c:Icon Kind="Download" Size="13" />
@@ -289,7 +289,7 @@
                       <TextBlock Text="Choose a folder" />
                     </StackPanel>
                   </Button>
-                </StackPanel>
+                </WrapPanel>
               </StackPanel>
             </Border>
             <Border Grid.Column="1" Classes="panel" Padding="16">
@@ -459,9 +459,9 @@
             <ItemsControl ItemsSource="{Binding Shortcuts}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:ShortcutRow">
-                  <Border Height="36" Padding="14,0" Background="{DynamicResource Bg2Brush}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,0,0,1">
-                    <Grid ColumnDefinitions="*,Auto">
-                      <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                  <Border MinHeight="36" Padding="14,8" Background="{DynamicResource Bg2Brush}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,0,0,1">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                      <TextBlock Text="{Binding Label}" VerticalAlignment="Center" TextWrapping="Wrap" />
                       <Border Grid.Column="1" Classes="kbd">
                         <TextBlock Text="{Binding Keys}" />
                       </Border>
@@ -483,7 +483,7 @@
                 <TextBlock Text="Prompuff" FontSize="22" FontWeight="Bold" LetterSpacing="-0.44" />
                 <TextBlock Classes="muted" Text="Your good prompts deserve a home." />
                 <TextBlock Classes="data faint" FontSize="12" Text="{Binding AboutVersion}" Margin="0,6,0,0" />
-                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                <WrapPanel ItemSpacing="8" LineSpacing="8" Margin="0,8,0,0">
                   <Button Classes="sm" Command="{Binding CheckForUpdatesCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                       <c:Icon Kind="RefreshCw" Size="12" />
@@ -502,7 +502,7 @@
                       <TextBlock Text="Licenses" />
                     </StackPanel>
                   </Button>
-                </StackPanel>
+                </WrapPanel>
               </StackPanel>
             </Grid>
           </Border>
