@@ -256,9 +256,7 @@
                 <Border Background="{DynamicResource Bg1Brush}" BorderBrush="{DynamicResource Border2Brush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,4,0,0">
                   <StackPanel Spacing="8">
                     <TextBlock Classes="label" Text="TEMPLATE" />
-                    <ScrollViewer MaxHeight="220">
-                      <SelectableTextBlock Text="{Binding Body}" FontFamily="{StaticResource MonoFont}" FontSize="12" LineHeight="18" TextWrapping="Wrap" Foreground="{DynamicResource Text2Brush}" />
-                    </ScrollViewer>
+                    <SelectableTextBlock Text="{Binding Body}" FontFamily="{StaticResource MonoFont}" FontSize="12" LineHeight="18" TextWrapping="Wrap" Foreground="{DynamicResource Text2Brush}" />
                   </StackPanel>
                 </Border>
               </StackPanel>
