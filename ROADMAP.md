@@ -207,12 +207,21 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Variables gain options without new syntax.** Defaults and choice lists, when they come, live in an optional metadata key, not inside `{{…}}`. A body holding `{{name|x}}` renders as plain text in 1.0, and `render` must keep printing it.
 - **The extension works from the selection and the text box, not the chat site's page.** Extensions that hooked into ChatGPT's page broke with each redesign. Its listing names every permission it takes, since VPN extensions were caught collecting millions of people's AI chats.
 
+## Decisions: v1.1.1 (2026-10-10)
+
+- **Live regions need a reported name change.** Toasts and Quick save's error are live regions that stay in the window and take the message as their name. Avalonia 12.1.3 raises `LiveRegionChanged` on Windows and posts an announcement on macOS only when a peer reports its name changing, and its own peers never do, so `AccessibleNames` reports it for every live region. Its Linux backend (AT-SPI) has no live regions yet. Checked with UI Automation on Windows; macOS follows the same path in Avalonia's code.
+- **Focus is a ring, `FocusOutline`:** an inset accent ring on the control's own border, in place of Fluent's square adorner. Avalonia draws no box shadow on a border whose thickness differs by side, so the focused list row's border goes all round and tabs carry the ring on an outer border. The Switch draws its edge in Text1 instead, since an accent ring would vanish on its accent track.
+- **`ControlBorderBrush`** is computed per palette as the faintest step from Border3 toward Text3 that reaches 3:1 on Bg0 to Bg3 and the inset. Prompuff Dark and Light carry the computed values in `Tokens.axaml`, and a test holds them equal.
+- **Palettes were nudged, not redrawn.** Tone text in eight palettes and Text2 in three moved the least distance toward Text1 that reaches 4.5:1 on their own tint and on Bg4. `ThemeTests` checks those pairs, read from the resources each theme resolves.
+- **`LayoutTests` opens the window at its minimum, 960 × 600,** and fails on text that overflows without trimming or wrapping, or a button pushed past its panel.
+
 ## Shipped
 
-Each release's notes say what it brought, and the decisions above say why. The checklists these milestones were built from are in this file as of 1.1: `git show 40fb99d:ROADMAP.md`. The patch releases, 0.1.1, 0.1.2, 0.6.1 and 0.6.2, are on the [releases page](https://github.com/hazeliscoding/prompuff/releases).
+Each release's notes say what it brought, and the decisions above say why. The checklists these milestones were built from are in this file as of 1.1: `git show 40fb99d:ROADMAP.md`, and 1.1.1's as of `git show f7b182c:ROADMAP.md`. The patch releases, 0.1.1, 0.1.2, 0.6.1 and 0.6.2, are on the [releases page](https://github.com/hazeliscoding/prompuff/releases).
 
 | Version | Released | What it brought |
 |---|---|---|
+| [1.1.1: Accessibility fixes](https://github.com/hazeliscoding/prompuff/releases/tag/v1.1.1) | 2026-10-10 | Rating and announcements for screen readers, a focus ring, contrast in every theme, and the smallest window fits |
 | [1.1: Puff comes alive](https://github.com/hazeliscoding/prompuff/releases/tag/v1.1.0) | 2026-10-09 | Puff's reactions in the app, on the website and in the launch video, Reduce motion, and the 1.0 promise pinned by fixtures |
 | [1.0](https://github.com/hazeliscoding/prompuff/releases/tag/v1.0.0) | 2026-10-08 | The release candidate's code, signed on Windows, with the launch video and the website |
 | [0.9: Release candidate](https://github.com/hazeliscoding/prompuff/releases/tag/v0.9.0) | 2026-10-08 | Large libraries, accessibility, diagnostic info, the user guide and the format docs |
@@ -224,18 +233,6 @@ Each release's notes say what it brought, and the decisions above say why. The c
 | [0.3: macOS and Linux ARM64](https://github.com/hazeliscoding/prompuff/releases/tag/v0.3.0) | 2026-10-08 | Builds for both Macs and Linux ARM64, and a signed Windows installer |
 | [0.2: Safe, searchable and shareable](https://github.com/hazeliscoding/prompuff/releases/tag/v0.2.0) | 2026-10-07 | Backups, Recently deleted, FTS5 search, remembered values and `.zip` sharing |
 | [0.1: MVP](https://github.com/hazeliscoding/prompuff/releases/tag/v0.1.0) | 2026-10-07 | The library, `{{variables}}`, versions, Markdown import and export, and updates |
-
-## v1.1.1: Accessibility fixes
-
-An audit on 2026-10-10 went through the UI tests' screenshots, the themes and the views. These are what it found.
-
-- [x] Screen readers and the keyboard: the rating takes the keyboard and reads out as "Usefulness, Solid", toasts and Quick save's error are announced, a heart says whether its prompt is a favorite, Show details says when it's open, and the workflow's Previous and Next buttons point left and right like its step strip.
-- [x] Contrast and focus: danger buttons on hover, the focused list row against a picked one, the picked option in segmented controls, control edges at 3:1 (the editor's empty rating pips too), counts on the active sidebar row and tags on their tinted fill, and focus outlines that follow each control's corners. `ThemeTests` holds every theme to the new pairs.
-- [x] Layout: long dialog titles wrap, the library and Settings fit the 960-pixel minimum width with a test at that size, toasts stay clear of the buttons beneath them, the Render tab scrolls once, the data folder's path wraps instead of being cut off, and Settings pages share one spacing under their titles.
-- [x] Copy and polish: Quick save's button says Save, the list view shows the rating's word, and small icon buttons use one icon size.
-- [ ] Publish v1.1.1.
-
-**Done when:** a screen reader reads a prompt's rating and favorite and announces a toast, the library and Settings fit a 960 × 600 window, and `ThemeTests` holds all thirteen themes to the new pairs.
 
 ## Getting found
 
