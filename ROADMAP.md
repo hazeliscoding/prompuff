@@ -225,6 +225,18 @@ Each release's notes say what it brought, and the decisions above say why. The c
 | [0.2: Safe, searchable and shareable](https://github.com/hazeliscoding/prompuff/releases/tag/v0.2.0) | 2026-10-07 | Backups, Recently deleted, FTS5 search, remembered values and `.zip` sharing |
 | [0.1: MVP](https://github.com/hazeliscoding/prompuff/releases/tag/v0.1.0) | 2026-10-07 | The library, `{{variables}}`, versions, Markdown import and export, and updates |
 
+## v1.1.1: Accessibility fixes
+
+An audit on 2026-10-10 went through the UI tests' screenshots, the themes and the views. These are what it found.
+
+- [ ] Screen readers and the keyboard: the rating takes the keyboard and reads out as "Usefulness, Solid", toasts and Quick save's error are announced, a favorite reads as one, Show details says when it's open, and the workflow's step strip moves with Left and Right.
+- [ ] Contrast and focus: danger buttons on hover, the focused list row against a picked one, the picked option in segmented controls, control edges and empty rating pips at 3:1, counts on the active sidebar row and tags on their tinted fill, and focus outlines that follow each control's corners. `ThemeTests` holds every theme to the new pairs.
+- [ ] Layout: long dialog titles wrap, the library and Settings fit the 960-pixel minimum width with a screenshot test at that size, toasts stay clear of the buttons beneath them, the Render tab scrolls once, the data folder's path shows in full on hover, and Settings sections share one spacing.
+- [ ] Copy and polish: Quick save's button says Save, the list view shows the rating's word, and small icon buttons use one icon size.
+- [ ] Publish v1.1.1.
+
+**Done when:** a screen reader reads a prompt's rating and favorite and announces a toast, the library and Settings fit a 960 × 600 window, and `ThemeTests` holds all thirteen themes to the new pairs.
+
 ## Getting found
 
 These need no release. Each lands as its own pull request whenever it's ready, alongside the milestones below.
