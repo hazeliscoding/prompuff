@@ -192,8 +192,20 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 
 ## Decisions: after 1.1 (2026-10-09)
 
-- **Integrations come next (the owner's choice).** v1.2 brings `prompuff://` links and MCP tools that save prompts, v1.3 a Markdown mirror, v1.4 the browser extension, and v1.5 Flatpak and `.deb` packages. The small steps extend what 1.0's command line and MCP server already do, and the biggest job, the extension, waits until the rest is settled. Encrypted sync, prompt relationships and recipes, evaluation notes and translations stay in Later.
+- **Integrations come next (the owner's choice).** v1.2 brings `prompuff://` links and MCP tools that save prompts, v1.3 a Markdown mirror, v1.4 the browser extension, and v1.5 Flatpak and `.deb` packages. The small steps extend what 1.0's command line and MCP server already do, and the biggest job, the extension, waits until the rest is settled. Encrypted sync, prompt relationships and recipes, evaluation notes and translations stay in Later. (Reordered on 2026-10-10: Paste anywhere comes first, and each of these moves down one. See below.)
 - **The plans keep the hard rules.** Registering `prompuff://` and connecting a browser write outside Prompuff's folders, so each is a step you start in Settings, like installing the command-line tool. New commands and tools get contract recordings of their own, since whatever ships joins the promise.
+
+## Decisions: market research (2026-10-10)
+
+- **What the research found.** Four searches covered rival apps, what people say about keeping prompts, how AI coding tools read reusable prompts, and open-source peers and how they're installed. People mostly keep prompts where they already work: text expanders, notes apps, or their AI tool's own skills and projects. The thing they praise most is a prompt landing wherever they're typing, and Prompuff's hotkey only saves. Open-source rivals lost people's data in updates, broke when a chat site changed its page, or stalled with one maintainer.
+- **Paste anywhere comes next (the owner's choice).** It becomes v1.2 and the 2026-10-09 plan moves down one: links and agent saves are v1.3, the mirror v1.4, the extension v1.5 and Linux packages v1.6. It reuses the hotkey backends and Quick save's return to the app you came from.
+- **Prompts are turning into skills.** Codex deprecated custom prompts for skills, Claude Code merged commands into skills, and Cursor, VS Code and Devin each ship a migration to them. Codex and Copilot CLI use MCP tools but not MCP prompts, so favorites never become slash commands there. The Agent Skills format (`SKILL.md`) has no variable syntax, so `{{variables}}` with remembered values stay Prompuff's own. v1.4 exports prompts as skills and commands and reads them back in. Syncing a repo's rules and `AGENTS.md` between tools is left to rulesync and ruler.
+- **The MCP server doesn't announce changes.** It never sends `list_changed`, so a client's slash commands only catch up with favorites after a restart. That joins v1.3, with wording that tells tools-only clients to search Prompuff when someone names a saved prompt. Claude Code's docs say it splits prompt arguments on spaces, so a multi-word value only works through `render_prompt`.
+- **Argument completion waits.** It could suggest values from remembered values, but those are never exported, and handing them to an AI tool would be. It's in Later, drawing on choice lists, once a named client asks for completions.
+- **Getting found is the bottleneck.** The repo is three days old with no stars and no issues. winget has no popularity bar, and the Microsoft Store has been free for individual developers since 2025-09 and takes the signed `Prompuff-Setup.exe`, so both come first, then the official MCP Registry and the lists that read from it. Homebrew disabled casks that fail Gatekeeper on 2026-09-01, so it stays out while macOS builds aren't notarized.
+- **Flathub keeps agents out.** Its rules say manifests must not contain AI-generated or AI-assisted content, AI tools must not open or automate submissions, and reviewers may reject apps over how much generated code they hold. Prompuff is built with agents, so v1.6 leads with the `.deb` and an AUR package. A Flatpak is the owner's to write and submit by hand, and the milestone doesn't wait on Flathub's review.
+- **Variables gain options without new syntax.** Defaults and choice lists, when they come, live in an optional metadata key, not inside `{{…}}`. A body holding `{{name|x}}` renders as plain text in 1.0, and `render` must keep printing it.
+- **The extension works from the selection and the text box, not the chat site's page.** Extensions that hooked into ChatGPT's page broke with each redesign. Its listing names every permission it takes, since VPN extensions were caught collecting millions of people's AI chats.
 
 ## Shipped
 
@@ -213,57 +225,93 @@ Each release's notes say what it brought, and the decisions above say why. The c
 | [0.2: Safe, searchable and shareable](https://github.com/hazeliscoding/prompuff/releases/tag/v0.2.0) | 2026-10-07 | Backups, Recently deleted, FTS5 search, remembered values and `.zip` sharing |
 | [0.1: MVP](https://github.com/hazeliscoding/prompuff/releases/tag/v0.1.0) | 2026-10-07 | The library, `{{variables}}`, versions, Markdown import and export, and updates |
 
-## v1.2: Links and agents that save
+## Getting found
+
+These need no release. Each lands as its own pull request whenever it's ready, alongside the milestones below.
+
+- [ ] winget: the release workflow opens the manifest pull request to `microsoft/winget-pkgs` for each stable release, installing `Prompuff-Setup.exe` per user and silently.
+- [ ] A Microsoft Store listing for the signed `Prompuff-Setup.exe`. The owner registers the free individual developer account.
+- [ ] The official MCP Registry lists the server as `io.github.hazeliscoding/prompuff`, with whatever package entry the registry needs, and says it comes with the Prompuff app. Glama and awesome-mcp-servers follow.
+- [ ] Submissions to awesome-claude-code (open to repos 14 days old, so from 2026-10-21), awesome-avalonia, Awesome-Prompt-Engineering and awesome-privacy.
+- [ ] The README and the website lead with what rival apps got wrong: a backup before every update, a library every later version opens, and no network beyond the update check.
+- [ ] Check that a fresh download of `Prompuff-Setup.exe` no longer gets SmartScreen's "unrecognized app" warning, now that the certificate has had time to build reputation.
+
+**Done when:** `winget install Prompuff` installs the signed build, and Prompuff is listed in the Microsoft Store and the MCP Registry.
+
+## v1.2: Paste anywhere
+
+Find a prompt and drop it into the app you're typing in, without opening Prompuff.
+
+- [ ] **Quick insert**, a second global hotkey beside Quick save, with its own default and the same recorder in Settings. It opens a small search over the library, and the first key typed after the hotkey lands in it.
+- [ ] Arrows and Enter pick a prompt. One with `{{variables}}` asks for them in the same window, filled with its remembered values, before it goes.
+- [ ] The result is copied and Prompuff steps back to the app you came from, as after a hotkey Quick save. **Paste after inserting** also presses the paste key there: `SendInput` on Windows and XTest on X11. On macOS it needs Accessibility access, which Settings asks for, and without it the result is only copied.
+- [ ] Wayland has no global keys or pasting into other apps, so a desktop shortcut runs the app with `--quick-insert` (a new launch argument, like `--quick-save`) and the result is copied.
+- [ ] `settings-1.2.0.json` records the new settings beside 1.0's recording.
+- [ ] Publish v1.2.0.
+
+**Done when:** on Windows and X11, Quick insert from another app finds a prompt by typing, fills its variables and pastes the result into that app; on macOS on CI it opens and copies; and on Wayland the desktop shortcut does the same through the clipboard.
+
+## v1.3: Links and agents that save
 
 Put a prompt one click away from anywhere, and let AI tools add to the library when you allow it.
 
 - [ ] `prompuff://` links that open, copy or render a prompt by its ID, with **Copy link** in a prompt's menu and `prompuff link <prompt>` on the command line.
 - [ ] Registering the link scheme is a step you start in Settings › Integrations on Windows and Linux, like installing the command-line tool. On macOS the app bundle declares it.
 - [ ] MCP tools that save a new prompt, off until **Let AI tools add prompts** is turned on in Settings › Integrations, apart from read access. Each saved prompt's first version names the tool that saved it.
-- [ ] `cli-1.2.0.json` and `mcp-1.2.0.json` record the new command and tools beside 1.0's recordings, so later versions keep them too.
-- [ ] Check that a fresh download of `Prompuff-Setup.exe` no longer gets SmartScreen's "unrecognized app" warning, now that the certificate has had time to build reputation.
-- [ ] Publish v1.2.0.
+- [ ] The MCP server watches the library's `data_version`, like the app, and sends `list_changed` for prompts and resources when it changes, so a client's slash commands follow favorites without a restart.
+- [ ] The server's instructions tell clients that can't show MCP prompts, such as Codex and Copilot CLI, to search Prompuff when someone names a saved prompt.
+- [ ] `cli-1.3.0.json` and `mcp-1.3.0.json` record the new command and tools beside 1.0's recordings, so later versions keep them too.
+- [ ] Publish v1.3.0.
 
-**Done when:** a `prompuff://` link in a browser opens, copies or renders its prompt on Windows and Linux, and on macOS on CI, Claude Code can save a prompt over MCP only once the setting allows it, and the 1.0 and 1.2 contract tests both pass.
+**Done when:** a `prompuff://` link in a browser opens, copies or renders its prompt on Windows and Linux, and on macOS on CI, Claude Code can save a prompt over MCP only once the setting allows it, a favorite added in the app shows up in Claude Code's slash commands without restarting it, and the 1.0 and 1.3 contract tests both pass.
 
-## v1.3: A Markdown mirror
+## v1.4: A Markdown mirror and agent skills
 
-Keep the library as plain files too, for Git, Syncthing or any editor.
+Keep the library as plain files too, for Git, Syncthing, any editor, or the skills folders AI tools read.
 
 - [ ] A mirror folder, chosen in Settings › Storage, that Prompuff keeps in step with the library: one Markdown file per prompt in the 1.0 format, and workflows in `workflows/`.
 - [ ] Saving a prompt rewrites its file, removing it for good deletes the file, and a file keeps its name when the prompt's title changes, so Git sees an edit rather than a new file.
 - [ ] The mirror is one-way: Prompuff writes it, and Import stays the way files come in. A two-way mirror stays in Later.
-- [ ] Publish v1.3.0.
-
-**Done when:** a mirror folder under Git shows each saved change as a readable diff, a renamed prompt keeps its file, and importing the folder into a fresh library brings back the same prompts.
-
-## v1.4: Capture from the browser
-
-Save a prompt from ChatGPT, Claude or any page without leaving the browser.
-
-- [ ] A browser extension for Chrome, Edge and Firefox, in `extension/`: **Save to Prompuff** on a selection, or on a prompt in ChatGPT or Claude, hands the text to Quick save through native messaging.
-- [ ] The native messaging host is the `prompuff` command. Connecting a browser is a step you start in Settings › Integrations, like installing the command-line tool, since it writes a manifest into the browser's own folders.
-- [ ] The extension and its host make no network requests, and the extension asks only for the permissions saving needs.
-- [ ] Listings on the Chrome Web Store (a one-time $5 developer fee), Microsoft Edge Add-ons and Firefox Add-ons.
+- [ ] **Export as skill** for a prompt or a selection: an Agent Skills folder (`<name>/SKILL.md`, which Codex, Cursor and Copilot CLI read from `~/.agents/skills`), a Claude Code skill, a Copilot `.prompt.md` or a Gemini CLI `.toml` command. `{{variables}}` become each tool's own arguments where it has them (`$name` in Claude Code, `${input:name}` in Copilot, `{{args}}` in Gemini) and a short list of inputs where it doesn't. `prompuff export --format …` does the same.
+- [ ] A skills mirror: favorites kept as skills in a folder you pick, such as `~/.claude/skills` or `~/.agents/skills`. A skill keeps its folder name when the title changes, and Prompuff only ever removes skills it wrote.
+- [ ] Import reads Claude Code commands and skills, Copilot `.prompt.md` files and Gemini `.toml` commands, and turns their arguments back into `{{variables}}`.
+- [ ] Fixtures record each export format as 1.4 writes it, and `cli-1.4.0.json` records `export`.
 - [ ] Publish v1.4.0.
 
-**Done when:** a selection on any page, or a prompt in ChatGPT or Claude, lands in the library through Save to Prompuff on Windows, Linux and macOS, with no network traffic from the extension or its host.
+**Done when:** a mirror folder under Git shows each saved change as a readable diff, a renamed prompt keeps its file, importing the folder into a fresh library brings back the same prompts, a favorite in the skills mirror runs as a skill in Claude Code and Codex, and a folder of Claude Code commands imports with its arguments as `{{variables}}`.
 
-## v1.5: More ways to install on Linux
+## v1.5: Capture from the browser
 
-- [ ] A Flatpak, submitted to Flathub, and a `.deb`, both built by the release workflow beside the AppImage.
-- [ ] Prompuff knows how it was installed: a Flatpak leaves updates to Flathub, and a `.deb` copy points to the new download instead of updating itself.
-- [ ] The `prompuff` command and the MCP setups in Settings › Integrations work from each package.
+Save a prompt from ChatGPT, Claude or any page without leaving the browser, and put one back.
+
+- [ ] A browser extension for Chrome, Edge and Firefox, in `extension/`: **Save to Prompuff** on a selection, or on the text box you're typing in, hands the text to Quick save through native messaging. It reads the selection and the focused text box, never a chat site's own page structure.
+- [ ] **Insert from Prompuff**: the extension's popup searches the library through the same host, fills a prompt's variables and puts the result in the focused text box. This is the way to paste on Wayland, where Quick insert can only copy.
+- [ ] The native messaging host is the `prompuff` command. Connecting a browser is a step you start in Settings › Integrations, like installing the command-line tool, since it writes a manifest into the browser's own folders.
+- [ ] The extension and its host make no network requests, and the extension asks only for the permissions saving and inserting need. Each listing names them.
+- [ ] Listings on the Chrome Web Store (a one-time $5 developer fee), Microsoft Edge Add-ons and Firefox Add-ons.
 - [ ] Publish v1.5.0.
 
-**Done when:** Prompuff installs from Flathub and from a `.deb` on Ubuntu, keeps its library across an update, and each copy says how it updates.
+**Done when:** a selection on any page, or what's typed in ChatGPT or Claude, lands in the library through Save to Prompuff, and a library prompt lands in their text box through Insert from Prompuff, on Windows, Linux and macOS, with no network traffic from the extension or its host.
+
+## v1.6: More ways to install on Linux
+
+- [ ] A `.deb`, built by the release workflow beside the AppImage, and a `prompuff-bin` package in the AUR that wraps the AppImage.
+- [ ] Prompuff knows how it was installed: a `.deb` or AUR copy points to the new download or the package manager instead of updating itself, and a Flatpak leaves updates to Flathub.
+- [ ] The `prompuff` command and the MCP setups in Settings › Integrations work from each package.
+- [ ] A Flatpak on Flathub, which the owner writes and submits by hand under Flathub's AI rules. The milestone doesn't wait for its review.
+- [ ] Publish v1.6.0.
+
+**Done when:** Prompuff installs from a `.deb` on Ubuntu and from the AUR, keeps its library across an update, and each copy says how it updates.
 
 ## Later
 
 - Optional end-to-end encrypted sync.
 - A two-way Markdown mirror.
-- Prompt relationships beyond lineage, and recipe templates.
-- Model evaluation notes.
+- Prompt relationships beyond lineage, and recipe templates, such as one prompt including another.
+- Model notes, for prompts that stop working after a model update: the models a prompt works with (the design's "Works with" chips), and a note you write on a version.
+- Variable defaults and choice lists, in an optional metadata key.
+- MCP argument completion from choice lists, once a named client asks for completions. Remembered values stay out of it.
+- Skills over MCP (`skill://`), once Claude Code or Codex supports it.
 - Translations.
 
 ## Not planned
@@ -274,3 +322,5 @@ Save a prompt from ChatGPT, Claude or any page without leaving the browser.
 - Telemetry, analytics or prompt performance tracking.
 - Embedding or vector search.
 - Electron, embedded Chromium or a web-app shell.
+- Syncing a repo's rules or `AGENTS.md` between AI tools, which rulesync and ruler already do.
+- A Homebrew cask while macOS builds aren't notarized.
