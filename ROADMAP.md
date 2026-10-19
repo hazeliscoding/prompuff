@@ -215,6 +215,10 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Palettes were nudged, not redrawn.** Tone text in eight palettes and Text2 in three moved the least distance toward Text1 that reaches 4.5:1 on their own tint and on Bg4. `ThemeTests` checks those pairs, read from the resources each theme resolves.
 - **`LayoutTests` opens the window at its minimum, 960 × 600,** and fails on text that overflows without trimming or wrapping, or a button pushed past its panel.
 
+## Decisions: Gemini CLI (2026-10-19)
+
+- **Gemini CLI is the fifth MCP client.** Settings › Integrations gets a ready-to-copy setup for it after Codex: `gemini mcp add --scope user prompuff <command> mcp`, which writes `~/.gemini/settings.json`. Check it against Gemini CLI's docs when it's built, like the other four. It's open as a good first issue (#16).
+
 ## Shipped
 
 Each release's notes say what it brought, and the decisions above say why. The checklists these milestones were built from are in this file as of 1.1: `git show 40fb99d:ROADMAP.md`, and 1.1.1's as of `git show f7b182c:ROADMAP.md`. The patch releases, 0.1.1, 0.1.2, 0.6.1 and 0.6.2, are on the [releases page](https://github.com/hazeliscoding/prompuff/releases).
