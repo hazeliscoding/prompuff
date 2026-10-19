@@ -11,8 +11,14 @@ public class TagNameTests
     [InlineData("  ANGULAR  ", "angular")]
     [InlineData("#angular", "angular")]
     [InlineData("# angular", "angular")]
+    [InlineData("##angular", "angular")]
     [InlineData("code review", "code-review")]
     [InlineData("code   review\t", "code-review")]
+    [InlineData("a,b", "a-b")]
+    [InlineData("review, angular", "review-angular")]
+    [InlineData("a\u0007b", "a-b")]
+    [InlineData("-angular-", "angular")]
+    [InlineData("CAFÉ", "café")]
     [InlineData("UI/UX", "ui/ux")]
     [InlineData("c#", "c#")]
     public void Normalize_produces_a_canonical_form(string raw, string expected)
@@ -26,6 +32,7 @@ public class TagNameTests
     [InlineData("   ")]
     [InlineData("#")]
     [InlineData(" # ")]
+    [InlineData(",")]
     public void Normalize_returns_null_when_nothing_is_left(string? raw)
     {
         Assert.Null(TagName.Normalize(raw));
@@ -35,8 +42,10 @@ public class TagNameTests
     public void Normalize_caps_the_length()
     {
         var normalized = TagName.Normalize(new string('a', 100));
+        var separatorAtTheCap = TagName.Normalize(new string('a', 39) + " bbbb");
 
         Assert.Equal(TagName.MaxLength, normalized!.Length);
+        Assert.Equal(new string('a', 39), separatorAtTheCap);
     }
 
     [Fact]
