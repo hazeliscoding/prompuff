@@ -62,6 +62,7 @@ public sealed class JsonSettingsStoreTests : IDisposable
         Assert.Equal(UpdateChannel.Beta, settings.UpdateChannel);
         Assert.Equal(AppSettings.Default with { UpdateChannel = UpdateChannel.Beta }, settings);
         Assert.Equal("Ctrl+Alt+P", settings.QuickSaveHotkey);
+        Assert.Equal("Ctrl+Alt+Shift+P", settings.QuickInsertHotkey);
     }
 
     /// <summary>Every setting changed from its default, as 1.0 saved them in <c>Fixtures/settings-1.0.0.json</c>.</summary>

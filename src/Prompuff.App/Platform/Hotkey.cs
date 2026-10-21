@@ -9,9 +9,11 @@ namespace Prompuff.App.Platform;
 /// </summary>
 public sealed record Hotkey(KeyModifiers Modifiers, Key Key)
 {
-    public const string DefaultText = "Ctrl+Alt+P";
+    public const string QuickSaveDefaultText = "Ctrl+Alt+P";
+    public const string QuickInsertDefaultText = "Ctrl+Alt+Shift+P";
 
-    public static Hotkey Default { get; } = new(KeyModifiers.Control | KeyModifiers.Alt, Key.P);
+    public static Hotkey QuickSaveDefault { get; } = new(KeyModifiers.Control | KeyModifiers.Alt, Key.P);
+    public static Hotkey QuickInsertDefault { get; } = new(KeyModifiers.Control | KeyModifiers.Alt | KeyModifiers.Shift, Key.P);
 
     /// <summary>Reads a stored hotkey. Returns null for empty text (turned off) or anything it can't use.</summary>
     public static Hotkey? Parse(string? text)

@@ -6,11 +6,15 @@ using System.Text;
 
 namespace Prompuff.App.Platform;
 
-/// <summary>What a launch asks of Prompuff: bring the window forward, or open Quick save with the clipboard.</summary>
+/// <summary>
+/// What a launch, the tray or a hotkey asks of Prompuff: bring the window forward, open Quick save with the clipboard,
+/// or open Quick insert. Only the hotkey asks for Quick insert so far.
+/// </summary>
 public enum LaunchRequest
 {
     Activate,
     QuickSave,
+    QuickInsert,
 }
 
 public static class LaunchArguments

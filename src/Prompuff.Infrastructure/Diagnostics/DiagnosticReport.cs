@@ -14,7 +14,8 @@ namespace Prompuff.Infrastructure.Diagnostics;
 /// <param name="AvaloniaVersion">The UI framework's version, such as "12.1.3".</param>
 /// <param name="IsCommandLineToolInstalled">Whether "Install command-line tool" has put <c>prompuff</c> on the PATH.</param>
 /// <param name="Hotkey">How the Quick save hotkey is doing, such as "ready" or "taken by another app".</param>
-public sealed record DiagnosticFacts(string AvaloniaVersion, bool IsCommandLineToolInstalled, string Hotkey);
+/// <param name="QuickInsertHotkey">How the Quick insert hotkey is doing, in the same words.</param>
+public sealed record DiagnosticFacts(string AvaloniaVersion, bool IsCommandLineToolInstalled, string Hotkey, string QuickInsertHotkey);
 
 /// <summary>
 /// The text behind Settings › About › Copy diagnostic info, for pasting into a bug report: versions, folders, library
@@ -79,6 +80,7 @@ public sealed partial class DiagnosticReport(
         Item(report, "Reduce motion", current.ReduceMotion is { } reduce ? OnOff(reduce) : "follows the system");
         Item(report, "Keep running in the tray", OnOff(current.KeepRunningInTray));
         Item(report, "Quick save hotkey", string.IsNullOrWhiteSpace(current.QuickSaveHotkey) ? "off" : $"{current.QuickSaveHotkey}, {facts.Hotkey}");
+        Item(report, "Quick insert hotkey", string.IsNullOrWhiteSpace(current.QuickInsertHotkey) ? "off" : $"{current.QuickInsertHotkey}, {facts.QuickInsertHotkey}");
         Item(report, "MCP", OnOff(current.AllowMcp));
         Item(report, "Command-line tool", facts.IsCommandLineToolInstalled ? "installed" : "not installed");
         Item(report, "Update check", current.CheckForUpdatesAutomatically ? "each time Prompuff opens" : "by hand");

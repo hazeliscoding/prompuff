@@ -44,7 +44,9 @@ public partial class MainWindow : Window
 
         RestorePlacement(settings.Load().Window);
         AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
-        viewModel.Settings.HotkeyPressed += (_, _) => _ = HandleLaunchAsync(LaunchRequest.QuickSave);
+        AddHandler(TextInputEvent, OnPreviewTextInput, RoutingStrategies.Tunnel);
+        viewModel.Settings.QuickSaveHotkey.Pressed += (_, _) => _ = HandleLaunchAsync(LaunchRequest.QuickSave);
+        viewModel.Settings.QuickInsertHotkey.Pressed += (_, _) => _ = HandleLaunchAsync(LaunchRequest.QuickInsert);
         AddHandler(KeyDownEvent, OnUnhandledKeyDown, RoutingStrategies.Bubble);
         AddHandler(PointerPressedEvent, (_, _) => UsingKeyboard = false, RoutingStrategies.Tunnel, handledEventsToo: true);
         viewModel.FocusSearchRequested += (_, _) => FocusLater(SearchBox, selectAll: true);
@@ -60,6 +62,14 @@ public partial class MainWindow : Window
             if (e.PropertyName == nameof(QuickSaveViewModel.IsOpen) && viewModel.QuickSave.IsOpen)
             {
                 FocusLater(QuickSaveTitle, selectAll: true);
+            }
+        };
+        viewModel.QuickInsert.PropertyChanged += (_, e) =>
+        {
+            // Not select all: a key typed before this runs is already in the box, and the next key would replace it.
+            if (e.PropertyName == nameof(QuickInsertViewModel.IsOpen) && viewModel.QuickInsert.IsOpen)
+            {
+                FocusLater(QuickInsertInput, selectAll: false);
             }
         };
         viewModel.Dialogs.PropertyChanged += (_, e) =>
@@ -103,35 +113,64 @@ public partial class MainWindow : Window
     /// <summary>True while the window is hidden in the tray rather than closed.</summary>
     public bool IsInTray { get; private set; }
 
+    // While a hotkey's overlay is open: where the window goes back to when it closes, and how to stop waiting for that.
+    private bool _returnToTray;
+    private Action? _cancelReturn;
+
     /// <summary>
-    /// A second launch, the tray or the hotkey: brings the window forward, and for Quick save opens it with the
-    /// clipboard. If the window was in the tray or minimized, it goes back there once Quick save closes, so the hotkey
+    /// A second launch, the tray or a hotkey: brings the window forward, and opens Quick save with the clipboard or
+    /// Quick insert. If the window was in the tray or minimized, it goes back there once that closes, so the hotkey
     /// returns you to whatever you were doing.
     /// </summary>
     public async Task HandleLaunchAsync(LaunchRequest request)
     {
         var wasInTray = IsInTray;
         var wasMinimized = WindowState == WindowState.Minimized;
+
+        // A launch while an earlier one's overlay is open takes over going back, so switching from Quick insert to
+        // Quick save doesn't send the window away as Quick insert closes.
+        if (_cancelReturn is { } cancel)
+        {
+            cancel();
+            (wasInTray, wasMinimized) = (_returnToTray, !_returnToTray);
+        }
+
         WindowActivation.BringForward(this);
-        if (request != LaunchRequest.QuickSave || ViewModel is not { } viewModel)
+        if (ViewModel is not { } viewModel)
         {
             return;
         }
 
-        await viewModel.QuickSaveFromOutsideAsync();
-        if (!viewModel.QuickSave.IsOpen || !(wasInTray || wasMinimized))
+        INotifyPropertyChanged overlay;
+        Func<bool> isOpen;
+        switch (request)
+        {
+            case LaunchRequest.QuickSave:
+                await viewModel.QuickSaveFromOutsideAsync();
+                (overlay, isOpen) = (viewModel.QuickSave, () => viewModel.QuickSave.IsOpen);
+                break;
+            case LaunchRequest.QuickInsert:
+                await viewModel.QuickInsertFromOutsideAsync();
+                (overlay, isOpen) = (viewModel.QuickInsert, () => viewModel.QuickInsert.IsOpen);
+                break;
+            default:
+                return;
+        }
+
+        if (!isOpen() || !(wasInTray || wasMinimized))
         {
             return;
         }
 
-        void OnQuickSaveChanged(object? sender, PropertyChangedEventArgs e)
+        // Quick save and Quick insert both call it IsOpen.
+        void OnOverlayChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName != nameof(QuickSaveViewModel.IsOpen) || viewModel.QuickSave.IsOpen)
+            if (e.PropertyName != nameof(QuickSaveViewModel.IsOpen) || isOpen())
             {
                 return;
             }
 
-            viewModel.QuickSave.PropertyChanged -= OnQuickSaveChanged;
+            StopWaiting();
             if (wasInTray)
             {
                 IsInTray = true;
@@ -143,7 +182,15 @@ public partial class MainWindow : Window
             }
         }
 
-        viewModel.QuickSave.PropertyChanged += OnQuickSaveChanged;
+        void StopWaiting()
+        {
+            overlay.PropertyChanged -= OnOverlayChanged;
+            _cancelReturn = null;
+        }
+
+        overlay.PropertyChanged += OnOverlayChanged;
+        _returnToTray = wasInTray;
+        _cancelReturn = StopWaiting;
     }
 
     /// <summary>Closes the window for good, even when closing it would normally keep Prompuff in the tray.</summary>
@@ -196,9 +243,9 @@ public partial class MainWindow : Window
         UsingKeyboard = true;
 
         // Settings › Quick save is recording a new hotkey, so every key goes there first.
-        if (ViewModel is { Settings.IsRecordingHotkey: true } recording)
+        if (ViewModel?.Settings.RecordingHotkey is { } recording)
         {
-            e.Handled = recording.Settings.RecordHotkey(e.Key, e.KeyModifiers);
+            e.Handled = recording.Record(e.Key, e.KeyModifiers);
             return;
         }
 
@@ -206,6 +253,21 @@ public partial class MainWindow : Window
         {
             e.Handled = true;
         }
+    }
+
+    // Quick insert opens as the window comes forward, so a key typed straight after its hotkey can arrive before the
+    // search box has focus. It goes into the search rather than wherever focus was.
+    private void OnPreviewTextInput(object? sender, TextInputEventArgs e)
+    {
+        if (ViewModel is not { QuickInsert.IsOpen: true } || QuickInsertInput.IsFocused || string.IsNullOrEmpty(e.Text))
+        {
+            return;
+        }
+
+        QuickInsertInput.Focus();
+        QuickInsertInput.Text += e.Text;
+        QuickInsertInput.CaretIndex = QuickInsertInput.Text?.Length ?? 0;
+        e.Handled = true;
     }
 
     // Esc that nothing else wanted, such as a dropdown closing itself, goes back from a prompt to the library.
@@ -285,6 +347,10 @@ public partial class MainWindow : Window
         else if (overlay == "quick-save")
         {
             viewModel.QuickSave.IsOpen = false;
+        }
+        else if (overlay == "quick-insert")
+        {
+            viewModel.QuickInsert.IsOpen = false;
         }
     }
 
