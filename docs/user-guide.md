@@ -106,10 +106,12 @@ Quick save stashes a prompt in a few seconds:
 **Quick insert** goes the other way: press **Ctrl+Alt+Shift+P** (⌃⌥⇧P on macOS) in any app, and Prompuff comes forward with a search over your library. Start typing straight away; the first key lands in the search.
 
 1. Type part of a title or a tag to narrow the list, and move through it with ↑ and ↓.
-2. Press Enter to pick a prompt. One without `{{variables}}` is copied at once.
-3. A prompt with variables asks for them first, one box each, filled with the values it remembers from last time. Tab moves between the boxes, and Enter copies the result. A box left empty keeps its `{{variable}}` in the copy. Values you type are remembered, and show up on the prompt's Render tab too.
+2. Press Enter to pick a prompt. One without `{{variables}}` is inserted at once.
+3. A prompt with variables asks for them first, one box each, filled with the values it remembers from last time. Tab moves between the boxes, and Enter inserts the result. A box left empty keeps its `{{variable}}`. Values you type are remembered, and show up on the prompt's Render tab too.
 
-Esc closes Quick insert without copying anything, and Prompuff goes back to the tray or the taskbar if that's where it was.
+Inserting copies the result, goes back to the app you came from, and pastes it there. Prompuff goes back to the tray or the taskbar if that's where it was. Esc closes Quick insert without copying anything and goes back the same way.
+
+**Paste after inserting** in Settings › Quick save is on to start with. Turn it off to have Quick insert only copy, so you paste where you like. Terminals often paste with Ctrl+Shift+V rather than Ctrl+V; there, press it yourself. On macOS, pressing ⌘V in another app needs Accessibility access: choose **Allow pasting** in Settings › Quick save, or turn on Prompuff in System Settings › Privacy & Security › Accessibility. Until then, Quick insert only copies.
 
 **Change either hotkey** in Settings › Quick save: choose **Change** next to it and press the new keys, which need Ctrl, Alt or the Windows, Super or ⌘ key, plus a letter, digit, F1–F12 or Space. Settings says when another app already owns a combination, or when the other hotkey already uses it. **Turn off** turns one off.
 
