@@ -1,6 +1,6 @@
 # Roadmap
 
-Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Windows, macOS and Linux. You save the prompts that worked, fill in their `{{variables}}`, copy the result, and keep the history of how each prompt evolved. This file tracks what gets built, in what order, and the decisions already made.
+Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Windows, macOS and Linux. You save the prompts that worked, fill in their `{{variables}}`, copy the result, and keep the history of how each prompt evolved. This file holds the decisions already made, what shipped and what's out of scope. Open work is in GitHub issues; **Next** says where.
 
 ## Decisions (2026-10-06)
 
@@ -188,7 +188,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Release tags are fixed.** A second ruleset stops `v*` tags from being moved or deleted. A tag starts a release that every install updates to, and later releases download the previous one to build deltas.
 - **Releases go through a pull request too:** the `chore(release)` bump merges like any change, and the merged commit gets the tag. For 1.1.0, CI and the release built at the same time, and a macOS-only test failure showed up after the tag; with required checks it couldn't have reached `main`.
 - **GitFlow was considered and left out.** It suits scheduled releases with several versions maintained at once. Prompuff ships from `main`, every install updates to the newest version, and the beta channel is where a release gets tried first, so a `develop` branch would add merges without catching anything.
-- **GitHub Project boards were considered and left out; this file stays the plan.** The decisions here can't live on a board, this file changes in the same pull request as the code, and agents read it directly. Bugs and requests from people using Prompuff go in GitHub Issues.
+- **GitHub Project boards were considered and left out; this file stays the plan.** The decisions here can't live on a board, this file changes in the same pull request as the code, and agents read it directly. Bugs and requests from people using Prompuff go in GitHub Issues. (Superseded on 2026-10-20: open work moved to GitHub issues, milestones and a Project, and decisions stay here. See below.)
 
 ## Decisions: after 1.1 (2026-10-09)
 
@@ -219,9 +219,15 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 
 - **Gemini CLI is the fifth MCP client.** Settings › Integrations gets a ready-to-copy setup for it after Codex: `gemini mcp add --scope user prompuff <command> mcp`, which writes `~/.gemini/settings.json`. Check it against Gemini CLI's docs when it's built, like the other four. It's open as a good first issue (#16).
 
+## Decisions: open work moves to GitHub (2026-10-20)
+
+- **Open work lives in GitHub issues, milestones and a Project (the owner's choice).** After 1.0, people using Prompuff can see what's planned, comment on it and react to it in the same place they report bugs. Each release is a GitHub milestone whose description says what it brings and when it's done, each checklist item is an issue, and the [Prompuff project](https://github.com/users/hazeliscoding/projects/9) shows them all on one board. This replaces the 2026-10-09 decision to keep the plan in this file. The trade: the plan no longer changes in the same pull request as the code, and agents read it through `gh` instead of from this file. A commit that finishes an issue closes it with `Closes #N`, where it used to tick a box here.
+- **This file keeps the decisions,** what shipped and what's not planned. The checklists as they stood are in `git show c5c9323:ROADMAP.md`. Getting found became #19 to #23, v1.2 to v1.6 became #24 to #54 (one issue per item, plus one to cut each release), and Later became #55 to #62. Those carry the `later` label and list what has to be settled before each one gets a milestone. Getting found's README and website item had already landed in 82c6d4c.
+- **Decisions still land here,** under a dated heading, in the same pull request as the change that needs them. An issue links to the decision it builds on instead of repeating it.
+
 ## Shipped
 
-Each release's notes say what it brought, and the decisions above say why. The checklists these milestones were built from are in this file as of 1.1: `git show 40fb99d:ROADMAP.md`, and 1.1.1's as of `git show f7b182c:ROADMAP.md`. The patch releases, 0.1.1, 0.1.2, 0.6.1 and 0.6.2, are on the [releases page](https://github.com/hazeliscoding/prompuff/releases).
+Each release's notes say what it brought, and the decisions above say why. The checklists these milestones were built from are in this file as of 1.1: `git show 40fb99d:ROADMAP.md`, and 1.1.1's as of `git show f7b182c:ROADMAP.md`. From v1.2 on, a release's checklist is its milestone's closed issues. The patch releases, 0.1.1, 0.1.2, 0.6.1 and 0.6.2, are on the [releases page](https://github.com/hazeliscoding/prompuff/releases).
 
 | Version | Released | What it brought |
 |---|---|---|
@@ -238,94 +244,19 @@ Each release's notes say what it brought, and the decisions above say why. The c
 | [0.2: Safe, searchable and shareable](https://github.com/hazeliscoding/prompuff/releases/tag/v0.2.0) | 2026-10-07 | Backups, Recently deleted, FTS5 search, remembered values and `.zip` sharing |
 | [0.1: MVP](https://github.com/hazeliscoding/prompuff/releases/tag/v0.1.0) | 2026-10-07 | The library, `{{variables}}`, versions, Markdown import and export, and updates |
 
-## Getting found
+## Next
 
-These need no release. Each lands as its own pull request whenever it's ready, alongside the milestones below.
+Open work is in [GitHub issues](https://github.com/hazeliscoding/prompuff/issues), and the [Prompuff project](https://github.com/users/hazeliscoding/projects/9) shows it on one board. The current milestone is [v1.2](https://github.com/hazeliscoding/prompuff/milestone/2). The milestones come in this order, and [Getting found](https://github.com/hazeliscoding/prompuff/milestone/1) runs alongside them, since it needs no release:
 
-- [ ] winget: the release workflow opens the manifest pull request to `microsoft/winget-pkgs` for each stable release, installing `Prompuff-Setup.exe` per user and silently.
-- [ ] A Microsoft Store listing for the signed `Prompuff-Setup.exe`. The owner registers the free individual developer account.
-- [ ] The official MCP Registry lists the server as `io.github.hazeliscoding/prompuff`, with whatever package entry the registry needs, and says it comes with the Prompuff app. Glama and awesome-mcp-servers follow.
-- [ ] Submissions to awesome-claude-code (open to repos 14 days old, so from 2026-10-21), awesome-avalonia, Awesome-Prompt-Engineering and awesome-privacy.
-- [x] The README and the website lead with what rival apps got wrong: a backup before an update changes the library, a library every later version opens, and no network beyond the update check.
-- [ ] Check that a fresh download of `Prompuff-Setup.exe` no longer gets SmartScreen's "unrecognized app" warning, now that the certificate has had time to build reputation.
+| Milestone | What it brings |
+|---|---|
+| [v1.2: Paste anywhere](https://github.com/hazeliscoding/prompuff/milestone/2) | Quick insert: find a prompt and drop it into the app you're typing in |
+| [v1.3: Links and agents that save](https://github.com/hazeliscoding/prompuff/milestone/3) | `prompuff://` links, and MCP tools that save prompts when you allow it |
+| [v1.4: A Markdown mirror and agent skills](https://github.com/hazeliscoding/prompuff/milestone/4) | The library as plain files, and prompts as skills for AI tools |
+| [v1.5: Capture from the browser](https://github.com/hazeliscoding/prompuff/milestone/5) | A browser extension that saves and inserts prompts |
+| [v1.6: More ways to install on Linux](https://github.com/hazeliscoding/prompuff/milestone/6) | A `.deb`, the AUR and a Flatpak |
 
-**Done when:** `winget install Prompuff` installs the signed build, and Prompuff is listed in the Microsoft Store and the MCP Registry.
-
-## v1.2: Paste anywhere
-
-Find a prompt and drop it into the app you're typing in, without opening Prompuff.
-
-- [ ] **Quick insert**, a second global hotkey beside Quick save, with its own default and the same recorder in Settings. It opens a small search over the library, and the first key typed after the hotkey lands in it.
-- [ ] Arrows and Enter pick a prompt. One with `{{variables}}` asks for them in the same window, filled with its remembered values, before it goes.
-- [ ] The result is copied and Prompuff steps back to the app you came from, as after a hotkey Quick save. **Paste after inserting** also presses the paste key there: `SendInput` on Windows and XTest on X11. On macOS it needs Accessibility access, which Settings asks for, and without it the result is only copied.
-- [ ] Wayland has no global keys or pasting into other apps, so a desktop shortcut runs the app with `--quick-insert` (a new launch argument, like `--quick-save`) and the result is copied.
-- [ ] `settings-1.2.0.json` records the new settings beside 1.0's recording.
-- [ ] Publish v1.2.0.
-
-**Done when:** on Windows and X11, Quick insert from another app finds a prompt by typing, fills its variables and pastes the result into that app; on macOS on CI it opens and copies; and on Wayland the desktop shortcut does the same through the clipboard.
-
-## v1.3: Links and agents that save
-
-Put a prompt one click away from anywhere, and let AI tools add to the library when you allow it.
-
-- [ ] `prompuff://` links that open, copy or render a prompt by its ID, with **Copy link** in a prompt's menu and `prompuff link <prompt>` on the command line.
-- [ ] Registering the link scheme is a step you start in Settings › Integrations on Windows and Linux, like installing the command-line tool. On macOS the app bundle declares it.
-- [ ] MCP tools that save a new prompt, off until **Let AI tools add prompts** is turned on in Settings › Integrations, apart from read access. Each saved prompt's first version names the tool that saved it.
-- [ ] The MCP server watches the library's `data_version`, like the app, and sends `list_changed` for prompts and resources when it changes, so a client's slash commands follow favorites without a restart.
-- [ ] The server's instructions tell clients that can't show MCP prompts, such as Codex and Copilot CLI, to search Prompuff when someone names a saved prompt.
-- [ ] `cli-1.3.0.json` and `mcp-1.3.0.json` record the new command and tools beside 1.0's recordings, so later versions keep them too.
-- [ ] Publish v1.3.0.
-
-**Done when:** a `prompuff://` link in a browser opens, copies or renders its prompt on Windows and Linux, and on macOS on CI, Claude Code can save a prompt over MCP only once the setting allows it, a favorite added in the app shows up in Claude Code's slash commands without restarting it, and the 1.0 and 1.3 contract tests both pass.
-
-## v1.4: A Markdown mirror and agent skills
-
-Keep the library as plain files too, for Git, Syncthing, any editor, or the skills folders AI tools read.
-
-- [ ] A mirror folder, chosen in Settings › Storage, that Prompuff keeps in step with the library: one Markdown file per prompt in the 1.0 format, and workflows in `workflows/`.
-- [ ] Saving a prompt rewrites its file, removing it for good deletes the file, and a file keeps its name when the prompt's title changes, so Git sees an edit rather than a new file.
-- [ ] The mirror is one-way: Prompuff writes it, and Import stays the way files come in. A two-way mirror stays in Later.
-- [ ] **Export as skill** for a prompt or a selection: an Agent Skills folder (`<name>/SKILL.md`, which Codex, Cursor and Copilot CLI read from `~/.agents/skills`), a Claude Code skill, a Copilot `.prompt.md` or a Gemini CLI `.toml` command. `{{variables}}` become each tool's own arguments where it has them (`$name` in Claude Code, `${input:name}` in Copilot, `{{args}}` in Gemini) and a short list of inputs where it doesn't. `prompuff export --format …` does the same.
-- [ ] A skills mirror: favorites kept as skills in a folder you pick, such as `~/.claude/skills` or `~/.agents/skills`. A skill keeps its folder name when the title changes, and Prompuff only ever removes skills it wrote.
-- [ ] Import reads Claude Code commands and skills, Copilot `.prompt.md` files and Gemini `.toml` commands, and turns their arguments back into `{{variables}}`.
-- [ ] Fixtures record each export format as 1.4 writes it, and `cli-1.4.0.json` records `export`.
-- [ ] Publish v1.4.0.
-
-**Done when:** a mirror folder under Git shows each saved change as a readable diff, a renamed prompt keeps its file, importing the folder into a fresh library brings back the same prompts, a favorite in the skills mirror runs as a skill in Claude Code and Codex, and a folder of Claude Code commands imports with its arguments as `{{variables}}`.
-
-## v1.5: Capture from the browser
-
-Save a prompt from ChatGPT, Claude or any page without leaving the browser, and put one back.
-
-- [ ] A browser extension for Chrome, Edge and Firefox, in `extension/`: **Save to Prompuff** on a selection, or on the text box you're typing in, hands the text to Quick save through native messaging. It reads the selection and the focused text box, never a chat site's own page structure.
-- [ ] **Insert from Prompuff**: the extension's popup searches the library through the same host, fills a prompt's variables and puts the result in the focused text box. This is the way to paste on Wayland, where Quick insert can only copy.
-- [ ] The native messaging host is the `prompuff` command. Connecting a browser is a step you start in Settings › Integrations, like installing the command-line tool, since it writes a manifest into the browser's own folders.
-- [ ] The extension and its host make no network requests, and the extension asks only for the permissions saving and inserting need. Each listing names them.
-- [ ] Listings on the Chrome Web Store (a one-time $5 developer fee), Microsoft Edge Add-ons and Firefox Add-ons.
-- [ ] Publish v1.5.0.
-
-**Done when:** a selection on any page, or what's typed in ChatGPT or Claude, lands in the library through Save to Prompuff, and a library prompt lands in their text box through Insert from Prompuff, on Windows, Linux and macOS, with no network traffic from the extension or its host.
-
-## v1.6: More ways to install on Linux
-
-- [ ] A `.deb`, built by the release workflow beside the AppImage, and a `prompuff-bin` package in the AUR that wraps the AppImage.
-- [ ] Prompuff knows how it was installed: a `.deb` or AUR copy points to the new download or the package manager instead of updating itself, and a Flatpak leaves updates to Flathub.
-- [ ] The `prompuff` command and the MCP setups in Settings › Integrations work from each package.
-- [ ] A Flatpak on Flathub, which the owner writes and submits by hand under Flathub's AI rules. The milestone doesn't wait for its review.
-- [ ] Publish v1.6.0.
-
-**Done when:** Prompuff installs from a `.deb` on Ubuntu and from the AUR, keeps its library across an update, and each copy says how it updates.
-
-## Later
-
-- Optional end-to-end encrypted sync.
-- A two-way Markdown mirror.
-- Prompt relationships beyond lineage, and recipe templates, such as one prompt including another.
-- Model notes, for prompts that stop working after a model update: the models a prompt works with (the design's "Works with" chips), and a note you write on a version.
-- Variable defaults and choice lists, in an optional metadata key.
-- MCP argument completion from choice lists, once a named client asks for completions. Remembered values stay out of it.
-- Skills over MCP (`skill://`), once Claude Code or Codex supports it.
-- Translations.
+Issues labeled [`later`](https://github.com/hazeliscoding/prompuff/labels/later) are ideas without a milestone, and each one says what has to be settled first.
 
 ## Not planned
 
