@@ -292,16 +292,21 @@ public class HotkeyTests
     public async Task Where_hotkeys_are_impossible_Settings_offers_a_desktop_shortcut()
     {
         var hotkeys = new FakeGlobalHotkeyService { IsSupported = false, UnsupportedReason = "Wayland doesn't let apps listen for keys while another app has focus, so bind a shortcut in your desktop's settings instead." };
-        await using var app = await AppHarness.StartAsync(importSamples: false, hotkeys: hotkeys);
+        await using var app = await AppHarness.StartAsync(importSamples: false, hotkeys: hotkeys, insertTarget: new UnsupportedInsertTarget());
         await app.ViewModel.OpenSettingsCommand.ExecuteAsync(null);
         var settings = app.ViewModel.Settings;
         settings.Select(SettingsSection.QuickSave);
         await app.SettleAsync();
 
         Assert.False(settings.IsHotkeySupported);
+        Assert.False(settings.IsPasteSupported);
         Assert.EndsWith(" --quick-save", settings.QuickSaveCommand);
         await settings.CopyQuickSaveCommandCommand.ExecuteAsync(null);
         Assert.Equal(settings.QuickSaveCommand, await app.Get<IClipboardService>().GetTextAsync());
+        Assert.EndsWith(" --quick-insert", settings.QuickInsertCommand);
+        Assert.Equal(settings.QuickSaveCommand[..^" --quick-save".Length], settings.QuickInsertCommand[..^" --quick-insert".Length]);
+        await settings.CopyQuickInsertCommandCommand.ExecuteAsync(null);
+        Assert.Equal(settings.QuickInsertCommand, await app.Get<IClipboardService>().GetTextAsync());
         app.Screenshot("settings-quick-save-wayland");
     }
 }

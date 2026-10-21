@@ -62,6 +62,11 @@ public sealed class App : Avalonia.Application
                 {
                     Dispatcher.UIThread.Post(() => _ = viewModel.QuickSaveFromOutsideAsync());
                 }
+                else if (launch.Request == LaunchRequest.QuickInsert)
+                {
+                    // Through the window, so Quick insert remembers the app the shortcut was pressed in and steps back to it.
+                    Dispatcher.UIThread.Post(() => _ = window.HandleLaunchAsync(LaunchRequest.QuickInsert));
+                }
 
                 // Later launches arrive on a background thread.
                 launch.Instance.SetHandler(request => Dispatcher.UIThread.Post(() => _ = HandleLaunchAsync(window, viewModel, request)));
