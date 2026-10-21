@@ -71,6 +71,12 @@ public partial class MainWindow : Window
             {
                 FocusLater(QuickInsertInput, selectAll: false);
             }
+            else if (e.PropertyName == nameof(QuickInsertViewModel.IsFilling) && viewModel.QuickInsert.IsFilling)
+            {
+                // The boxes appear on the next layout pass.
+                Dispatcher.UIThread.Post(() => Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(QuickInsertFields)
+                    .OfType<TextBox>().FirstOrDefault()?.Focus(NavigationMethod.Tab), DispatcherPriority.Loaded);
+            }
         };
         viewModel.Dialogs.PropertyChanged += (_, e) =>
         {
@@ -259,7 +265,7 @@ public partial class MainWindow : Window
     // search box has focus. It goes into the search rather than wherever focus was.
     private void OnPreviewTextInput(object? sender, TextInputEventArgs e)
     {
-        if (ViewModel is not { QuickInsert.IsOpen: true } || QuickInsertInput.IsFocused || string.IsNullOrEmpty(e.Text))
+        if (ViewModel is not { QuickInsert: { IsOpen: true, IsSearching: true } } || QuickInsertInput.IsFocused || string.IsNullOrEmpty(e.Text))
         {
             return;
         }
@@ -330,6 +336,39 @@ public partial class MainWindow : Window
         if (ViewModel?.Palette is { } palette && e.Source is Visual source && source.FindAncestorOfType<ListBoxItem>() is not null)
         {
             palette.RunCommand.Execute(palette.Selected);
+        }
+    }
+
+    private void OnQuickInsertKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (ViewModel?.QuickInsert is not { } quickInsert)
+        {
+            return;
+        }
+
+        switch (e.Key)
+        {
+            case Key.Down or Key.Up:
+                quickInsert.MoveSelection(e.Key == Key.Down ? 1 : -1);
+                if (quickInsert.Selected is { } selected)
+                {
+                    QuickInsertList.ScrollIntoView(selected);
+                }
+
+                e.Handled = true;
+                break;
+            case Key.Enter:
+                quickInsert.PickCommand.Execute(null);
+                e.Handled = true;
+                break;
+        }
+    }
+
+    private void OnQuickInsertItemActivated(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel?.QuickInsert is { } quickInsert && e.Source is Visual source && source.FindAncestorOfType<ListBoxItem>() is not null)
+        {
+            quickInsert.PickCommand.Execute(quickInsert.Selected);
         }
     }
 

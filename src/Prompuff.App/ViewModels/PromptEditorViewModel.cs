@@ -102,7 +102,7 @@ public sealed partial class PromptEditorViewModel : ObservableObject
 
     private PromptContent _saved = new(null, null, string.Empty, null);
     private Dictionary<string, string> _values = new(StringComparer.Ordinal);
-    private bool _clearingValues;
+    private bool _settingValues;
     private bool _loading;
 
     public PromptEditorViewModel(
@@ -379,19 +379,32 @@ public sealed partial class PromptEditorViewModel : ObservableObject
     [RelayCommand]
     private async Task ClearValues()
     {
-        _clearingValues = true;
+        _settingValues = true;
         _values.Clear();
         foreach (var variable in Variables)
         {
             variable.Value = string.Empty;
         }
 
-        _clearingValues = false;
+        _settingValues = false;
         RefreshRender();
         if (Id is { } id)
         {
             await _valuesCache.ClearAsync(id);
         }
+    }
+
+    /// <summary>Shows values Quick insert remembered for this prompt while it was open over the editor.</summary>
+    public void ReloadValues()
+    {
+        _settingValues = true;
+        foreach (var variable in Variables)
+        {
+            variable.Value = _values.GetValueOrDefault(variable.Name, string.Empty);
+        }
+
+        _settingValues = false;
+        RefreshRender();
     }
 
     [RelayCommand]
@@ -785,7 +798,7 @@ public sealed partial class PromptEditorViewModel : ObservableObject
     private void VariableEdited()
     {
         RefreshRender();
-        if (!_clearingValues && Id is { } id)
+        if (!_settingValues && Id is { } id)
         {
             _ = _valuesCache.SaveAsync(id);
         }

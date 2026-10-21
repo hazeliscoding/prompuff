@@ -448,9 +448,11 @@
               VerticalAlignment="Top"
               HorizontalAlignment="Center"
               ClipToBounds="True"
+              KeyboardNavigation.TabNavigation="Cycle"
               PointerPressed="OnModalPressed">
         <DockPanel>
-          <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto" Height="46" Margin="14,0">
+          <!-- Search -->
+          <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto" Height="46" Margin="14,0" IsVisible="{Binding IsSearching}">
             <c:Icon Kind="Search" Size="15" Foreground="{DynamicResource Text3Brush}" />
             <TextBox x:Name="QuickInsertInput"
                      Grid.Column="1"
@@ -458,7 +460,16 @@
                      Margin="6,0"
                      FontSize="14"
                      Text="{Binding Query}"
-                     PlaceholderText="Find a prompt to insert" />
+                     PlaceholderText="Find a prompt to insert"
+                     KeyDown="OnQuickInsertKeyDown" />
+            <Border Grid.Column="2" Classes="kbd">
+              <TextBlock Text="Esc" />
+            </Border>
+          </Grid>
+          <!-- Fill in the picked prompt's variables -->
+          <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto" Height="46" Margin="14,0" IsVisible="{Binding IsFilling}">
+            <c:Icon Kind="FileText" Size="15" Foreground="{DynamicResource Text3Brush}" />
+            <TextBlock Grid.Column="1" Classes="strong" Margin="10,0" Text="{Binding PickedTitle}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             <Border Grid.Column="2" Classes="kbd">
               <TextBlock Text="Esc" />
             </Border>
@@ -466,7 +477,16 @@
           <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0" Padding="14,8">
             <Grid ColumnDefinitions="*,Auto">
               <TextBlock Classes="micro faint" Text="QUICK INSERT" />
-              <TextBlock Grid.Column="1" Classes="micro faint" Text="ESC CLOSE" />
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="14" IsVisible="{Binding IsSearching}">
+                <TextBlock Classes="micro faint" Text="↑↓ NAVIGATE" />
+                <TextBlock Classes="micro faint" Text="↵ PICK" />
+                <TextBlock Classes="micro faint" Text="ESC CLOSE" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="14" IsVisible="{Binding IsFilling}">
+                <TextBlock Classes="micro faint" Text="TAB NEXT" />
+                <TextBlock Classes="micro faint" Text="↵ INSERT" />
+                <TextBlock Classes="micro faint" Text="ESC CLOSE" />
+              </StackPanel>
             </Grid>
           </Border>
           <Border BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0">
@@ -476,8 +496,10 @@
                        Classes="plain"
                        MaxHeight="320"
                        Margin="6"
+                       IsVisible="{Binding IsSearching}"
                        ItemsSource="{Binding Results}"
-                       SelectedItem="{Binding Selected}">
+                       SelectedItem="{Binding Selected}"
+                       Tapped="OnQuickInsertItemActivated">
                 <ListBox.ItemTemplate>
                   <DataTemplate x:DataType="vm:QuickInsertResult">
                     <Grid ColumnDefinitions="Auto,*,Auto" Height="34">
@@ -488,6 +510,26 @@
                   </DataTemplate>
                 </ListBox.ItemTemplate>
               </ListBox>
+              <ScrollViewer MaxHeight="340" IsVisible="{Binding IsFilling}">
+                <ItemsControl x:Name="QuickInsertFields" Margin="16,12" ItemsSource="{Binding Fields}">
+                  <ItemsControl.KeyBindings>
+                    <KeyBinding Gesture="Enter" Command="{Binding InsertCommand}" />
+                  </ItemsControl.KeyBindings>
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Spacing="12" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:VariableViewModel">
+                      <StackPanel Spacing="5">
+                        <TextBlock Classes="variable" Text="{Binding Braced}" />
+                        <TextBox Classes="raised" Height="30" Text="{Binding Value}" PlaceholderText="{Binding Placeholder}" />
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
             </Panel>
           </Border>
         </DockPanel>
