@@ -172,7 +172,7 @@ public sealed partial class CommandPaletteViewModel(
     }
 
     /// <summary>Case-insensitive substring match, or every query letter in order ("aup" finds "Angular Upgrade Planner").</summary>
-    private static bool Matches(string text, string query)
+    internal static bool Matches(string text, string query)
     {
         if (text.Contains(query, StringComparison.OrdinalIgnoreCase))
         {

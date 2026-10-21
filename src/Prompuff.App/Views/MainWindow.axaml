@@ -434,6 +434,67 @@
     </Grid>
     </Panel>
 
+    <!-- Quick insert -->
+    <Panel DataContext="{Binding QuickInsert}">
+    <Grid Background="{DynamicResource ScrimBrush}"
+          x:DataType="vm:QuickInsertViewModel"
+          IsVisible="{Binding IsOpen}"
+          PointerPressed="OnScrimPressed"
+          Tag="quick-insert">
+      <Border Classes="modal"
+              Width="520"
+              Margin="0,90,0,0"
+              CornerRadius="8"
+              VerticalAlignment="Top"
+              HorizontalAlignment="Center"
+              ClipToBounds="True"
+              PointerPressed="OnModalPressed">
+        <DockPanel>
+          <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto" Height="46" Margin="14,0">
+            <c:Icon Kind="Search" Size="15" Foreground="{DynamicResource Text3Brush}" />
+            <TextBox x:Name="QuickInsertInput"
+                     Grid.Column="1"
+                     Classes="plain"
+                     Margin="6,0"
+                     FontSize="14"
+                     Text="{Binding Query}"
+                     PlaceholderText="Find a prompt to insert" />
+            <Border Grid.Column="2" Classes="kbd">
+              <TextBlock Text="Esc" />
+            </Border>
+          </Grid>
+          <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0" Padding="14,8">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Classes="micro faint" Text="QUICK INSERT" />
+              <TextBlock Grid.Column="1" Classes="micro faint" Text="ESC CLOSE" />
+            </Grid>
+          </Border>
+          <Border BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,1,0,0">
+            <Panel>
+              <TextBlock Classes="compact faint" Margin="16,18" Text="{Binding EmptyText}" IsVisible="{Binding IsEmpty}" />
+              <ListBox x:Name="QuickInsertList" AutomationProperties.Name="Prompts"
+                       Classes="plain"
+                       MaxHeight="320"
+                       Margin="6"
+                       ItemsSource="{Binding Results}"
+                       SelectedItem="{Binding Selected}">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:QuickInsertResult">
+                    <Grid ColumnDefinitions="Auto,*,Auto" Height="34">
+                      <c:Icon Kind="{Binding Icon}" Width="16" Foreground="{DynamicResource Text3Brush}" />
+                      <TextBlock Grid.Column="1" Margin="10,0,0,0" Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Grid.Column="2" Classes="data faint" Margin="10,0,0,0" Text="{Binding Tags}" IsVisible="{Binding HasTags}" VerticalAlignment="Center" MaxWidth="180" TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </Panel>
+          </Border>
+        </DockPanel>
+      </Border>
+    </Grid>
+    </Panel>
+
     <!-- Dialog -->
     <Grid Background="{DynamicResource ScrimBrush}"
           IsVisible="{Binding Dialogs.Current, Converter={x:Static ObjectConverters.IsNotNull}}">

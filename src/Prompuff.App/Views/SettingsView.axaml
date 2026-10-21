@@ -55,6 +55,30 @@
       <Setter Property="BorderThickness" Value="0,0,0,1" />
     </Style>
   </UserControl.Styles>
+  <UserControl.DataTemplates>
+    <!-- A system-wide hotkey and its recorder, for Quick save and for Quick insert -->
+    <DataTemplate x:DataType="vm:HotkeySettingViewModel">
+      <Border Classes="setting-row">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+          <StackPanel Spacing="2">
+            <TextBlock Classes="strong" Text="{Binding Title}" />
+            <TextBlock Classes="compact faint" TextWrapping="Wrap" Text="{Binding Status}" IsVisible="{Binding !Problem}" />
+            <TextBlock Classes="compact" TextWrapping="Wrap" Text="{Binding Status}" IsVisible="{Binding Problem}"
+                       Foreground="{DynamicResource AmberTextBrush}" />
+          </StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Border Classes="kbd" Classes.recording="{Binding IsRecording}" Padding="8,3" MinWidth="64">
+              <TextBlock Text="{Binding Label}" FontSize="12" HorizontalAlignment="Center" />
+            </Border>
+            <Button Classes="sm" Content="Change" AutomationProperties.Name="{Binding ChangeName}" Command="{Binding StartRecordingCommand}" IsVisible="{Binding !IsRecording}" />
+            <Button Classes="ghost sm" Content="Cancel" Command="{Binding CancelRecordingCommand}" IsVisible="{Binding IsRecording}" />
+            <Button Classes="ghost sm" Content="Turn off" AutomationProperties.Name="{Binding TurnOffName}" Command="{Binding TurnOffCommand}" IsVisible="{Binding HasHotkey}" />
+            <Button Classes="ghost sm" Content="Turn on" AutomationProperties.Name="{Binding TurnOnName}" Command="{Binding TurnOnCommand}" IsVisible="{Binding !HasHotkey}" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </DataTemplate>
+  </UserControl.DataTemplates>
 
   <Grid ColumnDefinitions="200,*">
     <Border Background="{DynamicResource Bg1Brush}" BorderBrush="{DynamicResource Border1Brush}" BorderThickness="0,0,1,0" Padding="10,16">
@@ -150,26 +174,9 @@
         <StackPanel Spacing="4" IsVisible="{Binding IsQuickSave}">
           <TextBlock Classes="page-title" Text="Quick save" Margin="0,0,0,12" />
           <TextBlock Classes="muted" TextWrapping="Wrap" LineHeight="19.5" Margin="0,0,0,8"
-                     Text="Stash a prompt from any app: copy it, then press the hotkey or use Prompuff's tray icon. Quick save opens with the clipboard, and Enter stashes it." />
-          <Border Classes="setting-row" IsVisible="{Binding IsHotkeySupported}">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-              <StackPanel Spacing="2">
-                <TextBlock Classes="strong" Text="Hotkey" />
-                <TextBlock Classes="compact faint" TextWrapping="Wrap" Text="{Binding HotkeyStatus}" IsVisible="{Binding !HotkeyProblem}" />
-                <TextBlock Classes="compact" TextWrapping="Wrap" Text="{Binding HotkeyStatus}" IsVisible="{Binding HotkeyProblem}"
-                           Foreground="{DynamicResource AmberTextBrush}" />
-              </StackPanel>
-              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <Border Classes="kbd" Classes.recording="{Binding IsRecordingHotkey}" Padding="8,3" MinWidth="64">
-                  <TextBlock Text="{Binding HotkeyLabel}" FontSize="12" HorizontalAlignment="Center" />
-                </Border>
-                <Button Classes="sm" Content="Change" Command="{Binding StartRecordingHotkeyCommand}" IsVisible="{Binding !IsRecordingHotkey}" />
-                <Button Classes="ghost sm" Content="Cancel" Command="{Binding CancelRecordingHotkeyCommand}" IsVisible="{Binding IsRecordingHotkey}" />
-                <Button Classes="ghost sm" Content="Turn off" Command="{Binding TurnOffHotkeyCommand}" IsVisible="{Binding HasHotkey}" />
-                <Button Classes="ghost sm" Content="Turn on" Command="{Binding TurnOnHotkeyCommand}" IsVisible="{Binding !HasHotkey}" />
-              </StackPanel>
-            </Grid>
-          </Border>
+                     Text="Stash a prompt from any app: copy it, then press the hotkey or use Prompuff's tray icon. Quick save opens with the clipboard, and Enter stashes it. Quick insert goes the other way: its hotkey searches your library from any app." />
+          <ContentControl Content="{Binding QuickSaveHotkey}" IsVisible="{Binding IsHotkeySupported}" />
+          <ContentControl Content="{Binding QuickInsertHotkey}" IsVisible="{Binding IsHotkeySupported}" />
           <Border Classes="panel" Padding="16" Margin="0,4,0,8" IsVisible="{Binding !IsHotkeySupported}">
             <StackPanel Spacing="8">
               <TextBlock Classes="strong" Text="Use a desktop shortcut" />

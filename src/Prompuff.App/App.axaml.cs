@@ -130,7 +130,7 @@ public sealed class App : Avalonia.Application
         services.AddSingleton<IClipboardService, AvaloniaClipboardService>();
         services.AddSingleton<IFilePickerService, AvaloniaFilePickerService>();
         services.AddSingleton<IPlatformLauncher, AvaloniaLauncher>();
-        services.AddSingleton<IGlobalHotkeyService>(_ => GlobalHotkeys.Create());
+        services.AddSingleton(_ => new GlobalHotkeyServices(GlobalHotkeys.Create(), GlobalHotkeys.Create()));
         services.AddSingleton<IMotionPreference, SystemMotionPreference>();
         services.AddSingleton<ICommandLineInstaller, CommandLineInstaller>();
         services.AddSingleton<DiagnosticReport>();
@@ -146,6 +146,7 @@ public sealed class App : Avalonia.Application
         services.AddSingleton<LibraryViewModel>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<QuickSaveViewModel>();
+        services.AddSingleton<QuickInsertViewModel>();
         services.AddSingleton<CommandPaletteViewModel>();
         services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<PromptEditorViewModel>();

@@ -63,6 +63,9 @@ public sealed record AppSettings
     /// <summary>The system-wide Quick save hotkey, such as "Ctrl+Alt+P". Empty turns it off.</summary>
     public string QuickSaveHotkey { get; set; } = "Ctrl+Alt+P";
 
+    /// <summary>The system-wide Quick insert hotkey, which finds a prompt from any app. Empty turns it off.</summary>
+    public string QuickInsertHotkey { get; set; } = "Ctrl+Alt+Shift+P";
+
     /// <summary>Lets AI tools read the library through <c>prompuff mcp</c>. Off until the user turns it on.</summary>
     public bool AllowMcp { get; set; }
 

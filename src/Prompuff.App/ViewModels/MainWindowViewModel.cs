@@ -55,6 +55,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         LibraryViewModel library,
         SettingsViewModel settings,
         QuickSaveViewModel quickSave,
+        QuickInsertViewModel quickInsert,
         CommandPaletteViewModel palette,
         DialogService dialogs,
         ToastService toasts,
@@ -77,6 +78,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Library = library;
         Settings = settings;
         QuickSave = quickSave;
+        QuickInsert = quickInsert;
         Palette = palette;
         Dialogs = dialogs;
         Toasts = toasts;
@@ -106,6 +108,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public SettingsViewModel Settings { get; }
     public WorkflowsViewModel Workflows { get; }
     public QuickSaveViewModel QuickSave { get; }
+    public QuickInsertViewModel QuickInsert { get; }
     public CommandPaletteViewModel Palette { get; }
     public DialogService Dialogs { get; }
     public ToastService Toasts { get; }
@@ -153,7 +156,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             }
 
             _ready = true;
-            _ = Settings.ApplyHotkeyAsync();
+            _ = Settings.ApplyHotkeysAsync();
             _backups.StartDailySchedule();
             await PurgeExpiredAsync();
             await RefreshAllAsync();
@@ -179,7 +182,22 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
 
         Palette.IsOpen = false;
+        QuickInsert.IsOpen = false;
         await QuickSave.OpenAsync(CurrentCollectionId());
+    }
+
+    /// <summary>Quick insert asked for by its hotkey. Like Quick save, it leaves an open dialog alone.</summary>
+    public async Task QuickInsertFromOutsideAsync()
+    {
+        await _initialized.Task;
+        if (!_ready || Dialogs.Current is not null)
+        {
+            return;
+        }
+
+        Palette.IsOpen = false;
+        QuickSave.IsOpen = false;
+        await QuickInsert.OpenAsync();
     }
 
     /// <summary>Removes prompts that have waited in Recently deleted longer than 30 days.</summary>
@@ -201,10 +219,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         var applies = action switch
         {
-            ShortcutAction.Close => Dialogs.Current is not null || Palette.IsOpen || QuickSave.IsOpen,
+            ShortcutAction.Close => Dialogs.Current is not null || Palette.IsOpen || QuickSave.IsOpen || QuickInsert.IsOpen,
             _ when !_ready || Dialogs.Current is not null => false,
             ShortcutAction.CommandPalette or ShortcutAction.QuickSave => true,
-            _ when Palette.IsOpen || QuickSave.IsOpen => false,
+            _ when Palette.IsOpen || QuickSave.IsOpen || QuickInsert.IsOpen => false,
             ShortcutAction.NewPrompt or ShortcutAction.FocusSearch => true,
             ShortcutAction.ShowHistory => Editor is { IsNew: false },
             ShortcutAction.Back => CurrentPage is PromptEditorViewModel or SettingsViewModel or WorkflowViewModel or WorkflowsViewModel,
@@ -242,6 +260,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 return true;
             }
 
+            if (QuickInsert.IsOpen)
+            {
+                QuickInsert.IsOpen = false;
+                return true;
+            }
+
             return false;
         }
 
@@ -254,10 +278,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
         {
             case ShortcutAction.CommandPalette:
                 QuickSave.IsOpen = false;
+                QuickInsert.IsOpen = false;
                 await Palette.OpenAsync();
                 return true;
             case ShortcutAction.QuickSave:
                 Palette.IsOpen = false;
+                QuickInsert.IsOpen = false;
                 await QuickSave.OpenAsync(CurrentCollectionId());
                 return true;
             case ShortcutAction.NewPrompt:

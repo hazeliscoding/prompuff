@@ -3,7 +3,6 @@ using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
-using Avalonia.Input;
 using Avalonia.Media;
 using Prompuff.App.Platform;
 using Prompuff.App.Themes;
@@ -117,7 +116,6 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly IPlatformLauncher _launcher;
     private readonly IUpdateService _updates;
     private readonly WorkflowService _workflows;
-    private readonly IGlobalHotkeyService _hotkeys;
     private readonly IClipboardService _clipboard;
     private readonly ICommandLineInstaller _installer;
     private readonly LibraryBackups _backups;
@@ -141,7 +139,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         IPlatformLauncher launcher,
         IUpdateService updates,
         WorkflowService workflows,
-        IGlobalHotkeyService hotkeys,
+        GlobalHotkeyServices hotkeys,
         IClipboardService clipboard,
         ICommandLineInstaller installer,
         LibraryBackups backups,
@@ -163,10 +161,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         _launcher = launcher;
         _updates = updates;
         _workflows = workflows;
-        _hotkeys = hotkeys;
         _clipboard = clipboard;
         _installer = installer;
-        hotkeys.Pressed += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(() => HotkeyPressed?.Invoke(this, EventArgs.Empty));
         _backups = backups;
         _diagnostics = diagnostics;
         _dialogs = dialogs;
@@ -175,6 +171,25 @@ public sealed partial class SettingsViewModel : ObservableObject
         _motion = motion;
         _logger = logger;
         Appearance = appearance;
+
+        QuickSaveHotkey = new HotkeySettingViewModel(
+            "Quick save",
+            Platform.Hotkey.QuickSaveDefault,
+            hotkeys.QuickSave,
+            text => Persist(settings => settings with { QuickSaveHotkey = text }),
+            hotkey => $"Press {hotkey.Display} in any app to open Quick save with what you copied.",
+            $"Off. Quick save still opens from the tray, and with {Platform.Shortcuts.Display(ShortcutAction.QuickSave)} inside Prompuff.",
+            logger);
+        QuickInsertHotkey = new HotkeySettingViewModel(
+            "Quick insert",
+            Platform.Hotkey.QuickInsertDefault,
+            hotkeys.QuickInsert,
+            text => Persist(settings => settings with { QuickInsertHotkey = text }),
+            hotkey => $"Press {hotkey.Display} in any app to find a prompt in your library.",
+            "Off. Turn it on to find a prompt from any app.",
+            logger);
+        QuickSaveHotkey.Sibling = QuickInsertHotkey;
+        QuickInsertHotkey.Sibling = QuickSaveHotkey;
 
         Sections =
         [
@@ -281,28 +296,15 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _keepRunningInTray;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HotkeyLabel), nameof(HasHotkey))]
-    private Hotkey? _hotkey;
+    public HotkeySettingViewModel QuickSaveHotkey { get; }
+    public HotkeySettingViewModel QuickInsertHotkey { get; }
 
-    [ObservableProperty]
-    private string _hotkeyStatus = string.Empty;
+    /// <summary>The hotkey being recorded, which the window hands every key to. Null when neither is.</summary>
+    public HotkeySettingViewModel? RecordingHotkey =>
+        QuickSaveHotkey.IsRecording ? QuickSaveHotkey : QuickInsertHotkey.IsRecording ? QuickInsertHotkey : null;
 
-    /// <summary>True when the hotkey couldn't be registered, usually because another app has it.</summary>
-    [ObservableProperty]
-    private bool _hotkeyProblem;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HotkeyLabel))]
-    private bool _isRecordingHotkey;
-
-    /// <summary>Raised on the UI thread when the system-wide hotkey is pressed in any app.</summary>
-    public event EventHandler? HotkeyPressed;
-
-    public bool IsHotkeySupported => _hotkeys.IsSupported;
-    public string? HotkeyUnsupportedReason => _hotkeys.UnsupportedReason;
-    public bool HasHotkey => Hotkey is not null;
-    public string HotkeyLabel => IsRecordingHotkey ? "Press keys…" : Hotkey?.Display ?? "Off";
+    public bool IsHotkeySupported => QuickSaveHotkey.IsSupported;
+    public string? HotkeyUnsupportedReason => QuickSaveHotkey.UnsupportedReason;
 
     /// <summary>What a desktop shortcut should run to open Quick save, for desktops where Prompuff can't own a hotkey.</summary>
     public string QuickSaveCommand { get; } = BuildQuickSaveCommand();
@@ -455,7 +457,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         ReleaseChannel = settings.UpdateChannel;
         KeepRunningInTray = settings.KeepRunningInTray;
         AllowMcp = settings.AllowMcp;
-        Hotkey = Platform.Hotkey.Parse(settings.QuickSaveHotkey);
+        QuickSaveHotkey.Load(settings.QuickSaveHotkey);
+        QuickInsertHotkey.Load(settings.QuickInsertHotkey);
         Appearance.ShowMascot = settings.ShowMascot;
         Appearance.ReduceMotion = ReduceMotion;
         Appearance.Density = settings.Density;
@@ -742,8 +745,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task CopyDiagnosticInfo()
     {
-        var hotkey = !_hotkeys.IsSupported ? "unsupported in this session" : HotkeyProblem ? "taken by another app" : "ready";
-        var report = await _diagnostics.BuildAsync(new DiagnosticFacts(AvaloniaVersion, _installer.IsInstalled, hotkey));
+        var report = await _diagnostics.BuildAsync(new DiagnosticFacts(AvaloniaVersion, _installer.IsInstalled, QuickSaveHotkey.Health, QuickInsertHotkey.Health));
         await _clipboard.SetTextAsync(report);
         _logger.LogInformation("Copied diagnostic info");
         _toasts.Show("Copied.", "Give it a read, then paste it into your bug report.");
@@ -823,109 +825,11 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     partial void OnKeepRunningInTrayChanged(bool value) => Persist(settings => settings with { KeepRunningInTray = value });
 
-    /// <summary>Registers the saved hotkey with the system. Runs at startup and after each change.</summary>
-    public async Task ApplyHotkeyAsync()
+    /// <summary>Registers both saved hotkeys with the system. Runs at startup.</summary>
+    public async Task ApplyHotkeysAsync()
     {
-        if (!_hotkeys.IsSupported)
-        {
-            HotkeyProblem = false;
-            HotkeyStatus = _hotkeys.UnsupportedReason ?? string.Empty;
-            return;
-        }
-
-        var hotkey = Hotkey;
-        bool registered;
-        try
-        {
-            registered = await _hotkeys.RegisterAsync(hotkey);
-        }
-        catch (Exception exception)
-        {
-            _logger.LogWarning(exception, "Couldn't register the Quick save hotkey");
-            registered = false;
-        }
-
-        HotkeyProblem = hotkey is not null && !registered;
-        _logger.LogInformation("Quick save hotkey {Hotkey} is {State}", hotkey?.ToString() ?? "off", hotkey is null ? "off" : registered ? "ready" : "taken");
-        HotkeyStatus = hotkey switch
-        {
-            null => $"Off. Quick save still opens from the tray, and with {Platform.Shortcuts.Display(ShortcutAction.QuickSave)} inside Prompuff.",
-            _ when registered => $"Press {hotkey.Display} in any app to open Quick save with what you copied.",
-            _ => $"Another app already uses {hotkey.Display}. Pick another combination.",
-        };
-    }
-
-    /// <summary>
-    /// While recording, the window hands every key here. Returns true when it was used: Esc cancels, a valid
-    /// combination is saved, and anything else explains what's missing.
-    /// </summary>
-    public bool RecordHotkey(Key key, KeyModifiers modifiers)
-    {
-        if (!IsRecordingHotkey)
-        {
-            return false;
-        }
-
-        if (key == Key.Escape && modifiers == KeyModifiers.None)
-        {
-            CancelRecordingHotkeyCommand.Execute(null);
-            return true;
-        }
-
-        if (Platform.Hotkey.IsModifierKey(key))
-        {
-            return true;
-        }
-
-        var candidate = new Hotkey(modifiers & (KeyModifiers.Control | KeyModifiers.Alt | KeyModifiers.Shift | KeyModifiers.Meta), key);
-        if (!candidate.IsValid)
-        {
-            var meta = OperatingSystem.IsMacOS() ? "⌘" : OperatingSystem.IsWindows() ? "Win" : "Super";
-            HotkeyProblem = true;
-            HotkeyStatus = $"Hold Ctrl, Alt or {meta}, then press a letter, a digit, F1–F12 or Space. Esc cancels.";
-            return true;
-        }
-
-        IsRecordingHotkey = false;
-        Hotkey = candidate;
-        Persist(settings => settings with { QuickSaveHotkey = candidate.ToString() });
-        _ = ApplyHotkeyAsync();
-        return true;
-    }
-
-    [RelayCommand]
-    private async Task StartRecordingHotkey()
-    {
-        // Let go of the current hotkey, so pressing it again records it instead of opening Quick save.
-        await _hotkeys.RegisterAsync(null);
-        IsRecordingHotkey = true;
-        HotkeyProblem = false;
-        var meta = OperatingSystem.IsMacOS() ? "⌘" : OperatingSystem.IsWindows() ? "Win" : "Super";
-        HotkeyStatus = $"Press the new combination: Ctrl, Alt or {meta}, then a letter, a digit, F1–F12 or Space. Esc cancels.";
-    }
-
-    [RelayCommand]
-    private Task CancelRecordingHotkey()
-    {
-        IsRecordingHotkey = false;
-        return ApplyHotkeyAsync();
-    }
-
-    [RelayCommand]
-    private Task TurnOffHotkey()
-    {
-        IsRecordingHotkey = false;
-        Hotkey = null;
-        Persist(settings => settings with { QuickSaveHotkey = string.Empty });
-        return ApplyHotkeyAsync();
-    }
-
-    [RelayCommand]
-    private Task TurnOnHotkey()
-    {
-        Hotkey = Platform.Hotkey.Default;
-        Persist(settings => settings with { QuickSaveHotkey = Platform.Hotkey.DefaultText });
-        return ApplyHotkeyAsync();
+        await QuickSaveHotkey.ApplyAsync();
+        await QuickInsertHotkey.ApplyAsync();
     }
 
     [RelayCommand]

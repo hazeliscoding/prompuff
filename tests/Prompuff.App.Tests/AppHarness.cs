@@ -42,7 +42,10 @@ internal sealed class AppHarness : IAsyncDisposable
     }
 
     public string Folder { get; }
+    /// <summary>Quick save's hotkey.</summary>
     public FakeGlobalHotkeyService Hotkeys { get; private init; } = null!;
+
+    public FakeGlobalHotkeyService QuickInsertHotkeys { get; private init; } = null!;
     public MainWindow Window { get; }
     public MainWindowViewModel ViewModel { get; }
 
@@ -58,6 +61,7 @@ internal sealed class AppHarness : IAsyncDisposable
         IUpdateService? updates = null,
         IFilePickerService? files = null,
         FakeGlobalHotkeyService? hotkeys = null,
+        FakeGlobalHotkeyService? quickInsertHotkeys = null,
         FakeCommandLineInstaller? installer = null,
         bool systemReducesMotion = false)
     {
@@ -69,10 +73,11 @@ internal sealed class AppHarness : IAsyncDisposable
             name => name == AppDataPathProvider.OverrideVariable ? folder : null));
 
         hotkeys ??= new FakeGlobalHotkeyService();
+        quickInsertHotkeys ??= new FakeGlobalHotkeyService { IsSupported = hotkeys.IsSupported, UnsupportedReason = hotkeys.UnsupportedReason };
         var services = App.ConfigureServices(paths, replace: collection =>
         {
             // Tests never grab real system-wide keys.
-            collection.AddSingleton<IGlobalHotkeyService>(hotkeys);
+            collection.AddSingleton(new GlobalHotkeyServices(hotkeys, quickInsertHotkeys));
 
             // Nor touch the real PATH.
             collection.AddSingleton<ICommandLineInstaller>(installer ?? new FakeCommandLineInstaller());
@@ -106,7 +111,7 @@ internal sealed class AppHarness : IAsyncDisposable
         services.GetRequiredService<TopLevelAccessor>().TopLevel = window;
         window.Show();
         await viewModel.InitializeAsync();
-        var harness = new AppHarness(folder, services, window, viewModel) { Hotkeys = hotkeys };
+        var harness = new AppHarness(folder, services, window, viewModel) { Hotkeys = hotkeys, QuickInsertHotkeys = quickInsertHotkeys };
         await harness.SettleAsync();
         return harness;
     }

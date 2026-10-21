@@ -3,7 +3,7 @@ namespace Prompuff.App.Platform;
 /// <summary>
 /// A system-wide hotkey that works while another app has focus. Implemented for Windows, X11 and macOS. Wayland
 /// doesn't let apps listen for keys in other apps, so there the service reports why and Settings explains how to bind
-/// a desktop shortcut to <c>--quick-save</c> instead.
+/// a desktop shortcut to <c>--quick-save</c> instead. Each instance holds one combination, so each hotkey has its own.
 /// </summary>
 public interface IGlobalHotkeyService : IDisposable
 {
@@ -17,6 +17,22 @@ public interface IGlobalHotkeyService : IDisposable
 
     /// <summary>Raised when the hotkey is pressed, possibly on a background thread.</summary>
     event EventHandler? Pressed;
+}
+
+/// <summary>
+/// Quick save's and Quick insert's hotkeys, one service each. Two instances live side by side on every backend: Windows
+/// registers each on its own thread, X11 grabs each on its own display connection, and macOS gives each its own ID.
+/// </summary>
+public sealed class GlobalHotkeyServices(IGlobalHotkeyService quickSave, IGlobalHotkeyService quickInsert) : IDisposable
+{
+    public IGlobalHotkeyService QuickSave { get; } = quickSave;
+    public IGlobalHotkeyService QuickInsert { get; } = quickInsert;
+
+    public void Dispose()
+    {
+        QuickSave.Dispose();
+        QuickInsert.Dispose();
+    }
 }
 
 public static class GlobalHotkeys

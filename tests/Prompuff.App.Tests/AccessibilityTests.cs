@@ -105,6 +105,11 @@ public class AccessibilityTests
         failures.AddRange(Unnamed(app, "command palette"));
         app.ViewModel.Palette.IsOpen = false;
 
+        await app.ViewModel.QuickInsert.OpenAsync();
+        await app.SettleAsync();
+        failures.AddRange(Unnamed(app, "quick insert"));
+        app.ViewModel.QuickInsert.IsOpen = false;
+
         var asking = app.ViewModel.Dialogs.ConfirmAsync("Delete it?", "It moves to Recently deleted.", "Delete", isDanger: true);
         await app.SettleAsync();
         failures.AddRange(Unnamed(app, "dialog"));

@@ -74,7 +74,7 @@ public class LogScrubberTests
 
 public class DiagnosticReportTests
 {
-    private static readonly DiagnosticFacts Facts = new("12.1.3", IsCommandLineToolInstalled: true, Hotkey: "ready");
+    private static readonly DiagnosticFacts Facts = new("12.1.3", IsCommandLineToolInstalled: true, Hotkey: "ready", QuickInsertHotkey: "taken by another app");
 
     private static (DiagnosticReport Report, AppDataPathProvider Paths, JsonSettingsStore Settings) Create(TestLibrary library, string version = "0.9.0")
     {
@@ -118,6 +118,7 @@ public class DiagnosticReportTests
         Assert.Contains("- Theme: System, with nord for dark and prompuff-light for light\n", text);
         Assert.Contains("- Density: Dense\n", text);
         Assert.Contains("- Quick save hotkey: Ctrl+Alt+P, ready\n", text);
+        Assert.Contains("- Quick insert hotkey: Ctrl+Alt+Shift+P, taken by another app\n", text);
         Assert.Contains("- MCP: on\n", text);
         Assert.Contains("- Command-line tool: installed\n", text);
         Assert.Contains("Nothing logged yet.", text);
