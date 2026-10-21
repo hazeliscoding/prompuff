@@ -10,7 +10,7 @@ On macOS, use ⌘ Cmd wherever this guide says Ctrl.
 - [Collections and tags](#collections-and-tags)
 - [Editing and versions](#editing-and-versions)
 - [Render with variables](#render-with-variables)
-- [Quick save, the hotkey and the tray](#quick-save-the-hotkey-and-the-tray)
+- [Quick save, Quick insert and the tray](#quick-save-quick-insert-and-the-tray)
 - [Workflows](#workflows)
 - [Import and export](#import-and-export)
 - [Backups and Recently deleted](#backups-and-recently-deleted)
@@ -94,7 +94,7 @@ Wrap the parts that change in double braces: `{{repo_name}}`. Names use letters,
 
 A variable you leave empty stays as `{{repo_name}}` in the copy, highlighted in the preview. Each prompt remembers its values for next time; **Clear values** forgets them.
 
-## Quick save, the hotkey and the tray
+## Quick save, Quick insert and the tray
 
 Quick save stashes a prompt in a few seconds:
 
@@ -103,7 +103,9 @@ Quick save stashes a prompt in a few seconds:
 3. Quick save opens with what you copied and a title guessed from it. Pick a collection and tags if you like, and **Worked well** (rates it Great), **Template** or **Idea** (add those tags). The **Why save this?** line becomes its notes.
 4. Choose **Save**. After a hotkey Quick save, Prompuff goes back to the tray or the taskbar if that's where it was, so you land back in your app.
 
-**Change the hotkey** in Settings › Quick save: choose **Change** and press the new keys, which need Ctrl, Alt or the Windows, Super or ⌘ key, plus a letter, digit, F1–F12 or Space. Settings says when another app already owns a combination. **Turn off** turns it off.
+**Quick insert** goes the other way: press **Ctrl+Alt+Shift+P** (⌃⌥⇧P on macOS) in any app, and Prompuff comes forward with a search over your library. Start typing straight away; the first key lands in the search. Type part of a title or a tag to narrow the list. Esc closes it, and Prompuff goes back to the tray or the taskbar if that's where it was.
+
+**Change either hotkey** in Settings › Quick save: choose **Change** next to it and press the new keys, which need Ctrl, Alt or the Windows, Super or ⌘ key, plus a letter, digit, F1–F12 or Space. Settings says when another app already owns a combination, or when the other hotkey already uses it. **Turn off** turns one off.
 
 **On Wayland,** apps can't listen for keys while another app has focus, so bind a shortcut in your desktop's settings instead. Settings › Quick save shows the exact command (the AppImage followed by `--quick-save`), with the steps for GNOME and KDE Plasma. If Prompuff is running, the shortcut brings it forward with Quick save open; if not, it starts it.
 
