@@ -14,6 +14,9 @@ public class SingleInstanceTests
     [InlineData(new[] { "quick-save" }, LaunchRequest.QuickSave)]
     [InlineData(new[] { "--QUICK-SAVE" }, LaunchRequest.QuickSave)]
     [InlineData(new[] { "--something-else" }, LaunchRequest.Activate)]
+    [InlineData(new[] { "--quick-insert" }, LaunchRequest.QuickInsert)]
+    [InlineData(new[] { "quick-insert" }, LaunchRequest.QuickInsert)]
+    [InlineData(new[] { "--Quick-Insert" }, LaunchRequest.QuickInsert)]
     public void Arguments_choose_what_a_launch_asks_for(string[] args, LaunchRequest expected) =>
         Assert.Equal(expected, LaunchArguments.Parse(args));
 
@@ -45,6 +48,14 @@ public class SingleInstanceTests
 
         Assert.True(received.TryTake(out request, TimeSpan.FromSeconds(5)));
         Assert.Equal(LaunchRequest.Activate, request);
+
+        using (var fourth = SingleInstance.Claim(folder))
+        {
+            Assert.True(fourth.HandOff(LaunchRequest.QuickInsert, TimeSpan.FromSeconds(5)));
+        }
+
+        Assert.True(received.TryTake(out request, TimeSpan.FromSeconds(5)));
+        Assert.Equal(LaunchRequest.QuickInsert, request);
     }
 
     [Fact]

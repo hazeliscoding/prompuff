@@ -325,7 +325,10 @@ public sealed partial class SettingsViewModel : ObservableObject
         : "Pasting needs the XTest library (libXtst), which this system doesn't have, so Quick insert only copies.";
 
     /// <summary>What a desktop shortcut should run to open Quick save, for desktops where Prompuff can't own a hotkey.</summary>
-    public string QuickSaveCommand { get; } = BuildQuickSaveCommand();
+    public string QuickSaveCommand { get; } = BuildLaunchCommand("--quick-save");
+
+    /// <summary>The same for Quick insert.</summary>
+    public string QuickInsertCommand { get; } = BuildLaunchCommand("--quick-insert");
 
     [ObservableProperty]
     private bool _allowMcp;
@@ -873,11 +876,18 @@ public sealed partial class SettingsViewModel : ObservableObject
         _toasts.Show("Copied.", "Paste it into your desktop's custom shortcut.");
     }
 
-    private static string BuildQuickSaveCommand()
+    [RelayCommand]
+    private async Task CopyQuickInsertCommand()
+    {
+        await _clipboard.SetTextAsync(QuickInsertCommand);
+        _toasts.Show("Copied.", "Paste it into your desktop's custom shortcut.");
+    }
+
+    private static string BuildLaunchCommand(string argument)
     {
         // Inside an AppImage the process runs from a temporary mount; APPIMAGE is the file the user keeps.
         var path = Environment.GetEnvironmentVariable("APPIMAGE") is { Length: > 0 } appImage ? appImage : Environment.ProcessPath ?? "Prompuff";
-        return (path.Contains(' ') ? $"\"{path}\"" : path) + " --quick-save";
+        return (path.Contains(' ') ? $"\"{path}\"" : path) + " " + argument;
     }
 
     partial void OnAllowMcpChanged(bool value)

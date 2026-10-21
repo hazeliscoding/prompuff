@@ -202,12 +202,25 @@
               <TextBlock Classes="strong" Text="Use a desktop shortcut" />
               <TextBlock Classes="compact faint" TextWrapping="Wrap" Text="{Binding HotkeyUnsupportedReason}" />
               <TextBlock Classes="compact" TextWrapping="Wrap" Foreground="{DynamicResource Text2Brush}"
-                         Text="GNOME: Settings › Keyboard › View and Customize Shortcuts › Custom Shortcuts. KDE Plasma: System Settings › Keyboard › Shortcuts › Add New › Command or Script. Use this command, and pick any keys you like:" />
+                         Text="GNOME: Settings › Keyboard › View and Customize Shortcuts › Custom Shortcuts. KDE Plasma: System Settings › Keyboard › Shortcuts › Add New › Command or Script. Add one shortcut for each command, and pick any keys you like." />
+              <TextBlock Classes="label" Text="QUICK SAVE" Margin="0,4,0,0" />
               <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                 <Border Classes="well" CornerRadius="4" Padding="10,7">
                   <SelectableTextBlock Text="{Binding QuickSaveCommand}" FontFamily="{StaticResource MonoFont}" FontSize="12" TextWrapping="Wrap" />
                 </Border>
-                <Button Grid.Column="1" Command="{Binding CopyQuickSaveCommandCommand}" VerticalAlignment="Top">
+                <Button Grid.Column="1" Command="{Binding CopyQuickSaveCommandCommand}" VerticalAlignment="Top" AutomationProperties.Name="Copy the Quick save command">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <c:Icon Kind="Copy" Size="13" />
+                    <TextBlock Text="Copy" />
+                  </StackPanel>
+                </Button>
+              </Grid>
+              <TextBlock Classes="label" Text="QUICK INSERT" Margin="0,4,0,0" />
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Border Classes="well" CornerRadius="4" Padding="10,7">
+                  <SelectableTextBlock Text="{Binding QuickInsertCommand}" FontFamily="{StaticResource MonoFont}" FontSize="12" TextWrapping="Wrap" />
+                </Border>
+                <Button Grid.Column="1" Command="{Binding CopyQuickInsertCommandCommand}" VerticalAlignment="Top" AutomationProperties.Name="Copy the Quick insert command">
                   <StackPanel Orientation="Horizontal" Spacing="6">
                     <c:Icon Kind="Copy" Size="13" />
                     <TextBlock Text="Copy" />
@@ -215,7 +228,7 @@
                 </Button>
               </Grid>
               <TextBlock Classes="compact faint" TextWrapping="Wrap"
-                         Text="If Prompuff is already running, the shortcut brings it forward with Quick save open; if not, it starts it." />
+                         Text="If Prompuff is already running, a shortcut brings it forward with Quick save or Quick insert open; if not, it starts it. Wayland doesn't let Prompuff paste into other apps, so Quick insert copies the prompt and steps back for you to paste." />
             </StackPanel>
           </Border>
           <Border Classes="setting-row">

@@ -8,7 +8,7 @@ namespace Prompuff.App.Platform;
 
 /// <summary>
 /// What a launch, the tray or a hotkey asks of Prompuff: bring the window forward, open Quick save with the clipboard,
-/// or open Quick insert. Only the hotkey asks for Quick insert so far.
+/// or open Quick insert.
 /// </summary>
 public enum LaunchRequest
 {
@@ -19,11 +19,25 @@ public enum LaunchRequest
 
 public static class LaunchArguments
 {
-    /// <summary><c>--quick-save</c> or <c>quick-save</c> opens Quick save; anything else just opens Prompuff.</summary>
-    public static LaunchRequest Parse(IEnumerable<string> args) =>
-        args.Any(arg => arg.Trim().ToLowerInvariant() is "--quick-save" or "quick-save" or "/quick-save")
-            ? LaunchRequest.QuickSave
-            : LaunchRequest.Activate;
+    /// <summary>
+    /// <c>--quick-save</c> or <c>quick-save</c> opens Quick save, and <c>--quick-insert</c> or <c>quick-insert</c> opens
+    /// Quick insert; anything else just opens Prompuff. Desktop shortcuts run these, so they never change.
+    /// </summary>
+    public static LaunchRequest Parse(IEnumerable<string> args)
+    {
+        foreach (var arg in args)
+        {
+            switch (arg.Trim().ToLowerInvariant())
+            {
+                case "--quick-save" or "quick-save" or "/quick-save":
+                    return LaunchRequest.QuickSave;
+                case "--quick-insert" or "quick-insert" or "/quick-insert":
+                    return LaunchRequest.QuickInsert;
+            }
+        }
+
+        return LaunchRequest.Activate;
+    }
 }
 
 /// <summary>
@@ -131,7 +145,7 @@ public sealed class SingleInstance : IDisposable
         {
             using var pipe = new NamedPipeClientStream(".", _pipeName, PipeDirection.Out, PipeOptions.CurrentUserOnly);
             pipe.Connect(timeout);
-            var message = Encoding.UTF8.GetBytes(request == LaunchRequest.QuickSave ? "quick-save\n" : "activate\n");
+            var message = Encoding.UTF8.GetBytes(MessageFor(request) + "\n");
             pipe.Write(message);
             pipe.Flush();
             return true;
@@ -183,9 +197,9 @@ public sealed class SingleInstance : IDisposable
                 }
 
                 var message = Encoding.UTF8.GetString(buffer, 0, length).Trim();
-                if (message is "quick-save" or "activate")
+                if (RequestFor(message) is { } request)
                 {
-                    Dispatch(message == "quick-save" ? LaunchRequest.QuickSave : LaunchRequest.Activate);
+                    Dispatch(request);
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -199,6 +213,22 @@ public sealed class SingleInstance : IDisposable
             }
         }
     }
+
+    // What goes down the pipe. A copy that doesn't know a message, such as 1.1 receiving quick-insert, ignores it.
+    private static string MessageFor(LaunchRequest request) => request switch
+    {
+        LaunchRequest.QuickSave => "quick-save",
+        LaunchRequest.QuickInsert => "quick-insert",
+        _ => "activate",
+    };
+
+    private static LaunchRequest? RequestFor(string message) => message switch
+    {
+        "quick-save" => LaunchRequest.QuickSave,
+        "quick-insert" => LaunchRequest.QuickInsert,
+        "activate" => LaunchRequest.Activate,
+        _ => null,
+    };
 
     private void Dispatch(LaunchRequest request)
     {

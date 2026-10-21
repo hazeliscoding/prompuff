@@ -242,6 +242,33 @@ public class QuickInsertTests
     }
 
     /// <summary>
+    /// A Wayland desktop shortcut runs <c>--quick-insert</c>, which reaches the running copy as a launch request. The
+    /// result is copied, and the window goes back where it was for the person to paste.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task On_Wayland_a_desktop_shortcut_opens_Quick_insert_and_it_copies()
+    {
+        await using var app = await AppHarness.StartAsync(insertTarget: new UnsupportedInsertTarget());
+        await app.Get<PromptService>().CreateAsync(new PromptContent("Tidy commit message", null, "Tidy this commit message.", null));
+        app.ViewModel.Settings.KeepRunningInTray = true;
+        app.Window.Close();
+        await app.SettleAsync();
+
+        _ = app.Window.HandleLaunchAsync(LaunchArguments.Parse(["--quick-insert"]));
+        await app.SettleAsync();
+        Assert.True(app.Window.IsVisible);
+        Assert.True(app.ViewModel.QuickInsert.IsOpen);
+        Assert.True(app.Window.FindControl<TextBox>("QuickInsertInput")!.IsFocused);
+        app.Window.KeyTextInput("tidy");
+        await app.SettleAsync();
+        app.Window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+        await app.SettleAsync();
+
+        Assert.Equal("Tidy this commit message.", await app.Get<IClipboardService>().GetTextAsync());
+        Assert.True(app.Window.IsInTray);
+    }
+
+    /// <summary>
     /// The real macOS target. GitHub's macOS runners grant Accessibility access, so there every native call runs for
     /// real: finding the app in front, activating it, ⌘V and the access check. Without access, Quick insert copies,
     /// presses nothing, and Settings explains how to allow pasting.
