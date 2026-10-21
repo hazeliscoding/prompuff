@@ -7,7 +7,8 @@ namespace Prompuff.App.Platform;
 
 /// <summary>
 /// Carbon's <c>RegisterEventHotKey</c>, which macOS still offers for exactly this and which needs no Accessibility
-/// permission. The handler sits on the application event target, so presses arrive on the main thread.
+/// permission. The handler sits on the application event target, so presses arrive on the main thread. Every
+/// instance's handler hears every Prompuff hotkey, so each registers with an ID of its own and passes the others on.
 /// </summary>
 [SupportedOSPlatform("macos")]
 internal sealed class MacGlobalHotkeyService : IGlobalHotkeyService
@@ -16,6 +17,9 @@ internal sealed class MacGlobalHotkeyService : IGlobalHotkeyService
     private const uint KeyboardEventClass = 0x6B657962; // 'keyb'
     private const uint HotKeyPressedKind = 5;
     private const uint Signature = 0x5046686B; // 'PFhk'
+    private const uint DirectObjectParameter = 0x2D2D2D2D; // '----'
+    private const uint HotKeyIdType = 0x686B6964; // 'hkid'
+    private const int EventNotHandled = -9874;
     private const uint CmdKey = 1 << 8;
     private const uint ShiftKey = 1 << 9;
     private const uint OptionKey = 1 << 11;
@@ -34,7 +38,10 @@ internal sealed class MacGlobalHotkeyService : IGlobalHotkeyService
         [Key.F7] = 0x62, [Key.F8] = 0x64, [Key.F9] = 0x65, [Key.F10] = 0x6D, [Key.F11] = 0x67, [Key.F12] = 0x6F,
     };
 
+    private static int s_lastId;
+
     private readonly EventHandlerProc _handler;
+    private readonly uint _id = (uint)Interlocked.Increment(ref s_lastId);
     private IntPtr _handlerRef;
     private IntPtr _hotKeyRef;
 
@@ -105,7 +112,7 @@ internal sealed class MacGlobalHotkeyService : IGlobalHotkeyService
                         | (hotkey.Modifiers.HasFlag(KeyModifiers.Shift) ? ShiftKey : 0)
                         | (hotkey.Modifiers.HasFlag(KeyModifiers.Alt) ? OptionKey : 0)
                         | (hotkey.Modifiers.HasFlag(KeyModifiers.Control) ? ControlKey : 0);
-        var id = new EventHotKeyId { Signature = Signature, Id = 1 };
+        var id = new EventHotKeyId { Signature = Signature, Id = _id };
 
         // Fails with eventHotKeyExistsErr when another app has the same combination.
         if (RegisterEventHotKey(code, modifiers, id, target, 0, out _hotKeyRef) != 0)
@@ -119,6 +126,14 @@ internal sealed class MacGlobalHotkeyService : IGlobalHotkeyService
 
     private int OnHotKey(IntPtr callRef, IntPtr eventRef, IntPtr userData)
     {
+        // Answering "not handled" sends the press on to the next handler, which may be the instance it belongs to.
+        if (GetEventParameter(eventRef, DirectObjectParameter, HotKeyIdType, IntPtr.Zero, (nuint)Marshal.SizeOf<EventHotKeyId>(), IntPtr.Zero, out var pressed) != 0
+            || pressed.Signature != Signature
+            || pressed.Id != _id)
+        {
+            return EventNotHandled;
+        }
+
         Pressed?.Invoke(this, EventArgs.Empty);
         return 0;
     }
@@ -154,4 +169,7 @@ internal sealed class MacGlobalHotkeyService : IGlobalHotkeyService
 
     [DllImport(Carbon)]
     private static extern int UnregisterEventHotKey(IntPtr hotKeyRef);
+
+    [DllImport(Carbon)]
+    private static extern int GetEventParameter(IntPtr eventRef, uint name, uint desiredType, IntPtr actualType, nuint bufferSize, IntPtr actualSize, out EventHotKeyId data);
 }
