@@ -62,6 +62,7 @@ internal sealed class AppHarness : IAsyncDisposable
         IFilePickerService? files = null,
         FakeGlobalHotkeyService? hotkeys = null,
         FakeGlobalHotkeyService? quickInsertHotkeys = null,
+        IInsertTarget? insertTarget = null,
         FakeCommandLineInstaller? installer = null,
         bool systemReducesMotion = false)
     {
@@ -78,6 +79,9 @@ internal sealed class AppHarness : IAsyncDisposable
         {
             // Tests never grab real system-wide keys.
             collection.AddSingleton(new GlobalHotkeyServices(hotkeys, quickInsertHotkeys));
+
+            // Nor press keys in other apps.
+            collection.AddSingleton(insertTarget ?? new FakeInsertTarget());
 
             // Nor touch the real PATH.
             collection.AddSingleton<ICommandLineInstaller>(installer ?? new FakeCommandLineInstaller());
@@ -204,6 +208,37 @@ internal sealed class FakeGlobalHotkeyService : IGlobalHotkeyService
     public void Dispose()
     {
     }
+}
+
+/// <summary>Stands in for the app Quick insert was opened from: records stepping back to it and pasting there.</summary>
+internal sealed class FakeInsertTarget : IInsertTarget
+{
+    public bool IsSupported { get; set; } = true;
+    public bool CanPaste { get; set; } = true;
+
+    /// <summary>Whether the app takes focus back.</summary>
+    public bool Returns { get; set; } = true;
+
+    public bool Remembered { get; private set; }
+    public int ReturnCount { get; private set; }
+    public int PasteCount { get; private set; }
+    public int AccessRequests { get; private set; }
+
+    public void Remember(IntPtr ownWindow) => Remembered = true;
+
+    public Task<bool> ReturnAsync()
+    {
+        ReturnCount++;
+        return Task.FromResult(Returns && Remembered);
+    }
+
+    public Task<bool> PasteAsync()
+    {
+        PasteCount++;
+        return Task.FromResult(true);
+    }
+
+    public void RequestPasteAccess() => AccessRequests++;
 }
 
 /// <summary>Stands in for putting the CLI on the PATH. Starts as an installed build whose CLI isn't installed yet.</summary>

@@ -1,7 +1,9 @@
+using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Prompuff.App.Platform;
 using Prompuff.App.ViewModels;
 using Prompuff.Application.DTOs;
 using Prompuff.Application.Interfaces;
@@ -131,6 +133,148 @@ public class QuickInsertTests
         Assert.True(app.Window.FindControl<TextBox>("QuickInsertInput")!.IsFocused);
     }
 
+    /// <summary>Opens Quick insert with its hotkey from the tray, as from another app, and inserts the tidy prompt.</summary>
+    private static async Task<AppHarness> InsertFromTrayAsync(FakeInsertTarget target, Action<AppHarness>? before = null)
+    {
+        var app = await AppHarness.StartAsync(insertTarget: target);
+        await app.Get<PromptService>().CreateAsync(new PromptContent("Tidy commit message", null, "Tidy this commit message.", null));
+        before?.Invoke(app);
+        app.ViewModel.Settings.KeepRunningInTray = true;
+        app.Window.Close();
+        await app.SettleAsync();
+
+        app.QuickInsertHotkeys.Press();
+        await app.SettleAsync();
+        Assert.True(target.Remembered);
+        app.Window.KeyTextInput("tidy");
+        await app.SettleAsync();
+        app.Window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+        await app.SettleAsync();
+        Assert.Equal("Tidy this commit message.", await app.Get<IClipboardService>().GetTextAsync());
+        return app;
+    }
+
+    [AvaloniaFact]
+    public async Task Inserting_steps_back_to_the_app_it_came_from_and_pastes_there()
+    {
+        var target = new FakeInsertTarget();
+        await using var app = await InsertFromTrayAsync(target);
+
+        Assert.Equal(1, target.ReturnCount);
+        Assert.Equal(1, target.PasteCount);
+        Assert.True(app.Window.IsInTray);
+        Assert.False(app.Window.IsVisible);
+    }
+
+    [AvaloniaFact]
+    public async Task With_Paste_after_inserting_off_the_result_is_only_copied()
+    {
+        var target = new FakeInsertTarget();
+        await using var app = await InsertFromTrayAsync(target, app => app.ViewModel.Settings.PasteAfterInserting = false);
+
+        Assert.False(app.Get<ISettingsStore>().Load().PasteAfterInserting);
+        Assert.Equal(1, target.ReturnCount);
+        Assert.Equal(0, target.PasteCount);
+    }
+
+    [AvaloniaFact]
+    public async Task Nothing_is_pasted_when_the_app_doesnt_take_focus_back()
+    {
+        var target = new FakeInsertTarget { Returns = false };
+        await using var app = await InsertFromTrayAsync(target);
+
+        Assert.Equal(0, target.PasteCount);
+        Assert.True(app.Window.IsInTray);
+    }
+
+    [AvaloniaFact]
+    public async Task Esc_steps_back_without_pasting()
+    {
+        var target = new FakeInsertTarget();
+        await using var app = await AppHarness.StartAsync(insertTarget: target);
+        app.QuickInsertHotkeys.Press();
+        await app.SettleAsync();
+
+        app.Window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+        await app.SettleAsync();
+        Assert.Equal(1, target.ReturnCount);
+        Assert.Equal(0, target.PasteCount);
+    }
+
+    [AvaloniaFact]
+    public async Task Without_access_to_paste_the_result_is_copied_and_Settings_says_how_to_allow_it()
+    {
+        var target = new FakeInsertTarget { CanPaste = false };
+        await using var app = await InsertFromTrayAsync(target);
+        Assert.Equal(0, target.PasteCount);
+
+        WindowActivation.BringForward(app.Window);
+        await app.ViewModel.OpenSettingsCommand.ExecuteAsync(null);
+        var settings = app.ViewModel.Settings;
+        settings.Select(SettingsSection.QuickSave);
+        await app.SettleAsync();
+        Assert.True(settings.IsPasteSupported);
+        Assert.True(settings.PasteNeedsAccess);
+        app.Screenshot("settings-paste-needs-access");
+
+        settings.AllowPastingCommand.Execute(null);
+        Assert.Equal(1, target.AccessRequests);
+    }
+
+    [AvaloniaFact]
+    public async Task Where_Prompuff_cant_reach_other_apps_it_only_copies()
+    {
+        await using var app = await AppHarness.StartAsync(insertTarget: new UnsupportedInsertTarget());
+        await app.Get<PromptService>().CreateAsync(new PromptContent("Tidy commit message", null, "Tidy this commit message.", null));
+        await OpenAndSearchAsync(app, "tidy");
+        app.Window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+        await app.SettleAsync();
+        Assert.Equal("Tidy this commit message.", await app.Get<IClipboardService>().GetTextAsync());
+
+        await app.ViewModel.OpenSettingsCommand.ExecuteAsync(null);
+        app.ViewModel.Settings.Select(SettingsSection.QuickSave);
+        await app.SettleAsync();
+        Assert.False(app.ViewModel.Settings.IsPasteSupported);
+    }
+
+    /// <summary>
+    /// The real macOS target on the CI runner, which hasn't granted Prompuff Accessibility access: Quick insert copies,
+    /// presses nothing, and Settings explains how to allow pasting. Pasting with access is checked by hand on a Mac.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task On_macOS_without_Accessibility_access_Quick_insert_only_copies()
+    {
+        if (!OperatingSystem.IsMacOS())
+        {
+            Assert.Skip("Uses macOS's Accessibility check.");
+        }
+
+        var target = InsertTargets.Create();
+        if (target.CanPaste)
+        {
+            Assert.Skip("This Mac already lets Prompuff press keys.");
+        }
+
+        await using var app = await AppHarness.StartAsync(insertTarget: target);
+        await app.Get<PromptService>().CreateAsync(new PromptContent("Tidy commit message", null, "Tidy this commit message.", null));
+        app.QuickInsertHotkeys.Press();
+        await app.SettleAsync();
+        app.Window.KeyTextInput("tidy");
+        await app.SettleAsync();
+        app.Window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+        await app.SettleAsync(1500);
+        Assert.Equal("Tidy this commit message.", await app.Get<IClipboardService>().GetTextAsync());
+
+        await app.ViewModel.OpenSettingsCommand.ExecuteAsync(null);
+        var settings = app.ViewModel.Settings;
+        settings.Select(SettingsSection.QuickSave);
+        await app.SettleAsync();
+        Assert.True(settings.PasteNeedsAccess);
+        Assert.True(settings.CanAskForPasteAccess);
+        Assert.Contains("Accessibility", settings.PasteAccessNote);
+        app.Screenshot("settings-paste-macos-access");
+    }
+
     [AvaloniaFact]
     public async Task Values_are_shared_with_the_Render_tab_both_ways()
     {
@@ -158,4 +302,138 @@ public class QuickInsertTests
         Assert.Equal("warm", editor.Variables[1].Value);
         Assert.Contains("warm", string.Concat(editor.Segments.Select(segment => segment.Text)));
     }
+}
+
+/// <summary>
+/// The real X11 target under Xvfb, which CI runs the Linux tests in. Xvfb has no window manager, so this takes the
+/// input-focus path rather than _NET_ACTIVE_WINDOW.
+/// </summary>
+public class SystemInsertTests
+{
+    private const long KeyPressMask = 1L << 0;
+    private const long StructureNotifyMask = 1L << 17;
+    private const int KeyPress = 2;
+    private const int MapNotify = 19;
+    private const int RevertToParent = 2;
+
+    [Fact]
+    public async Task X11_hands_focus_back_to_the_app_and_pastes_there()
+    {
+        if (!OperatingSystem.IsLinux() || string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY")) || GlobalHotkeys.IsWaylandSession())
+        {
+            Assert.Skip("Needs an X11 display, such as Xvfb.");
+        }
+
+        var display = XOpenDisplay(IntPtr.Zero);
+        Assert.NotEqual(IntPtr.Zero, display);
+        X11Errors.Track(display);
+        var xEvent = Marshal.AllocHGlobal(192);
+        try
+        {
+            // Two windows stand in for the app the hotkey was pressed in and for Prompuff.
+            var root = XDefaultRootWindow(display);
+            var app = XCreateSimpleWindow(display, root, 0, 0, 200, 100, 0, 0, 0);
+            var prompuff = XCreateSimpleWindow(display, root, 220, 0, 200, 100, 0, 0, 0);
+            _ = XSelectInput(display, app, (IntPtr)(KeyPressMask | StructureNotifyMask));
+            _ = XSelectInput(display, prompuff, (IntPtr)StructureNotifyMask);
+            _ = XMapWindow(display, app);
+            _ = XMapWindow(display, prompuff);
+            var mapped = 0;
+            await ReadEventsAsync(display, xEvent, () => Marshal.ReadInt32(xEvent) == MapNotify && ++mapped == 2);
+
+            _ = XSetInputFocus(display, app, RevertToParent, IntPtr.Zero);
+            _ = XSync(display, false);
+            var target = new X11InsertTarget();
+            target.Remember(prompuff);
+
+            // Prompuff comes forward, then hands focus back.
+            _ = XSetInputFocus(display, prompuff, RevertToParent, IntPtr.Zero);
+            _ = XSync(display, false);
+            Assert.True(await target.ReturnAsync());
+            _ = XGetInputFocus(display, out var focus, out _);
+            Assert.Equal(app, focus);
+
+            // Ctrl+V lands in the app.
+            Assert.True(target.CanPaste);
+            Assert.True(await target.PasteAsync());
+            var control = XKeysymToKeycode(display, XStringToKeysym("Control_L"));
+            var v = XKeysymToKeycode(display, XStringToKeysym("v"));
+            var pressed = new HashSet<uint>();
+            Assert.True(await ReadEventsAsync(display, xEvent, () =>
+            {
+                // XKeyEvent: the window is at 32 and the keycode at 84.
+                if (Marshal.ReadInt32(xEvent) == KeyPress && Marshal.ReadIntPtr(xEvent, 32) == app)
+                {
+                    pressed.Add((uint)Marshal.ReadInt32(xEvent, 84));
+                }
+
+                return pressed.Contains(control) && pressed.Contains(v);
+            }), $"The app heard keycodes {string.Join(", ", pressed)}, not Ctrl ({control}) and V ({v}).");
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(xEvent);
+            _ = XCloseDisplay(display);
+            X11Errors.Forget(display);
+        }
+    }
+
+    /// <summary>Reads events until one satisfies <paramref name="done"/>, for up to five seconds.</summary>
+    private static async Task<bool> ReadEventsAsync(IntPtr display, IntPtr xEvent, Func<bool> done)
+    {
+        for (var waited = 0; waited < 5000; waited += 20)
+        {
+            while (XPending(display) > 0)
+            {
+                _ = XNextEvent(display, xEvent);
+                if (done())
+                {
+                    return true;
+                }
+            }
+
+            await Task.Delay(20);
+        }
+
+        return false;
+    }
+
+    [DllImport("libX11.so.6")]
+    private static extern IntPtr XOpenDisplay(IntPtr name);
+
+    [DllImport("libX11.so.6")]
+    private static extern int XCloseDisplay(IntPtr display);
+
+    [DllImport("libX11.so.6")]
+    private static extern IntPtr XDefaultRootWindow(IntPtr display);
+
+    [DllImport("libX11.so.6")]
+    private static extern IntPtr XCreateSimpleWindow(IntPtr display, IntPtr parent, int x, int y, uint width, uint height, uint borderWidth, ulong border, ulong background);
+
+    [DllImport("libX11.so.6")]
+    private static extern int XSelectInput(IntPtr display, IntPtr window, IntPtr eventMask);
+
+    [DllImport("libX11.so.6")]
+    private static extern int XMapWindow(IntPtr display, IntPtr window);
+
+    [DllImport("libX11.so.6")]
+    private static extern int XSetInputFocus(IntPtr display, IntPtr window, int revertTo, IntPtr time);
+
+    [DllImport("libX11.so.6")]
+    private static extern int XGetInputFocus(IntPtr display, out IntPtr focus, out int revertTo);
+
+    [DllImport("libX11.so.6")]
+    private static extern int XSync(IntPtr display, bool discard);
+
+    [DllImport("libX11.so.6")]
+    private static extern int XPending(IntPtr display);
+
+    [DllImport("libX11.so.6")]
+    private static extern int XNextEvent(IntPtr display, IntPtr eventReturn);
+
+    [DllImport("libX11.so.6")]
+    private static extern ulong XStringToKeysym(string name);
+
+    [DllImport("libX11.so.6")]
+    private static extern byte XKeysymToKeycode(IntPtr display, ulong keysym);
 }

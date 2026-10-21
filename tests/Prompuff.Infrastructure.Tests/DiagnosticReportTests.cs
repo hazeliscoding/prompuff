@@ -119,6 +119,7 @@ public class DiagnosticReportTests
         Assert.Contains("- Density: Dense\n", text);
         Assert.Contains("- Quick save hotkey: Ctrl+Alt+P, ready\n", text);
         Assert.Contains("- Quick insert hotkey: Ctrl+Alt+Shift+P, taken by another app\n", text);
+        Assert.Contains("- Paste after inserting: on\n", text);
         Assert.Contains("- MCP: on\n", text);
         Assert.Contains("- Command-line tool: installed\n", text);
         Assert.Contains("Nothing logged yet.", text);

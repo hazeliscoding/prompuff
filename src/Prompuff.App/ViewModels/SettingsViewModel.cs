@@ -117,6 +117,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly IUpdateService _updates;
     private readonly WorkflowService _workflows;
     private readonly IClipboardService _clipboard;
+    private readonly IInsertTarget _insertTarget;
     private readonly ICommandLineInstaller _installer;
     private readonly LibraryBackups _backups;
     private readonly DiagnosticReport _diagnostics;
@@ -140,6 +141,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         IUpdateService updates,
         WorkflowService workflows,
         GlobalHotkeyServices hotkeys,
+        IInsertTarget insertTarget,
         IClipboardService clipboard,
         ICommandLineInstaller installer,
         LibraryBackups backups,
@@ -162,6 +164,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _updates = updates;
         _workflows = workflows;
         _clipboard = clipboard;
+        _insertTarget = insertTarget;
         _installer = installer;
         _backups = backups;
         _diagnostics = diagnostics;
@@ -305,6 +308,21 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public bool IsHotkeySupported => QuickSaveHotkey.IsSupported;
     public string? HotkeyUnsupportedReason => QuickSaveHotkey.UnsupportedReason;
+
+    [ObservableProperty]
+    private bool _pasteAfterInserting;
+
+    /// <summary>False under Wayland, where Quick insert can only copy.</summary>
+    public bool IsPasteSupported => _insertTarget.IsSupported;
+
+    /// <summary>True until Prompuff may press keys in other apps: macOS without Accessibility access, or X11 without XTest.</summary>
+    public bool PasteNeedsAccess => _insertTarget.IsSupported && !_insertTarget.CanPaste;
+
+    public bool CanAskForPasteAccess => OperatingSystem.IsMacOS();
+
+    public string PasteAccessNote { get; } = OperatingSystem.IsMacOS()
+        ? "Pasting needs Accessibility access. Until you allow it, Quick insert only copies. Allow pasting shows macOS's prompt, or turn on Prompuff in System Settings › Privacy & Security › Accessibility."
+        : "Pasting needs the XTest library (libXtst), which this system doesn't have, so Quick insert only copies.";
 
     /// <summary>What a desktop shortcut should run to open Quick save, for desktops where Prompuff can't own a hotkey.</summary>
     public string QuickSaveCommand { get; } = BuildQuickSaveCommand();
@@ -456,6 +474,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         CheckForUpdatesAutomatically = settings.CheckForUpdatesAutomatically;
         ReleaseChannel = settings.UpdateChannel;
         KeepRunningInTray = settings.KeepRunningInTray;
+        PasteAfterInserting = settings.PasteAfterInserting;
         AllowMcp = settings.AllowMcp;
         QuickSaveHotkey.Load(settings.QuickSaveHotkey);
         QuickInsertHotkey.Load(settings.QuickInsertHotkey);
@@ -531,6 +550,12 @@ public sealed partial class SettingsViewModel : ObservableObject
         if (section == SettingsSection.Integrations)
         {
             RefreshCommandLineTool();
+        }
+
+        // Access may have been granted in System Settings since.
+        if (section == SettingsSection.QuickSave)
+        {
+            OnPropertyChanged(nameof(PasteNeedsAccess));
         }
 
         Section = section;
@@ -824,6 +849,15 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     partial void OnKeepRunningInTrayChanged(bool value) => Persist(settings => settings with { KeepRunningInTray = value });
+
+    partial void OnPasteAfterInsertingChanged(bool value) => Persist(settings => settings with { PasteAfterInserting = value });
+
+    [RelayCommand]
+    private void AllowPasting()
+    {
+        _insertTarget.RequestPasteAccess();
+        OnPropertyChanged(nameof(PasteNeedsAccess));
+    }
 
     /// <summary>Registers both saved hotkeys with the system. Runs at startup.</summary>
     public async Task ApplyHotkeysAsync()
