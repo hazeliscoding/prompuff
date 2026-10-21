@@ -201,12 +201,22 @@ jobs:
             import -window root "$RUNNER_TEMP/smoke-$RID-quick-save.png"
             xdotool key Return
             sleep 3
+            # Quick insert: its hotkey opens a search over the library, which takes typing straight away.
+            xdotool key ctrl+alt+shift+p
+            sleep 3
+            xdotool type --delay 50 review
+            sleep 2
+            import -window root "$RUNNER_TEMP/smoke-$RID-quick-insert.png"
+            xdotool key Escape
+            sleep 1
             kill $pid'
           test -f "$XDG_DATA_HOME/prompuff/prompuff.db" || { echo "No database in the XDG data folder"; cat "$RUNNER_TEMP/app.log"; exit 1; }
           ls -la "$XDG_DATA_HOME/prompuff" "$XDG_CONFIG_HOME/prompuff" || true
           cat "$XDG_DATA_HOME"/prompuff/logs/*.log
           grep -q "Quick save hotkey Ctrl+Alt+P is ready" "$XDG_DATA_HOME"/prompuff/logs/*.log || { echo "The X11 hotkey didn't register"; exit 1; }
           grep -q "Created prompt" "$XDG_DATA_HOME"/prompuff/logs/*.log || { echo "The hotkey didn't stash a prompt"; exit 1; }
+          grep -q "Quick insert hotkey Ctrl+Alt+Shift+P is ready" "$XDG_DATA_HOME"/prompuff/logs/*.log || { echo "The X11 Quick insert hotkey didn't register"; exit 1; }
+          grep -q "Quick insert opened" "$XDG_DATA_HOME"/prompuff/logs/*.log || { echo "The Quick insert hotkey didn't open Quick insert"; exit 1; }
       - name: Smoke test the command-line tool from the AppImage
         run: |
           mkdir appimage && cd appimage
@@ -317,6 +327,7 @@ jobs:
           ls -la "$data"
           cat "$data"/logs/*.log
           grep -q "Quick save hotkey Ctrl+Alt+P is ready" "$data"/logs/*.log || { echo "The Carbon hotkey didn't register"; exit 1; }
+          grep -q "Quick insert hotkey Ctrl+Alt+Shift+P is ready" "$data"/logs/*.log || { echo "The Carbon Quick insert hotkey didn't register"; exit 1; }
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
