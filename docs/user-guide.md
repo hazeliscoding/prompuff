@@ -103,7 +103,13 @@ Quick save stashes a prompt in a few seconds:
 3. Quick save opens with what you copied and a title guessed from it. Pick a collection and tags if you like, and **Worked well** (rates it Great), **Template** or **Idea** (add those tags). The **Why save this?** line becomes its notes.
 4. Choose **Save**. After a hotkey Quick save, Prompuff goes back to the tray or the taskbar if that's where it was, so you land back in your app.
 
-**Quick insert** goes the other way: press **Ctrl+Alt+Shift+P** (⌃⌥⇧P on macOS) in any app, and Prompuff comes forward with a search over your library. Start typing straight away; the first key lands in the search. Type part of a title or a tag to narrow the list. Esc closes it, and Prompuff goes back to the tray or the taskbar if that's where it was.
+**Quick insert** goes the other way: press **Ctrl+Alt+Shift+P** (⌃⌥⇧P on macOS) in any app, and Prompuff comes forward with a search over your library. Start typing straight away; the first key lands in the search.
+
+1. Type part of a title or a tag to narrow the list, and move through it with ↑ and ↓.
+2. Press Enter to pick a prompt. One without `{{variables}}` is copied at once.
+3. A prompt with variables asks for them first, one box each, filled with the values it remembers from last time. Tab moves between the boxes, and Enter copies the result. A box left empty keeps its `{{variable}}` in the copy. Values you type are remembered, and show up on the prompt's Render tab too.
+
+Esc closes Quick insert without copying anything, and Prompuff goes back to the tray or the taskbar if that's where it was.
 
 **Change either hotkey** in Settings › Quick save: choose **Change** next to it and press the new keys, which need Ctrl, Alt or the Windows, Super or ⌘ key, plus a letter, digit, F1–F12 or Space. Settings says when another app already owns a combination, or when the other hotkey already uses it. **Turn off** turns one off.
 

@@ -231,6 +231,7 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Each hotkey has its own service instance,** rather than one service holding two registrations, so the backends stay as they were. Windows registers each on its own thread and X11 grabs each on its own display connection, which the hotkey tests already ran side by side. Carbon was the exception: both handlers sit on the application target and the first one took every press, so each instance now registers with its own ID and passes presses that aren't its own to the next handler.
 - **While either hotkey records, both let go of their keys.** Otherwise pressing the other one's combination opens it instead of reaching the recorder. A combination the other hotkey holds is refused with its name, rather than reported as another app's.
 - **Quick insert opens before it reads the library,** and a key typed while focus is elsewhere in the window goes into its search, so nothing typed straight after the hotkey is lost. It's an overlay in the main window, like Quick save, and goes back to the tray or the taskbar when it closes.
+- **Quick insert's variable boxes are single-line,** like the Render tab's, so Enter always inserts and Tab moves between them without leaving Quick insert. They share the Render tab's remembered values, and an editor open on the same prompt picks up what Quick insert types.
 
 ## Shipped
 
