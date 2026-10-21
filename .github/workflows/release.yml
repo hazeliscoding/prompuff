@@ -233,6 +233,44 @@ jobs:
           grep -q "Quick insert hotkey Ctrl+Alt+Shift+P is ready" "$XDG_DATA_HOME"/prompuff/logs/*.log || { echo "The X11 Quick insert hotkey didn't register"; exit 1; }
           grep -q "Quick insert opened" "$XDG_DATA_HOME"/prompuff/logs/*.log || { echo "The Quick insert hotkey didn't open Quick insert"; exit 1; }
           grep -qx "Review the patch for behavior changes." "$RUNNER_TEMP/pasted.txt" || { echo "Quick insert didn't paste into the app it came from"; exit 1; }
+      - name: Smoke test Quick insert from a desktop shortcut, as on Wayland
+        run: |
+          export XDG_DATA_HOME="$RUNNER_TEMP/xdg-data" XDG_CONFIG_HOME="$RUNNER_TEMP/xdg-config"
+          export APPIMAGE_EXTRACT_AND_RUN=1
+          # XDG_SESSION_TYPE=wayland makes Prompuff treat the session as Wayland: no hotkeys, and Quick insert only
+          # copies. The window still shows through X11 under Xvfb, and the library holds the prompt stashed above.
+          # Without a window manager to give Prompuff focus, xdotool gives it.
+          XDG_SESSION_TYPE=wayland xvfb-run -a -s "-screen 0 1280x800x24" bash -c '
+            opened() { cat "$XDG_DATA_HOME"/prompuff/logs/*.log | grep -c "Quick insert opened"; }
+            insert() {
+              for _ in $(seq 120); do [ "$(opened)" -gt "$1" ] && break; sleep 1; done
+              sleep 2
+              xdotool search --sync --onlyvisible --name "^Prompuff$" windowfocus --sync
+              xdotool type --delay 50 review
+              sleep 1
+              xdotool key Return
+              sleep 2
+              xdotool type --delay 50 "$2"
+              xdotool key Return
+              sleep 2
+            }
+            # A fresh start.
+            before=$(opened)
+            "./dist/Prompuff-$RID.AppImage" --quick-insert > "$RUNNER_TEMP/app-shortcut.log" 2>&1 &
+            pid=$!
+            insert "$before" "a fresh start"
+            xclip -o -selection clipboard > "$RUNNER_TEMP/copied-fresh.txt"
+            # A second launch hands it to the running copy and exits.
+            before=$(opened)
+            "./dist/Prompuff-$RID.AppImage" --quick-insert
+            insert "$before" "the running copy"
+            xclip -o -selection clipboard > "$RUNNER_TEMP/copied-running.txt"
+            import -window root "$RUNNER_TEMP/smoke-$RID-shortcut.png"
+            kill $pid'
+          echo "Fresh start copied: $(cat "$RUNNER_TEMP/copied-fresh.txt")"
+          echo "Running copy copied: $(cat "$RUNNER_TEMP/copied-running.txt")"
+          grep -qx "Review a fresh start for behavior changes." "$RUNNER_TEMP/copied-fresh.txt" || { echo "--quick-insert didn't open Quick insert in a fresh start"; cat "$RUNNER_TEMP/app-shortcut.log"; exit 1; }
+          grep -qx "Review the running copy for behavior changes." "$RUNNER_TEMP/copied-running.txt" || { echo "--quick-insert didn't reach the running copy"; exit 1; }
       - name: Smoke test the command-line tool from the AppImage
         run: |
           mkdir appimage && cd appimage
