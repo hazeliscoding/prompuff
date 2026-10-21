@@ -119,26 +119,39 @@ public partial class MainWindow : Window
     /// <summary>True while the window is hidden in the tray rather than closed.</summary>
     public bool IsInTray { get; private set; }
 
-    // While a hotkey's overlay is open: where the window goes back to when it closes, and how to stop waiting for that.
-    private bool _returnToTray;
+    // Where the window was before a launch brought it forward.
+    private enum Place
+    {
+        Shown,
+        Tray,
+        Taskbar,
+    }
+
+    // While a launch's overlay is open: where the window goes back to when it closes, and how to stop waiting for that.
+    private Place _returnTo;
     private Action? _cancelReturn;
 
     /// <summary>
     /// A second launch, the tray or a hotkey: brings the window forward, and opens Quick save with the clipboard or
     /// Quick insert. If the window was in the tray or minimized, it goes back there once that closes, so the hotkey
-    /// returns you to whatever you were doing.
+    /// returns you to whatever you were doing. Quick insert also hands focus back to the app it was opened from.
     /// </summary>
     public async Task HandleLaunchAsync(LaunchRequest request)
     {
-        var wasInTray = IsInTray;
-        var wasMinimized = WindowState == WindowState.Minimized;
+        var cameFrom = IsInTray ? Place.Tray : WindowState == WindowState.Minimized ? Place.Taskbar : Place.Shown;
 
         // A launch while an earlier one's overlay is open takes over going back, so switching from Quick insert to
         // Quick save doesn't send the window away as Quick insert closes.
         if (_cancelReturn is { } cancel)
         {
             cancel();
-            (wasInTray, wasMinimized) = (_returnToTray, !_returnToTray);
+            cameFrom = _returnTo;
+        }
+
+        if (request == LaunchRequest.QuickInsert && ViewModel is { } before)
+        {
+            // While the app the hotkey was pressed in is still in front.
+            before.QuickInsert.RememberWhereFrom(TryGetPlatformHandle()?.Handle ?? IntPtr.Zero);
         }
 
         WindowActivation.BringForward(this);
@@ -163,7 +176,7 @@ public partial class MainWindow : Window
                 return;
         }
 
-        if (!isOpen() || !(wasInTray || wasMinimized))
+        if (!isOpen() || (request == LaunchRequest.QuickSave && cameFrom == Place.Shown))
         {
             return;
         }
@@ -177,14 +190,13 @@ public partial class MainWindow : Window
             }
 
             StopWaiting();
-            if (wasInTray)
+            if (request == LaunchRequest.QuickInsert)
             {
-                IsInTray = true;
-                Hide();
+                _ = viewModel.QuickInsert.StepBackAsync(() => GoBack(cameFrom));
             }
             else
             {
-                WindowState = WindowState.Minimized;
+                GoBack(cameFrom);
             }
         }
 
@@ -195,8 +207,22 @@ public partial class MainWindow : Window
         }
 
         overlay.PropertyChanged += OnOverlayChanged;
-        _returnToTray = wasInTray;
+        _returnTo = cameFrom;
         _cancelReturn = StopWaiting;
+    }
+
+    private void GoBack(Place place)
+    {
+        switch (place)
+        {
+            case Place.Tray:
+                IsInTray = true;
+                Hide();
+                break;
+            case Place.Taskbar:
+                WindowState = WindowState.Minimized;
+                break;
+        }
     }
 
     /// <summary>Closes the window for good, even when closing it would normally keep Prompuff in the tray.</summary>

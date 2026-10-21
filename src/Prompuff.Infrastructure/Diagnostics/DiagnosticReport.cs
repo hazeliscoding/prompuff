@@ -81,6 +81,7 @@ public sealed partial class DiagnosticReport(
         Item(report, "Keep running in the tray", OnOff(current.KeepRunningInTray));
         Item(report, "Quick save hotkey", string.IsNullOrWhiteSpace(current.QuickSaveHotkey) ? "off" : $"{current.QuickSaveHotkey}, {facts.Hotkey}");
         Item(report, "Quick insert hotkey", string.IsNullOrWhiteSpace(current.QuickInsertHotkey) ? "off" : $"{current.QuickInsertHotkey}, {facts.QuickInsertHotkey}");
+        Item(report, "Paste after inserting", OnOff(current.PasteAfterInserting));
         Item(report, "MCP", OnOff(current.AllowMcp));
         Item(report, "Command-line tool", facts.IsCommandLineToolInstalled ? "installed" : "not installed");
         Item(report, "Update check", current.CheckForUpdatesAutomatically ? "each time Prompuff opens" : "by hand");

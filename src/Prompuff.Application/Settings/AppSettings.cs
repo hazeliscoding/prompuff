@@ -66,6 +66,9 @@ public sealed record AppSettings
     /// <summary>The system-wide Quick insert hotkey, which finds a prompt from any app. Empty turns it off.</summary>
     public string QuickInsertHotkey { get; set; } = "Ctrl+Alt+Shift+P";
 
+    /// <summary>Quick insert presses the paste key in the app it was opened from, not just copies.</summary>
+    public bool PasteAfterInserting { get; set; } = true;
+
     /// <summary>Lets AI tools read the library through <c>prompuff mcp</c>. Off until the user turns it on.</summary>
     public bool AllowMcp { get; set; }
 

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using Prompuff.App.Platform;
 using Prompuff.Application.DTOs;
 using Prompuff.Application.Interfaces;
 using Prompuff.Application.Services;
@@ -20,7 +21,7 @@ public sealed record QuickInsertResult(PromptSummary Prompt)
 
 /// <summary>
 /// Quick insert: its hotkey opens a small search over the library from any app. Picking a prompt asks for its
-/// variables, if it has any, and inserts the result.
+/// variables, if it has any, and inserts the result: copies it, steps back to the app it came from, and pastes it there.
 /// </summary>
 public sealed partial class QuickInsertViewModel(
     IPromptSearch search,
@@ -28,6 +29,8 @@ public sealed partial class QuickInsertViewModel(
     IPromptTemplateService templates,
     RenderValuesCache valuesCache,
     IClipboardService clipboard,
+    IInsertTarget target,
+    ISettingsStore settings,
     ToastService toasts,
     ILogger<QuickInsertViewModel> logger) : ObservableObject
 {
@@ -62,6 +65,9 @@ public sealed partial class QuickInsertViewModel(
 
     public bool IsSearching => !IsFilling;
 
+    /// <summary>True when the last open ended by inserting rather than Esc.</summary>
+    public bool Inserted { get; private set; }
+
     public bool IsEmpty => _loaded && Results.Count == 0;
 
     public string EmptyText => _prompts.Count == 0
@@ -76,6 +82,7 @@ public sealed partial class QuickInsertViewModel(
     {
         _loaded = false;
         _picked = null;
+        Inserted = false;
         Fields.Clear();
         IsFilling = false;
         Query = string.Empty;
@@ -93,6 +100,34 @@ public sealed partial class QuickInsertViewModel(
         _loaded = true;
         Rebuild();
         logger.LogInformation("Quick insert opened with {Count} prompts", _prompts.Count);
+    }
+
+    /// <summary>Remembers the app the hotkey was pressed in. Runs before Prompuff comes forward.</summary>
+    public void RememberWhereFrom(IntPtr ownWindow) => target.Remember(ownWindow);
+
+    /// <summary>
+    /// After Quick insert closes: gives focus back to the app it came from, then sends the window back with
+    /// <paramref name="sendWindowBack"/>, and after an insert presses that app's paste key if Paste after inserting
+    /// is on. Focus moves first, because Windows only lets the app in front hand it over.
+    /// </summary>
+    public async Task StepBackAsync(Action sendWindowBack)
+    {
+        var returned = await target.ReturnAsync();
+        sendWindowBack();
+        if (!Inserted || _picked is not { } prompt)
+        {
+            return;
+        }
+
+        if (!returned)
+        {
+            logger.LogInformation("Quick insert left prompt {PromptId} on the clipboard; the app it came from didn't take focus", prompt.Id);
+        }
+        else if (settings.Load().PasteAfterInserting && target.CanPaste)
+        {
+            var pasted = await target.PasteAsync();
+            logger.LogInformation("Quick insert {Outcome} prompt {PromptId}", pasted ? "pasted" : "couldn't paste", prompt.Id);
+        }
     }
 
     public void MoveSelection(int delta)
@@ -157,6 +192,7 @@ public sealed partial class QuickInsertViewModel(
         }
 
         await clipboard.SetTextAsync(templates.Render(prompt.Body, _values));
+        Inserted = true;
         IsOpen = false;
         logger.LogInformation("Quick insert copied prompt {PromptId}", prompt.Id);
         toasts.Show("Copied.", $"{prompt.Title} is on your clipboard.");

@@ -177,6 +177,26 @@
                      Text="Stash a prompt from any app: copy it, then press the hotkey or use Prompuff's tray icon. Quick save opens with the clipboard, and Enter stashes it. Quick insert goes the other way: its hotkey searches your library from any app." />
           <ContentControl Content="{Binding QuickSaveHotkey}" IsVisible="{Binding IsHotkeySupported}" />
           <ContentControl Content="{Binding QuickInsertHotkey}" IsVisible="{Binding IsHotkeySupported}" />
+          <Border Classes="setting-row" IsVisible="{Binding IsPasteSupported}">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel Spacing="2">
+                <TextBlock Classes="strong" Text="Paste after inserting" />
+                <TextBlock Classes="compact faint" TextWrapping="Wrap"
+                           Text="Quick insert goes back to the app you came from and presses its paste key, so the prompt lands where you were typing. Off, it's only copied." />
+                <TextBlock Classes="compact" TextWrapping="Wrap" Text="{Binding PasteAccessNote}" IsVisible="{Binding PasteNeedsAccess}"
+                           Foreground="{DynamicResource AmberTextBrush}" />
+                <Button Classes="sm" Content="Allow pasting" Command="{Binding AllowPastingCommand}" HorizontalAlignment="Left" Margin="0,6,0,0">
+                  <Button.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                      <Binding Path="PasteNeedsAccess" />
+                      <Binding Path="CanAskForPasteAccess" />
+                    </MultiBinding>
+                  </Button.IsVisible>
+                </Button>
+              </StackPanel>
+              <ToggleButton Grid.Column="1" Theme="{StaticResource Switch}" AutomationProperties.Name="Paste after inserting" IsChecked="{Binding PasteAfterInserting}" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
           <Border Classes="panel" Padding="16" Margin="0,4,0,8" IsVisible="{Binding !IsHotkeySupported}">
             <StackPanel Spacing="8">
               <TextBlock Classes="strong" Text="Use a desktop shortcut" />
