@@ -192,9 +192,9 @@ public sealed partial class QuickInsertViewModel(
         }
 
         await clipboard.SetTextAsync(templates.Render(prompt.Body, _values));
+        logger.LogInformation("Quick insert copied prompt {PromptId}", prompt.Id);
         Inserted = true;
         IsOpen = false;
-        logger.LogInformation("Quick insert copied prompt {PromptId}", prompt.Id);
         toasts.Show("Copied.", $"{prompt.Title} is on your clipboard.");
     }
 

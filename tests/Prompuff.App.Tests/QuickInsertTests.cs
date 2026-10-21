@@ -215,6 +215,10 @@ public class QuickInsertTests
         await app.SettleAsync();
         Assert.True(settings.IsPasteSupported);
         Assert.True(settings.PasteNeedsAccess);
+
+        // macOS asks for Accessibility access, with a button for its prompt; elsewhere it's a missing library.
+        Assert.Equal(OperatingSystem.IsMacOS(), settings.CanAskForPasteAccess);
+        Assert.Contains(OperatingSystem.IsMacOS() ? "Accessibility" : "XTest", settings.PasteAccessNote);
         app.Screenshot("settings-paste-needs-access");
 
         settings.AllowPastingCommand.Execute(null);
@@ -238,21 +242,26 @@ public class QuickInsertTests
     }
 
     /// <summary>
-    /// The real macOS target on the CI runner, which hasn't granted Prompuff Accessibility access: Quick insert copies,
-    /// presses nothing, and Settings explains how to allow pasting. Pasting with access is checked by hand on a Mac.
+    /// The real macOS target. GitHub's macOS runners grant Accessibility access, so there every native call runs for
+    /// real: finding the app in front, activating it, ⌘V and the access check. Without access, Quick insert copies,
+    /// presses nothing, and Settings explains how to allow pasting.
     /// </summary>
     [AvaloniaFact]
-    public async Task On_macOS_without_Accessibility_access_Quick_insert_only_copies()
+    public async Task The_real_macOS_target_pastes_with_access_and_only_copies_without()
     {
         if (!OperatingSystem.IsMacOS())
         {
-            Assert.Skip("Uses macOS's Accessibility check.");
+            Assert.Skip("Uses macOS's own APIs.");
         }
 
         var target = InsertTargets.Create();
         if (target.CanPaste)
         {
-            Assert.Skip("This Mac already lets Prompuff press keys.");
+            target.Remember(IntPtr.Zero);
+            _ = await target.ReturnAsync();
+            Assert.True(await target.PasteAsync());
+            target.RequestPasteAccess();
+            return;
         }
 
         await using var app = await AppHarness.StartAsync(insertTarget: target);
