@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Avalonia.Controls;
+using Avalonia.Threading;
 
 namespace Prompuff.App.Platform;
 
@@ -25,6 +26,13 @@ internal static class WindowActivation
             // Activate alone can leave the window flashing in the taskbar. The launch, tray click or hotkey that got
             // here gives this process the right to come to the front.
             _ = SetForegroundWindow(handle);
+        }
+        else if (OperatingSystem.IsLinux() && X11Activation.IsAvailable && window.TryGetPlatformHandle()?.Handle is { } xid && xid != IntPtr.Zero)
+        {
+            // Avalonia's request can look like an app stealing focus, since the hotkey's keypress reached Prompuff on a
+            // connection Avalonia doesn't see, and without a window manager nobody answers it. A pager's request is
+            // honored. It goes after Avalonia's own requests, such as showing the window from the tray.
+            Dispatcher.UIThread.Post(() => X11Activation.Activate(xid), DispatcherPriority.Background);
         }
     }
 
