@@ -7,7 +7,7 @@ namespace Prompuff.App.Platform;
 /// <summary>
 /// <c>XGrabKey</c> on the root window, through a display connection of its own on a background thread, so it never
 /// touches Avalonia's. The grab is repeated with Caps Lock and Num Lock, which X counts as modifiers. A grab another
-/// app already holds fails with BadAccess, which a chained error handler catches instead of letting Xlib exit.
+/// app already holds fails with BadAccess, which <see cref="X11Errors"/> catches instead of letting Xlib exit.
 /// </summary>
 [SupportedOSPlatform("linux")]
 internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
@@ -16,7 +16,6 @@ internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
     private const int KeyPress = 2;
     private const int KeyRelease = 3;
     private const int GrabModeAsync = 1;
-    private const int BadAccess = 10;
     private const uint ShiftMask = 1 << 0;
     private const uint LockMask = 1 << 1;
     private const uint ControlMask = 1 << 2;
@@ -26,14 +25,6 @@ internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
     private const short PollIn = 1;
 
     private static readonly uint[] IgnoredLocks = [0, LockMask, Mod2Mask, LockMask | Mod2Mask];
-    private static readonly Lock ErrorGate = new();
-    private static readonly XErrorHandler ErrorHandler = OnXError;
-    private static IntPtr s_previousHandler;
-    private static bool s_handlerInstalled;
-
-    // Every connection this class opened, with the last error X reported on it. Errors on any other connection,
-    // such as Avalonia's, go on to the handler that was there before.
-    private static readonly Dictionary<IntPtr, int> s_lastErrors = [];
 
     private readonly Thread _thread;
     private readonly TaskCompletionSource<bool> _started = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -104,7 +95,7 @@ internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
             return;
         }
 
-        InstallErrorHandler(display);
+        X11Errors.Track(display);
         var root = XDefaultRootWindow(display);
         var poll = new PollFd { Fd = XConnectionNumber(display), Events = PollIn };
         var xEvent = Marshal.AllocHGlobal(192);
@@ -171,10 +162,7 @@ internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
 
             Marshal.FreeHGlobal(xEvent);
             XCloseDisplay(display);
-            lock (ErrorGate)
-            {
-                s_lastErrors.Remove(display);
-            }
+            X11Errors.Forget(display);
         }
     }
 
@@ -192,11 +180,7 @@ internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
                         | (hotkey.Modifiers.HasFlag(KeyModifiers.Alt) ? Mod1Mask : 0)
                         | (hotkey.Modifiers.HasFlag(KeyModifiers.Meta) ? Mod4Mask : 0);
 
-        lock (ErrorGate)
-        {
-            s_lastErrors[display] = 0;
-        }
-
+        X11Errors.Clear(display);
         foreach (var locks in IgnoredLocks)
         {
             XGrabKey(display, keyCode, modifiers | locks, root, false, GrabModeAsync, GrabModeAsync);
@@ -204,13 +188,7 @@ internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
 
         // Errors arrive asynchronously; a round trip makes sure any BadAccess has been seen.
         XSync(display, false);
-        int error;
-        lock (ErrorGate)
-        {
-            error = s_lastErrors.GetValueOrDefault(display);
-        }
-
-        if (error == BadAccess)
+        if (X11Errors.Last(display) == X11Errors.BadAccess)
         {
             Ungrab(display, root, keyCode, modifiers);
             return null;
@@ -228,41 +206,6 @@ internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
 
         XSync(display, false);
     }
-
-    private static void InstallErrorHandler(IntPtr display)
-    {
-        lock (ErrorGate)
-        {
-            s_lastErrors[display] = 0;
-            if (!s_handlerInstalled)
-            {
-                // Xlib keeps one handler for the whole process. Avalonia's stays in charge of its own connection.
-                s_previousHandler = XSetErrorHandler(Marshal.GetFunctionPointerForDelegate(ErrorHandler));
-                s_handlerInstalled = true;
-            }
-        }
-    }
-
-    private static int OnXError(IntPtr display, IntPtr errorEvent)
-    {
-        IntPtr previous;
-        lock (ErrorGate)
-        {
-            if (s_lastErrors.ContainsKey(display))
-            {
-                // XErrorEvent: type, display, resource id and serial, then the error code.
-                s_lastErrors[display] = Marshal.ReadByte(errorEvent, 32);
-                return 0;
-            }
-
-            previous = s_previousHandler;
-        }
-
-        return previous == IntPtr.Zero ? 0 : Marshal.GetDelegateForFunctionPointer<XErrorHandler>(previous)(display, errorEvent);
-    }
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    private delegate int XErrorHandler(IntPtr display, IntPtr errorEvent);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct PollFd
@@ -304,9 +247,6 @@ internal sealed class X11GlobalHotkeyService : IGlobalHotkeyService
 
     [DllImport(LibX11)]
     private static extern int XConnectionNumber(IntPtr display);
-
-    [DllImport(LibX11)]
-    private static extern IntPtr XSetErrorHandler(IntPtr handler);
 
     [DllImport("libc", EntryPoint = "poll")]
     private static extern int PollFds(ref PollFd fds, nuint count, int timeoutMilliseconds);
