@@ -182,11 +182,14 @@ jobs:
       - name: Smoke test the AppImage under Xvfb
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq xvfb x11-apps imagemagick xdotool xclip zenity > /dev/null
+          sudo apt-get install -y -qq xvfb x11-apps imagemagick xdotool xclip zenity openbox > /dev/null
           export XDG_DATA_HOME="$RUNNER_TEMP/xdg-data" XDG_CONFIG_HOME="$RUNNER_TEMP/xdg-config"
           export APPIMAGE_EXTRACT_AND_RUN=1
           chmod +x "dist/Prompuff-$RID.AppImage"
           xvfb-run -a -s "-screen 0 1280x800x24" bash -c '
+            # A window manager, as on a desktop: it decides which window gets focus.
+            openbox > /dev/null 2>&1 &
+            sleep 2
             "./dist/Prompuff-$RID.AppImage" > "$RUNNER_TEMP/app.log" 2>&1 &
             pid=$!
             # Wait for the hotkey rather than a fixed time: the ARM64 AppImage can take 20 seconds to start.
@@ -205,7 +208,7 @@ jobs:
             # the result into the text box the hotkey was pressed in.
             zenity --entry --title=Target --text=Paste > "$RUNNER_TEMP/pasted.txt" 2> /dev/null &
             target=$!
-            xdotool search --sync --onlyvisible --name Target windowfocus --sync
+            xdotool search --sync --onlyvisible --name Target windowactivate --sync
             xdotool key ctrl+alt+shift+p
             sleep 3
             xdotool type --delay 50 review
