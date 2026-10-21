@@ -100,6 +100,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
         navigator.OpenWorkflowRequested += OpenWorkflowAsync;
         notifier.Changed += (_, _) => QueueRefresh();
         palette.RunAction = RunPaletteActionAsync;
+        quickInsert.ValuesChanged += (_, promptId) =>
+        {
+            if (Editor is { } editor && editor.Id == promptId)
+            {
+                editor.ReloadValues();
+            }
+        };
         _currentPage = library;
     }
 

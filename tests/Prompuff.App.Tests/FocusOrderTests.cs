@@ -1,8 +1,11 @@
+using Avalonia;
 using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.VisualTree;
+using Prompuff.App.ViewModels;
 
 namespace Prompuff.App.Tests;
 
@@ -37,5 +40,46 @@ public class FocusOrderTests
         Assert.True(settings > stops.IndexOf("#mockup"), "Settings comes after the sidebar's tags");
         Assert.True(settings < stops.IndexOf("Select"), "and before the library's toolbar");
         Assert.True(stops.IndexOf("Sort by") < stops.FindIndex(name => name.StartsWith("UI Mockup Generator", StringComparison.Ordinal)), "The toolbar comes before the cards");
+    }
+
+    /// <summary>Tab goes round Quick insert's own controls and never reaches the window behind it.</summary>
+    [AvaloniaFact]
+    public async Task Tab_stays_inside_Quick_insert()
+    {
+        await using var app = await AppHarness.StartAsync();
+        await app.ViewModel.QuickInsertFromOutsideAsync();
+        await app.SettleAsync();
+        var focus = app.Window.FocusManager!;
+        static Border? ModalOf(Visual control) => control.GetVisualAncestors().OfType<Border>().FirstOrDefault(border => border.Classes.Contains("modal"));
+        var modal = ModalOf(app.Window.FindControl<TextBox>("QuickInsertInput")!);
+        Assert.NotNull(modal);
+
+        async Task<List<object?>> Walk(int steps)
+        {
+            var seen = new List<object?>();
+            for (var i = 0; i < steps; i++)
+            {
+                app.Window.KeyPressQwerty(PhysicalKey.Tab, RawInputModifiers.None);
+                await app.SettleAsync(30);
+                var focused = Assert.IsAssignableFrom<Control>(focus.GetFocusedElement());
+                Assert.True(focused.IsEffectivelyVisible);
+                Assert.Same(modal, ModalOf(focused));
+                seen.Add(focused);
+            }
+
+            return seen;
+        }
+
+        await Walk(4);
+
+        // Picking a prompt with two variables: Tab goes between its two boxes.
+        app.Window.FindControl<TextBox>("QuickInsertInput")!.Focus();
+        app.Window.KeyTextInput("handoff");
+        app.Window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+        await app.SettleAsync();
+        var boxes = await Walk(4);
+        Assert.Equal(2, boxes.Distinct().Count());
+        Assert.All(boxes, box => Assert.IsType<VariableViewModel>(Assert.IsType<TextBox>(box).DataContext));
+        app.Screenshot("quick-insert-focus");
     }
 }

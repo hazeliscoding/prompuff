@@ -108,6 +108,10 @@ public class AccessibilityTests
         await app.ViewModel.QuickInsert.OpenAsync();
         await app.SettleAsync();
         failures.AddRange(Unnamed(app, "quick insert"));
+        await app.ViewModel.QuickInsert.PickCommand.ExecuteAsync(app.ViewModel.QuickInsert.Results.First(result => result.Title == "Claude Code Handoff"));
+        await app.SettleAsync();
+        Assert.True(app.ViewModel.QuickInsert.IsFilling);
+        failures.AddRange(Unnamed(app, "quick insert variables"));
         app.ViewModel.QuickInsert.IsOpen = false;
 
         var asking = app.ViewModel.Dialogs.ConfirmAsync("Delete it?", "It moves to Recently deleted.", "Delete", isDanger: true);
