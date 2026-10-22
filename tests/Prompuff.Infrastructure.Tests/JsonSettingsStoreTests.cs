@@ -98,9 +98,52 @@ public sealed class JsonSettingsStoreTests : IDisposable
         Assert.Equal(SavedBy1_0, _store.Load());
     }
 
+    /// <summary>Every setting changed from its default, as 1.2 saved them in <c>Fixtures/settings-1.2.0.json</c>.</summary>
+    private static readonly AppSettings SavedBy1_2 = new()
+    {
+        Theme = ThemePreference.System,
+        DarkTheme = "tokyo-night",
+        LightTheme = "solarized-light",
+        ShowMascot = false,
+        ReduceMotion = true,
+        CheckForUpdatesAutomatically = false,
+        UpdateChannel = UpdateChannel.Beta,
+        LibraryLayout = LibraryLayout.List,
+        Density = Density.Dense,
+        KeepRunningInTray = true,
+        QuickSaveHotkey = "Ctrl+Shift+Space",
+        QuickInsertHotkey = "Ctrl+Alt+Shift+I",
+        PasteAfterInserting = false,
+        AllowMcp = true,
+        InstalledCommandLineTool = "/home/puff/.local/share/prompuff/bin/prompuff",
+        LibrarySort = PromptSort.RecentActivity,
+        Window = new WindowPlacement(1440, 900, true),
+    };
+
+    /// <summary>1.2 added Quick insert's hotkey and Paste after inserting; an update keeps them as well.</summary>
+    [Fact]
+    public void Settings_saved_by_1_2_keep_every_choice()
+    {
+        Directory.CreateDirectory(_folder);
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Fixtures", "settings-1.2.0.json"), Path.Combine(_folder, "settings.json"));
+
+        Assert.Equal(SavedBy1_2, _store.Load());
+    }
+
+    /// <summary>A recording only proves a setting carries over if it holds something other than the default.</summary>
+    [Fact]
+    public void The_1_2_recording_changes_every_setting()
+    {
+        foreach (var property in typeof(AppSettings).GetProperties().Where(property => property.CanWrite))
+        {
+            Assert.False(Equals(property.GetValue(AppSettings.Default), property.GetValue(SavedBy1_2)), $"{property.Name} is at its default");
+        }
+    }
+
     /// <summary>
-    /// Writes <c>Fixtures/settings-1.0.0.json</c> with this version's store and pins it. It's skipped unless
-    /// <c>PROMPUFF_WRITE_SETTINGS_FIXTURE</c> is set, and refuses to overwrite the pinned file.
+    /// Writes <c>Fixtures/settings-1.2.0.json</c> with this version's store and pins it. It's skipped unless
+    /// <c>PROMPUFF_WRITE_SETTINGS_FIXTURE</c> is set, and refuses to overwrite a pinned file. The 1.0 recording it
+    /// wrote before stays as it is.
     /// </summary>
     [Fact]
     public void Write_fixture()
@@ -110,9 +153,9 @@ public sealed class JsonSettingsStoreTests : IDisposable
             Assert.Skip("Set PROMPUFF_WRITE_SETTINGS_FIXTURE to write the settings fixture.");
         }
 
-        var fixture = Path.Combine(SchemaFixtures.SourceFolder, "settings-1.0.0.json");
+        var fixture = Path.Combine(SchemaFixtures.SourceFolder, "settings-1.2.0.json");
         PinnedFixtures.EnsureUnpinned(fixture);
-        _store.Save(SavedBy1_0);
+        _store.Save(SavedBy1_2);
         File.Copy(Path.Combine(_folder, "settings.json"), fixture);
         PinnedFixtures.Pin(fixture);
     }
