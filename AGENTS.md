@@ -77,5 +77,6 @@ These are the working rules for agents in this repo. Prompuff is a local-first d
 - Renaming a job in `ci.yml` means updating the required checks in the `main` ruleset in the same change, or every pull request waits for a check that never comes.
 - **Releases:** the version bump in `Directory.Build.props` goes through a pull request as `chore(release): x.y.z`. Once it's merged, tag that commit on `main` and push the tag. `v*` tags can't be moved or deleted.
 - **Release notes credit contributors.** When you rewrite GitHub's generated notes by hand, keep its credits: thank everyone outside the project by @-name with their pull request, and say when it's their first contribution. 1.2.0 went out without crediting #18 because the notes it copied had no such section.
+- **Release notes are short and easy to scan** (the owner's preference): a bold one-line summary, a three-step "Try it", one-line bullets that start with a bold label, a "Heads-up" for this release's caveats, then "Thanks". Leave out what the README already says, such as downloads, install steps and checksums; GitHub lists the files under the notes. 1.2.0's notes are the model.
 - Run `dotnet build` and `dotnet test` before every commit that touches code.
 - **Docs:** short and plain. Track work in GitHub issues and decisions in `ROADMAP.md`, and don't add planning documents.
