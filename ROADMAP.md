@@ -237,12 +237,22 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **On X11, Prompuff asks to be activated as a pager does.** Avalonia's own request comes from the app, and a window manager can refuse it as focus stealing, since the hotkey's keypress reached Prompuff on a connection Avalonia doesn't see. The release smoke test runs under openbox so it covers this.
 - **`--quick-insert` and `quick-insert`** open Quick insert, as `--quick-save` opens Quick save, for Wayland desktop shortcuts. A second launch sends `quick-insert` down the single-instance pipe; a running 1.0 or 1.1 copy doesn't know it and ignores it, rather than opening something else. On Wayland the result is only copied, and Prompuff steps back for the person to paste.
 
+## Decisions: checked for 1.2.0 (2026-10-21)
+
+- **Windows paste, with real keys.** `SendInput` pressed Quick insert's hotkey in a text box from another process, standing in for Notepad, then typed the search and a variable. With Paste after inserting on, the box received the result and got focus back; with it off, the box stayed empty and the result was on the clipboard. The owner checked the hotkey and the first key landing in the search by hand.
+- **X11, in the release smoke test under openbox.** From a zenity text box, on x64 and ARM64, the box received `Review the patch for behavior changes.`. Its first run caught Prompuff not coming forward on X11, fixed before release.
+- **Wayland, in WSLg with the draft AppImage.** `--quick-insert` as a fresh start and handed to the running copy each put the filled-in prompt on the clipboard, which reached the Windows clipboard too. The release smoke test does the same under Xvfb as a stand-in.
+- **macOS, on the CI runner.** Carbon registered both hotkeys, and the real Quick insert target ran its native calls (the app in front, activating it, ⌘V and the access check), since GitHub's runners grant Accessibility access. Pasting into another app with access granted still needs a Mac by hand.
+- **Updating from 1.1.1.** A portable 1.1.1 on Windows found 1.2.0 at startup, and **Download and restart** (pressed through UI Automation) restarted it into 1.2.0 with its library. Its bundled `prompuff` moved to 1.2.0 too. `update-check.yml` found 1.2.0 from 1.1.1 on Windows, Ubuntu and macOS, and `winget.yml` submitted it to winget.
+- **Settings carry over.** `settings-1.2.0.json` is pinned beside `settings-1.0.0.json`, and both read back.
+
 ## Shipped
 
 Each release's notes say what it brought, and the decisions above say why. The checklists these milestones were built from are in this file as of 1.1: `git show 40fb99d:ROADMAP.md`, and 1.1.1's as of `git show f7b182c:ROADMAP.md`. From v1.2 on, a release's checklist is its milestone's closed issues. The patch releases, 0.1.1, 0.1.2, 0.6.1 and 0.6.2, are on the [releases page](https://github.com/hazeliscoding/prompuff/releases).
 
 | Version | Released | What it brought |
 |---|---|---|
+| [1.2: Paste anywhere](https://github.com/hazeliscoding/prompuff/releases/tag/v1.2.0) | 2026-10-21 | Quick insert: a second hotkey that finds a prompt, fills its variables and pastes it into the app you're typing in, and `--quick-insert` for Wayland |
 | [1.1.1: Accessibility fixes](https://github.com/hazeliscoding/prompuff/releases/tag/v1.1.1) | 2026-10-10 | Rating and announcements for screen readers, a focus ring, contrast in every theme, and the smallest window fits |
 | [1.1: Puff comes alive](https://github.com/hazeliscoding/prompuff/releases/tag/v1.1.0) | 2026-10-09 | Puff's reactions in the app, on the website and in the launch video, Reduce motion, and the 1.0 promise pinned by fixtures |
 | [1.0](https://github.com/hazeliscoding/prompuff/releases/tag/v1.0.0) | 2026-10-08 | The release candidate's code, signed on Windows, with the launch video and the website |
@@ -258,11 +268,10 @@ Each release's notes say what it brought, and the decisions above say why. The c
 
 ## Next
 
-Open work is in [GitHub issues](https://github.com/hazeliscoding/prompuff/issues), and the [Prompuff project](https://github.com/users/hazeliscoding/projects/9) shows it on one board. The current milestone is [v1.2](https://github.com/hazeliscoding/prompuff/milestone/2). The milestones come in this order, and [Getting found](https://github.com/hazeliscoding/prompuff/milestone/1) runs alongside them, since it needs no release:
+Open work is in [GitHub issues](https://github.com/hazeliscoding/prompuff/issues), and the [Prompuff project](https://github.com/users/hazeliscoding/projects/9) shows it on one board. The current milestone is [v1.3](https://github.com/hazeliscoding/prompuff/milestone/3). The milestones come in this order, and [Getting found](https://github.com/hazeliscoding/prompuff/milestone/1) runs alongside them, since it needs no release:
 
 | Milestone | What it brings |
 |---|---|
-| [v1.2: Paste anywhere](https://github.com/hazeliscoding/prompuff/milestone/2) | Quick insert: find a prompt and drop it into the app you're typing in |
 | [v1.3: Links and agents that save](https://github.com/hazeliscoding/prompuff/milestone/3) | `prompuff://` links, and MCP tools that save prompts when you allow it |
 | [v1.4: A Markdown mirror and agent skills](https://github.com/hazeliscoding/prompuff/milestone/4) | The library as plain files, and prompts as skills for AI tools |
 | [v1.5: Capture from the browser](https://github.com/hazeliscoding/prompuff/milestone/5) | A browser extension that saves and inserts prompts |
