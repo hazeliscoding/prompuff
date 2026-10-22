@@ -185,6 +185,7 @@ public class QuickInsertTests
 
         Assert.Equal(0, target.PasteCount);
         Assert.True(app.Window.IsInTray);
+        Assert.Contains("the app it came from didn't take focus", app.ReadLog());
     }
 
     [AvaloniaFact]
@@ -266,6 +267,11 @@ public class QuickInsertTests
 
         Assert.Equal("Tidy this commit message.", await app.Get<IClipboardService>().GetTextAsync());
         Assert.True(app.Window.IsInTray);
+
+        // Nothing failed: Wayland doesn't let apps hand focus back or paste, so the log mustn't blame the app (#71).
+        var log = app.ReadLog();
+        Assert.Contains("on the clipboard to paste by hand", log);
+        Assert.DoesNotContain("didn't take focus", log);
     }
 
     /// <summary>
