@@ -119,7 +119,12 @@ public sealed partial class QuickInsertViewModel(
             return;
         }
 
-        if (!returned)
+        if (!target.IsSupported)
+        {
+            // Under Wayland nothing failed: apps can't hand focus to another app or paste into it.
+            logger.LogInformation("Quick insert left prompt {PromptId} on the clipboard to paste by hand; this desktop doesn't let apps paste into others", prompt.Id);
+        }
+        else if (!returned)
         {
             logger.LogInformation("Quick insert left prompt {PromptId} on the clipboard; the app it came from didn't take focus", prompt.Id);
         }

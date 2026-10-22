@@ -138,6 +138,13 @@ internal sealed class AppHarness : IAsyncDisposable
         }
     }
 
+    /// <summary>Everything logged so far. The logger keeps its file open for writing, so it's read alongside it.</summary>
+    public string ReadLog() => string.Concat(Directory.GetFiles(Get<IAppDataPathProvider>().GetLogsDirectory(), "*.log").Order().Select(path =>
+    {
+        using var reader = new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+        return reader.ReadToEnd();
+    }));
+
     public void Screenshot(string name)
     {
         Dispatcher.UIThread.RunJobs();
