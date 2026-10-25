@@ -246,6 +246,10 @@ Prompuff is a local-first desktop prompt vault (C#, .NET 10, Avalonia 12) for Wi
 - **Updating from 1.1.1.** A portable 1.1.1 on Windows found 1.2.0 at startup, and **Download and restart** (pressed through UI Automation) restarted it into 1.2.0 with its library. Its bundled `prompuff` moved to 1.2.0 too. `update-check.yml` found 1.2.0 from 1.1.1 on Windows, Ubuntu and macOS, and `winget.yml` submitted it to winget.
 - **Settings carry over.** `settings-1.2.0.json` is pinned beside `settings-1.0.0.json`, and both read back.
 
+## Decisions: signing (2026-10-24)
+
+- **Windows releases are signed in a job of their own.** The `windows` job runs the tests and the build, and every package they load, so it can't get a token. `windows-package` takes the built files and only packs and signs them with vpk, and `windows-smoke` runs the packaged command-line tool, which the signing job never runs. A compromised package could otherwise take the token and sign files of its own with the owner's certificate, unseen in any release. A package that changes the build is still signed with it. This gives up a single Windows job: a release starts two more Windows runners and passes the build between them.
+
 ## Shipped
 
 Each release's notes say what it brought, and the decisions above say why. The checklists these milestones were built from are in this file as of 1.1: `git show 40fb99d:ROADMAP.md`, and 1.1.1's as of `git show f7b182c:ROADMAP.md`. From v1.2 on, a release's checklist is its milestone's closed issues. The patch releases, 0.1.1, 0.1.2, 0.6.1 and 0.6.2, are on the [releases page](https://github.com/hazeliscoding/prompuff/releases).
