@@ -5,8 +5,8 @@ Thanks for helping Puff out. Prompuff is a small, local-first app, and it stays 
 ## Before you start
 
 - [README.md](README.md) says what Prompuff is and how it's built and packaged.
-- [ROADMAP.md](ROADMAP.md) holds the decisions already made, what shipped and what's not planned. Check it before proposing a feature. Decisions stand unless the owner reopens them.
-- Open work is in [GitHub issues](https://github.com/hazeliscoding/prompuff/issues), one [milestone](https://github.com/hazeliscoding/prompuff/milestones) per release, and on the [Prompuff project](https://github.com/users/hazeliscoding/projects/9). Issues labeled `good first issue` are a good place to start.
+- [ROADMAP.md](ROADMAP.md) holds the decisions already made, what shipped, the milestones still to build and what's not planned. Check it before proposing a feature. Decisions stand unless the owner reopens them.
+- Issues labeled [`good first issue`](https://github.com/hazeliscoding/prompuff/labels/good%20first%20issue) are a good place to start.
 - [docs/user-guide.md](docs/user-guide.md) is how Prompuff works for the people using it. When you change behavior, change the guide with it.
 - For anything bigger than a fix, open an issue first, so nobody builds something that's already decided against.
 
@@ -104,7 +104,7 @@ Match the code around you: `.editorconfig` sets file-scoped namespaces, four-spa
 
 ## Where decisions live
 
-The work is in GitHub issues, grouped into one milestone per release and worked from the current one. The commit that finishes an issue closes it. `ROADMAP.md` holds the decisions, each under a dated "Decisions" heading with the reason. There are no separate plan, spec or backlog documents.
+`ROADMAP.md` holds the work, one milestone per release, worked from the next unchecked item in the current one, and the change that finishes an item ticks it off. It holds the decisions too, each under a dated "Decisions" heading with the reason. GitHub issues are for bugs, requests and `good first issue` tasks. There are no separate plan, spec or backlog documents.
 
 ## How releases are cut
 

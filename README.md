@@ -19,7 +19,7 @@ Your library outlasts every update. Prompuff backs it up before an update change
 
 The website, [hazeliscoding.github.io/prompuff](https://hazeliscoding.github.io/prompuff/), has the launch video and a download for every platform.
 
-> **Status:** [v1.2.0 is out](https://github.com/hazeliscoding/prompuff/releases/latest) for Windows x64, macOS (Apple Silicon and Intel), and Linux x64 and ARM64. What's next is in the [milestones](https://github.com/hazeliscoding/prompuff/milestones).
+> **Status:** [v1.2.0 is out](https://github.com/hazeliscoding/prompuff/releases/latest) for Windows x64, macOS (Apple Silicon and Intel), and Linux x64 and ARM64. What's next is in the [roadmap](ROADMAP.md).
 
 ![The library: a sidebar with collections and tags, and prompt cards with tags, usefulness and edit times](docs/screenshots/library.png)
 

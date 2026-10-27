@@ -5,10 +5,9 @@ These are the working rules for agents in this repo. Prompuff is a local-first d
 ## Sources of truth
 
 - `README.md`: what Prompuff is, how to build, run, test and package it, and the privacy promise.
-- `ROADMAP.md`: decisions already made, what shipped, and what is out of scope. Check it before proposing features, and respect its decisions unless the owner reopens them. Record new decisions there under a dated heading.
+- `ROADMAP.md`: decisions already made, what shipped, the milestones still to build, and what is out of scope. Work from the next unchecked item in the current milestone, which **Next** names, tick it off in the change that finishes it, and don't build past that milestone without asking. An item marked "owner only" is not for agents. Check it before proposing features, and respect its decisions unless the owner reopens them. Record new decisions there under a dated heading.
 - `docs/user-guide.md`: how Prompuff works, for the people using it. Update it in the same change whenever behavior or a label it mentions changes. `CONTRIBUTING.md` is the short version of these rules for human contributors.
-- GitHub issues hold the open work, one milestone per release, and the [Prompuff project](https://github.com/users/hazeliscoding/projects/9) shows all of it. Work from the open issues in the current milestone, which `ROADMAP.md` names under **Next** (`gh issue list --milestone <name>`), and don't build past it without asking. The commit that finishes an issue closes it with `Closes #N` in its body. An issue that says "owner only" is not for agents.
-- New work gets an issue in the project (`gh issue create --project Prompuff`) with a milestone, or the `later` label until it has one. Bugs and requests from people using Prompuff are issues too. Don't create separate plan, spec or backlog documents.
+- New work goes in `ROADMAP.md`, in a milestone or under Later. GitHub issues are for bugs and requests from people using Prompuff, and for contributor tasks labeled `good first issue`, never for roadmap work: no milestones and no Project boards. Don't create separate plan, spec or backlog documents.
 
 ## Privacy (hard rules)
 
@@ -73,10 +72,10 @@ These are the working rules for agents in this repo. Prompuff is a local-first d
 
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `chore:`, `test:`, `ci:`, `build:`, `refactor:`). Keep each commit atomic, and use a scope when it helps (`feat(library): …`).
 - **No AI attribution** in commits or PRs: no `Co-Authored-By` trailers, no "Generated with" lines, no session links.
-- **Pull requests:** `main` is protected, so nothing is pushed to it directly. Branch from `main`, named like the commit types (`feat/…`, `fix/…`, `docs/…`), push, and open a pull request with `gh pr create`. It merges once the three "Build and test" jobs pass on a branch that's up to date with `main`, by rebase (`gh pr merge --rebase --delete-branch`), so each atomic commit lands as it is. Keep a pull request to one issue or fix, and never bypass the checks or force-push `main`.
+- **Pull requests:** `main` is protected, so nothing is pushed to it directly. Branch from `main`, named like the commit types (`feat/…`, `fix/…`, `docs/…`), push, and open a pull request with `gh pr create`. It merges once the three "Build and test" jobs pass on a branch that's up to date with `main`, by rebase (`gh pr merge --rebase --delete-branch`), so each atomic commit lands as it is. Keep a pull request to one roadmap item, issue or fix, and never bypass the checks or force-push `main`.
 - Renaming a job in `ci.yml` means updating the required checks in the `main` ruleset in the same change, or every pull request waits for a check that never comes.
 - **Releases:** the version bump in `Directory.Build.props` goes through a pull request as `chore(release): x.y.z`. Once it's merged, tag that commit on `main` and push the tag. `v*` tags can't be moved or deleted.
 - **Release notes credit contributors.** When you rewrite GitHub's generated notes by hand, keep its credits: thank everyone outside the project by @-name with their pull request, and say when it's their first contribution. 1.2.0 went out without crediting #18 because the notes it copied had no such section.
 - **Release notes are short and easy to scan** (the owner's preference): a bold one-line summary, a three-step "Try it", one-line bullets that start with a bold label, a "Heads-up" for this release's caveats, then "Thanks". Leave out what the README already says, such as downloads, install steps and checksums; GitHub lists the files under the notes. 1.2.0's notes are the model.
 - Run `dotnet build` and `dotnet test` before every commit that touches code.
-- **Docs:** short and plain. Track work in GitHub issues and decisions in `ROADMAP.md`, and don't add planning documents.
+- **Docs:** short and plain. Track work and decisions in `ROADMAP.md`, and don't add planning documents.
